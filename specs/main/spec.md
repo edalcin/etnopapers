@@ -1,6 +1,6 @@
 # Especificação da Funcionalidade: Sistema de Extração de Metadados de Artigos Etnobotânicos
 
-**Branch da Funcionalidade**: `001-pdf-metadata-extraction`
+**Branch da Funcionalidade**: `main`
 **Criado**: 2025-11-20
 **Status**: Rascunho
 **Entrada**: Sistema de extração de metadados de artigos científicos em PDF sobre etnobotânica usando APIs externas de IA (Gemini, ChatGPT, Claude) com chaves fornecidas pelo usuário, rodando em Docker com banco SQLite
