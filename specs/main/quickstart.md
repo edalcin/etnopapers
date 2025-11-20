@@ -1,0 +1,746 @@
+# Guia de Início Rápido: Etnopapers
+
+**Funcionalidade**: Sistema de Extração de Metadados de Artigos Etnobotânicos
+**Branch**: main
+**Criado**: 2025-11-20
+**Status**: Em Desenvolvimento
+
+## Visão Geral
+
+Este guia fornece instruções passo-a-passo para configurar e executar o Etnopapers em seu servidor. O processo completo leva aproximadamente **10 minutos**.
+
+**Arquitetura Simplificada**:
+- ✅ Docker padrão (sem necessidade de GPU)
+- ✅ APIs externas de IA (Gemini, ChatGPT, Claude)
+- ✅ Chaves de API fornecidas pelo usuário
+- ✅ Banco de dados SQLite
+- ✅ Interface web responsiva
+
+## Pré-requisitos
+
+### Hardware Mínimo
+
+- **CPU**: 2 cores
+- **RAM**: 1 GB
+- **Disco**: 10 GB de espaço livre
+- **Rede**: Conexão à internet para acesso a APIs externas
+
+### Software Necessário
+
+- **Docker**: Versão 20.10 ou superior
+- **Docker Compose** (opcional, mas recomendado): Versão 1.29 ou superior
+- **Navegador Web**: Chrome, Firefox, Safari ou Edge (versões recentes)
+
+### Conta de API de IA
+
+Você precisará de uma chave de API de **pelo menos um** dos seguintes provedores:
+
+1. **Google Gemini** (recomendado para começar)
+   - Gratuito com quota generosa
+   - Criar conta: https://makersuite.google.com/app/apikey
+
+2. **OpenAI ChatGPT**
+   - Requer créditos pagos após quota inicial
+   - Criar conta: https://platform.openai.com/api-keys
+
+3. **Anthropic Claude**
+   - Modelos com diferentes níveis de custo
+   - Criar conta: https://console.anthropic.com/settings/keys
+
+## Instalação no UNRAID
+
+### Passo 1: Instalar via Community Applications
+
+1. Acesse o **UNRAID Web UI**
+2. Navegue para **Apps** → **Community Applications**
+3. Busque por **"Etnopapers"**
+4. Clique em **Install**
+5. Configure as opções:
+
+```
+Container Name: etnopapers
+Port (WebUI): 8000 → 8000
+Path (Database): /mnt/user/appdata/etnopapers → /data
+```
+
+6. Clique em **Apply**
+
+### Passo 2: Acessar a Interface Web
+
+1. Abra navegador e acesse: `http://SEU_IP_UNRAID:8000`
+2. Você verá a tela de configuração de API key
+
+### Passo 3: Configurar API Key
+
+1. Selecione o provedor de IA (Gemini, ChatGPT ou Claude)
+2. Clique em **"Como obter chave de API"** para instruções
+3. Cole sua chave de API no campo
+4. Clique em **"Validar e Salvar"**
+5. Se válida, você será direcionado para a tela de upload
+
+**Pronto!** Você já pode fazer upload de PDFs.
+
+---
+
+## Instalação Manual com Docker
+
+### Passo 1: Clonar o Repositório (quando disponível)
+
+```bash
+git clone https://github.com/etnopapers/etnopapers.git
+cd etnopapers
+```
+
+### Passo 2: Criar Estrutura de Diretórios
+
+```bash
+mkdir -p data
+```
+
+### Passo 3: Configurar Variáveis de Ambiente
+
+Crie arquivo `.env` na raiz do projeto:
+
+```env
+# Caminho do banco de dados
+DATABASE_PATH=/data/etnopapers.db
+
+# Porta da aplicação
+PORT=8000
+
+# Nível de log (debug|info|warning|error)
+LOG_LEVEL=info
+
+# Timeout para API de taxonomia (segundos)
+TAXONOMY_API_TIMEOUT=5
+
+# TTL do cache de taxonomia (dias)
+CACHE_TTL_DAYS=30
+```
+
+### Passo 4: Executar com Docker Compose
+
+Crie arquivo `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  etnopapers:
+    image: etnopapers:latest
+    container_name: etnopapers
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      - DATABASE_PATH=/data/etnopapers.db
+      - PORT=8000
+      - LOG_LEVEL=info
+      - TAXONOMY_API_TIMEOUT=5
+      - CACHE_TTL_DAYS=30
+    restart: unless-stopped
+```
+
+Execute:
+
+```bash
+docker-compose up -d
+```
+
+### Passo 5: Verificar Status
+
+```bash
+docker-compose logs -f
+```
+
+Você deve ver:
+
+```
+INFO:     Started server process
+INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Database initialized successfully
+```
+
+### Passo 6: Acessar Interface
+
+Abra navegador: `http://localhost:8000`
+
+---
+
+## Instalação Manual sem Docker Compose
+
+### Build da Imagem Docker
+
+```bash
+docker build -t etnopapers:latest .
+```
+
+### Executar Container
+
+```bash
+docker run -d \
+  --name etnopapers \
+  -p 8000:8000 \
+  -v $(pwd)/data:/data \
+  -e DATABASE_PATH=/data/etnopapers.db \
+  -e PORT=8000 \
+  -e LOG_LEVEL=info \
+  --restart unless-stopped \
+  etnopapers:latest
+```
+
+### Verificar Logs
+
+```bash
+docker logs -f etnopapers
+```
+
+---
+
+## Primeiro Uso: Configuração de API Key
+
+### Google Gemini (Recomendado)
+
+**Passo a Passo**:
+
+1. Acesse: https://makersuite.google.com/app/apikey
+2. Faça login com sua conta Google
+3. Clique em **"Create API Key"**
+4. Selecione ou crie um projeto do Google Cloud
+5. Copie a chave gerada (formato: `AIzaSy...`)
+6. No Etnopapers:
+   - Selecione **"Google Gemini"**
+   - Cole a chave
+   - Clique em **"Validar e Salvar"**
+
+**Limites Gratuitos**:
+- 60 requests por minuto
+- Adequado para uso individual/acadêmico
+
+### OpenAI ChatGPT
+
+**Passo a Passo**:
+
+1. Acesse: https://platform.openai.com/signup
+2. Crie uma conta OpenAI
+3. Navegue para **API Keys**: https://platform.openai.com/api-keys
+4. Clique em **"Create new secret key"**
+5. Dê um nome (ex: "Etnopapers")
+6. Copie a chave (formato: `sk-...`) - **ela só será exibida uma vez**
+7. No Etnopapers:
+   - Selecione **"OpenAI ChatGPT"**
+   - Cole a chave
+   - Clique em **"Validar e Salvar"**
+
+**Custos**:
+- gpt-3.5-turbo: ~$0.02 por artigo de 30 páginas
+- Requer adicionar créditos após quota inicial gratuita
+
+### Anthropic Claude
+
+**Passo a Passo**:
+
+1. Acesse: https://console.anthropic.com
+2. Crie uma conta Anthropic
+3. Navegue para **API Keys**: https://console.anthropic.com/settings/keys
+4. Clique em **"Create Key"**
+5. Dê um nome (ex: "Etnopapers")
+6. Copie a chave (formato: `sk-ant-...`)
+7. No Etnopapers:
+   - Selecione **"Anthropic Claude"**
+   - Cole a chave
+   - Clique em **"Validar e Salvar"**
+
+**Custos**:
+- claude-3-haiku: ~$0.003 por artigo de 30 páginas (mais econômico)
+- claude-3-sonnet: ~$0.03 por artigo (melhor qualidade)
+
+---
+
+## Usando o Sistema: Processando Seu Primeiro Artigo
+
+### Passo 1: Upload de PDF
+
+1. Na tela principal, clique em **"Selecionar PDF"** ou arraste um arquivo
+2. Formatos aceitos: `.pdf` (máximo 50 MB)
+3. O sistema validará:
+   - Formato do arquivo (apenas PDF)
+   - Tamanho (até 50 MB)
+   - Integridade do PDF
+
+### Passo 2: Processamento Automático
+
+1. Clique em **"Processar"**
+2. O sistema irá:
+   - Extrair texto do PDF (usando pdf.js)
+   - Enviar para API de IA selecionada
+   - Processar metadados (1-2 minutos)
+3. Barra de progresso indica status
+
+### Passo 3: Revisar Metadados Extraídos
+
+Após processamento, você verá:
+
+**Metadados Extraídos**:
+- ✅ Título
+- ✅ Autores
+- ✅ Ano de publicação
+- ✅ Resumo
+- ✅ DOI (se disponível)
+- ✅ Região do estudo
+- ✅ Comunidades tradicionais
+- ✅ Espécies de plantas
+- ✅ Dados metodológicos
+
+**Campos não extraídos** serão marcados com ⚠️.
+
+### Passo 4: Decidir Ação
+
+Três botões estarão disponíveis:
+
+**"Salvar"**:
+- Finaliza e armazena no banco de dados
+- Valida taxonomia das espécies
+- Status: "finalizado"
+
+**"Editar"**:
+- Abre interface de edição
+- Permite corrigir/completar metadados
+- Ideal para PDFs escaneados ou baixa qualidade
+
+**"Descartar"**:
+- Remove dados extraídos
+- Solicita confirmação
+- Irreversível
+
+**Fechou a janela sem clicar?**
+- Dados salvos automaticamente como **rascunho**
+- Recuperáveis em "Rascunhos Pendentes"
+
+---
+
+## Interface de Edição Manual
+
+### Quando Usar
+
+- PDF escaneado (baixa qualidade de extração)
+- Campos importantes faltando
+- Erros na extração de nomes científicos
+- Complementar informações
+
+### Como Usar
+
+1. Clique em **"Editar"** após extração
+2. Todos os campos são editáveis:
+   - Texto simples: título, DOI, resumo
+   - Listas: autores, regiões, comunidades
+   - Tabelas: espécies de plantas
+3. **Validações automáticas**:
+   - Ano de publicação (1900-2100)
+   - Formato de DOI (10.xxxx/xxxx)
+   - Nome científico (binomial: Genus species)
+4. Campos editados ficam marcados com 📝
+5. Clique em **"Salvar Alterações"** para finalizar
+
+### Validação Taxonômica
+
+Ao adicionar/editar espécie:
+
+1. Digite nome científico (ex: "Uncaria tomentosa")
+2. Sistema consulta API de taxonomia (GBIF ou Tropicos)
+3. Retorna:
+   - ✅ Nome aceito atual
+   - ✅ Família botânica
+   - ✅ Autores do nome científico
+   - ⚠️ Se sinônimo, sugere nome válido
+4. Validação salva automaticamente
+
+**Se API estiver offline**:
+- Sistema permite salvamento
+- Status: "não validado"
+- Pode validar posteriormente
+
+---
+
+## Consultando Histórico de Artigos
+
+### Visualizar Todos os Artigos
+
+1. Menu: **"Histórico"**
+2. Lista exibe:
+   - Título
+   - Ano
+   - Autores
+   - Número de espécies
+   - Status (finalizado/rascunho)
+
+### Filtros Disponíveis
+
+- **Ano de publicação**: Slider 1900-2100
+- **Status**: Finalizado, Rascunho, Todos
+- **Busca textual**: Título, autores, DOI
+
+### Detalhes de Artigo
+
+1. Clique em um artigo da lista
+2. Visualiza metadados completos:
+   - Informações bibliográficas
+   - Regiões e comunidades
+   - Espécies mencionadas com usos
+   - Dados metodológicos
+3. Botões de ação:
+   - **"Editar"**: Modificar metadados
+   - **"Excluir"**: Remover artigo (confirmação)
+
+---
+
+## Gerenciamento de Rascunhos
+
+### Visualizar Rascunhos
+
+Menu: **"Rascunhos Pendentes"**
+
+Exibe artigos com status "rascunho":
+- Salvos automaticamente (janela fechada)
+- Salvos manualmente como rascunho
+- Indicação de tempo desde criação
+
+### Finalizar Rascunho
+
+1. Clique em rascunho
+2. Revise metadados
+3. Clique em **"Finalizar"**
+4. Status muda para "finalizado"
+
+### Limpeza Automática
+
+Rascunhos com mais de **7 dias** são automaticamente excluídos.
+
+**Para limpar manualmente**:
+- Menu: **"Configurações"** → **"Limpar Rascunhos Antigos"**
+
+---
+
+## Configurações Avançadas
+
+### Trocar Provedor de IA
+
+1. Menu: **"Configurações"** → **"API de IA"**
+2. Selecione novo provedor
+3. Insira nova chave de API
+4. Clique em **"Validar e Salvar"**
+
+**Nota**: Chave anterior será substituída (apenas no navegador).
+
+### Visualizar/Remover Chave de API
+
+1. Menu: **"Configurações"** → **"API de IA"**
+2. Opções:
+   - **"Mostrar Chave"**: Exibe chave armazenada (mascarada)
+   - **"Remover Chave"**: Apaga chave do navegador
+
+**Importante**: Se limpar cache do navegador, chave será perdida.
+
+### Configurar Variáveis de Ambiente
+
+Edite arquivo `.env` ou variáveis do Docker:
+
+```bash
+# Aumentar timeout para artigos grandes
+TAXONOMY_API_TIMEOUT=10
+
+# Aumentar TTL do cache
+CACHE_TTL_DAYS=60
+
+# Mudar nível de log para debug
+LOG_LEVEL=debug
+```
+
+Reinicie container:
+
+```bash
+docker-compose restart
+```
+
+---
+
+## Backup e Manutenção
+
+### Backup do Banco de Dados
+
+**Localização**: `./data/etnopapers.db`
+
+**Backup Manual**:
+
+```bash
+# Copiar arquivo do banco
+cp ./data/etnopapers.db ./backups/etnopapers_$(date +%Y%m%d).db
+```
+
+**Backup Automático** (agendado):
+
+1. Criar script `backup.sh`:
+
+```bash
+#!/bin/bash
+BACKUP_DIR="/mnt/user/backups/etnopapers"
+mkdir -p $BACKUP_DIR
+cp /mnt/user/appdata/etnopapers/etnopapers.db \
+   $BACKUP_DIR/etnopapers_$(date +%Y%m%d_%H%M%S).db
+# Manter apenas últimos 30 backups
+ls -t $BACKUP_DIR/etnopapers_*.db | tail -n +31 | xargs rm -f
+```
+
+2. Agendar no UNRAID User Scripts plugin:
+   - Frequência: Diária
+   - Horário: 03:00
+
+### Restaurar Backup
+
+```bash
+# Parar container
+docker-compose down
+
+# Restaurar arquivo
+cp ./backups/etnopapers_20251120.db ./data/etnopapers.db
+
+# Reiniciar container
+docker-compose up -d
+```
+
+### Exportar Dados para CSV
+
+**Via Interface Web**:
+
+1. Menu: **"Exportar"** → **"CSV"**
+2. Selecione dados:
+   - Artigos
+   - Espécies
+   - Regiões
+   - Comunidades
+3. Clique em **"Baixar CSV"**
+
+**Via SQLite CLI** (acesso ao servidor):
+
+```bash
+# Conectar ao banco
+sqlite3 ./data/etnopapers.db
+
+# Exportar artigos
+.headers on
+.mode csv
+.output artigos_export.csv
+SELECT * FROM ArtigosCientificos;
+.quit
+```
+
+---
+
+## Troubleshooting
+
+### Problema: Container não inicia
+
+**Sintomas**: Docker exibe erro ao executar `docker-compose up`
+
+**Soluções**:
+
+1. Verificar logs:
+   ```bash
+   docker-compose logs
+   ```
+
+2. Verificar permissões do diretório `./data`:
+   ```bash
+   chmod 755 ./data
+   ```
+
+3. Verificar se porta 8000 está disponível:
+   ```bash
+   netstat -tuln | grep 8000
+   ```
+
+### Problema: API key inválida
+
+**Sintomas**: Mensagem "Chave de API inválida" ao tentar processar PDF
+
+**Soluções**:
+
+1. Verificar se chave foi copiada corretamente (sem espaços)
+2. Verificar se chave não expirou (recriar no provedor)
+3. Verificar se tem créditos disponíveis (OpenAI/Claude)
+4. Testar chave manualmente:
+
+**Gemini**:
+```bash
+curl -X POST \
+  "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=SUA_CHAVE" \
+  -H "Content-Type: application/json" \
+  -d '{"contents":[{"parts":[{"text":"test"}]}]}'
+```
+
+**OpenAI**:
+```bash
+curl https://api.openai.com/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SUA_CHAVE" \
+  -d '{"model":"gpt-3.5-turbo","messages":[{"role":"user","content":"test"}],"max_tokens":5}'
+```
+
+**Claude**:
+```bash
+curl https://api.anthropic.com/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_CHAVE" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{"model":"claude-3-haiku-20240307","max_tokens":5,"messages":[{"role":"user","content":"test"}]}'
+```
+
+### Problema: Extração muito lenta (>5 minutos)
+
+**Causas**:
+- PDF muito grande (>30 páginas)
+- API de IA sobrecarregada
+- Conexão lenta com internet
+
+**Soluções**:
+
+1. Dividir PDFs grandes em partes menores
+2. Tentar outro provedor de IA
+3. Verificar velocidade de internet
+4. Aumentar timeout no `.env`:
+   ```env
+   REQUEST_TIMEOUT=120
+   ```
+
+### Problema: JSON malformado (erro de parsing)
+
+**Sintomas**: Mensagem "Erro ao processar resposta da IA"
+
+**Causas**:
+- IA retornou texto ao invés de JSON
+- PDF de baixa qualidade (escaneado)
+
+**Soluções**:
+
+1. Tentar processar novamente (pode funcionar na 2ª tentativa)
+2. Usar outro provedor de IA
+3. Clicar em "Editar" e preencher manualmente
+4. Melhorar qualidade do PDF (re-escanear)
+
+### Problema: Taxonomia não validada
+
+**Sintomas**: Espécies com status "não validado"
+
+**Causas**:
+- API de taxonomia (GBIF/Tropicos) offline
+- Nome científico incorreto/incompleto
+- Espécie não catalogada nas bases
+
+**Soluções**:
+
+1. Verificar conectividade com internet
+2. Tentar validar novamente mais tarde
+3. Corrigir nome científico manualmente
+4. Aceitar status "não validado" temporariamente
+
+### Problema: Banco de dados corrompido
+
+**Sintomas**: Erros ao salvar artigos, interface não carrega
+
+**Soluções**:
+
+1. Verificar integridade:
+   ```bash
+   sqlite3 ./data/etnopapers.db "PRAGMA integrity_check;"
+   ```
+
+2. Se corrompido, restaurar backup:
+   ```bash
+   cp ./backups/etnopapers_ULTIMO.db ./data/etnopapers.db
+   ```
+
+3. Se sem backup, tentar recuperar:
+   ```bash
+   sqlite3 ./data/etnopapers.db ".recover" | sqlite3 ./data/etnopapers_recovered.db
+   ```
+
+---
+
+## Perguntas Frequentes (FAQ)
+
+### O PDF original fica armazenado no servidor?
+
+**Não.** Apenas metadados são armazenados no banco SQLite. O PDF é processado no navegador, enviado para API de IA, e descartado após extração.
+
+### Minha chave de API é enviada para o servidor?
+
+**Não.** A chave fica armazenada APENAS no `localStorage` do seu navegador e é usada diretamente pelo frontend para chamar APIs de IA. O backend nunca recebe ou armazena chaves de API.
+
+### Posso usar o sistema offline?
+
+**Não.** O sistema requer conexão à internet para:
+- Chamadas às APIs de IA (Gemini/ChatGPT/Claude)
+- Validação taxonômica (GBIF/Tropicos)
+
+Porém, após metadados estarem salvos, você pode consultar o histórico offline.
+
+### Quantos artigos posso processar?
+
+**Ilimitado.** O sistema não impõe limites. Restrições vêm das quotas da API de IA escolhida:
+- **Gemini**: 60 requests/minuto (gratuito)
+- **ChatGPT**: Conforme créditos disponíveis
+- **Claude**: Conforme créditos disponíveis
+
+### Posso mudar de provedor de IA após processar artigos?
+
+**Sim.** Artigos já processados permanecem no banco. Você pode trocar de provedor a qualquer momento para novos processamentos.
+
+### Como exportar todos os dados?
+
+**Via CSV**:
+- Interface: Menu → Exportar → CSV
+
+**Via Backup do SQLite**:
+- Copiar arquivo `./data/etnopapers.db`
+- Acessar com qualquer ferramenta SQLite (DB Browser, DBeaver, etc.)
+
+### O sistema funciona com PDFs escaneados?
+
+**Parcialmente.** O sistema tentará processar, mas:
+- Qualidade de extração será **reduzida**
+- Sistema exibirá **aviso**
+- Recomendado usar **interface de edição manual** para corrigir
+
+Para melhores resultados, use PDFs com texto pesquisável.
+
+### Posso processar múltiplos PDFs simultaneamente?
+
+**Não na versão atual.** Sistema processa um PDF por vez. Upload em lote será considerado para versões futuras.
+
+---
+
+## Próximos Passos
+
+Agora que seu sistema está configurado:
+
+1. ✅ Processar artigos de teste
+2. ✅ Experimentar diferentes provedores de IA
+3. ✅ Configurar backup automático
+4. ✅ Explorar interface de edição
+5. ✅ Consultar histórico e filtros
+
+**Precisa de Ajuda?**
+- Documentação completa: `specs/main/spec.md`
+- Modelo de dados: `specs/main/data-model.md`
+- API REST: `specs/main/contracts/api-rest.yaml`
+
+---
+
+## Contato e Suporte
+
+**Repositório**: [GitHub - etnopapers/etnopapers](https://github.com/etnopapers/etnopapers)
+**Issues**: https://github.com/etnopapers/etnopapers/issues
+**Documentação**: https://docs.etnopapers.org
+
+**Contribuições são bem-vindas!**
