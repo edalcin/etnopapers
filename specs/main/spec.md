@@ -14,6 +14,7 @@
 - Q: Como garantir unicidade de espécies de plantas no banco de dados? → A: Nome científico (binomial) como chave única, com validação via API externa para obter nome aceito atual, família botânica e autores do nome científico
 - Q: O que acontece se usuário fechar janela sem salvar? → A: Salvar automaticamente como rascunho. Após extração, apresentar botões "Salvar" (finalizar no BD), "Editar" (abrir interface de edição) e "Descartar" (excluir dados extraídos)
 - Q: Como será feita a extração de metadados? → A: Usando APIs externas (Gemini, ChatGPT, Claude) com chave fornecida pelo usuário. A chave é armazenada apenas no navegador (browser storage), nunca no servidor
+- Q: Como evitar duplicação de artigos na base de dados? → A: Sistema verifica duplicatas após extração de metadados usando DOI (se disponível) ou combinação título+ano+primeiro autor. Se duplicata for detectada, usuário é informado e pode optar por descartar ou sobrescrever o registro existente
 
 ## Cenários de Usuário e Testes *(obrigatório)*
 
@@ -42,17 +43,22 @@ Um pesquisador acessa o sistema através de uma página web, fornece sua chave d
 
 ### História de Usuário 2 - Validação e Tratamento de Erros no Upload (Prioridade: P2)
 
-Um pesquisador tenta fazer upload de diferentes tipos de arquivos e o sistema valida adequadamente, rejeitando arquivos não-PDF ou PDFs corrompidos, fornecendo mensagens de erro claras e orientando o usuário sobre como corrigir o problema.
+Um pesquisador tenta fazer upload de diferentes tipos de arquivos e o sistema valida adequadamente, rejeitando arquivos não-PDF ou PDFs corrompidos, fornecendo mensagens de erro claras e orientando o usuário sobre como corrigir o problema. O sistema também detecta artigos duplicados e informa o pesquisador, permitindo que ele decida se deseja descartar ou sobrescrever o registro existente.
 
 **Por que esta prioridade**: Melhora significativamente a experiência do usuário ao fornecer feedback claro sobre problemas, mas não é essencial para a funcionalidade básica. Pode ser implementada e testada após o fluxo principal estar funcionando.
 
-**Teste Independente**: Pode ser testado independentemente tentando upload de arquivos inválidos (imagens, documentos corrompidos, formatos incorretos) e verificando se as mensagens de erro apropriadas são exibidas.
+**Teste Independente**: Pode ser testado independentemente tentando upload de arquivos inválidos (imagens, documentos corrompidos, formatos incorretos) e verificando se as mensagens de erro apropriadas são exibidas. Também pode ser testado fazendo upload do mesmo artigo duas vezes.
 
 **Cenários de Aceitação**:
 
 1. **Dado** que o usuário está na página de upload, **Quando** o usuário tenta fazer upload de um arquivo que não é PDF, **Então** o sistema rejeita o arquivo e exibe mensagem explicativa informando que apenas arquivos PDF são aceitos
 2. **Dado** que o usuário selecionou um arquivo PDF corrompido, **Quando** o sistema tenta processar o arquivo, **Então** o sistema detecta o problema e informa ao usuário que o arquivo está corrompido ou ilegível
 3. **Dado** que ocorreu um erro durante o processamento, **Quando** o sistema exibe a mensagem de erro, **Então** a mensagem é clara, em português brasileiro, e sugere possíveis soluções
+4. **Dado** que o sistema extraiu metadados de um PDF, **Quando** o sistema verifica duplicatas no banco de dados, **Então** o sistema compara usando DOI (se disponível) ou combinação de título + ano + primeiro autor
+5. **Dado** que o artigo extraído já existe no banco de dados (duplicata detectada), **Quando** o sistema identifica a duplicata, **Então** o sistema exibe mensagem informando que o artigo já foi processado anteriormente, mostrando a data do processamento original e o status (finalizado/rascunho)
+6. **Dado** que uma duplicata foi detectada, **Quando** a mensagem de duplicata é exibida, **Então** o sistema apresenta duas opções: "Descartar" (ignora novo upload) e "Sobrescrever" (substitui registro existente pelos novos metadados extraídos)
+7. **Dado** que o usuário escolheu "Descartar" na detecção de duplicata, **Quando** a ação é confirmada, **Então** os metadados recém-extraídos são descartados e o registro original permanece inalterado no banco de dados
+8. **Dado** que o usuário escolheu "Sobrescrever" na detecção de duplicata, **Quando** a ação é confirmada, **Então** o sistema substitui o registro existente pelos novos metadados e atualiza o timestamp de última modificação
 
 ---
 
@@ -105,6 +111,10 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - O que acontece se a API de taxonomia botânica estiver offline ou inacessível? O sistema permite salvamento dos dados mas marca o status de validação taxonômica como "não validado"
 - Como o sistema trata nomes científicos sinônimos ou desatualizados? A API retorna o nome aceito atual e o sistema armazena ambos (extraído e validado)
 - Como o sistema protege a chave de API do usuário? A chave nunca é enviada ao servidor, apenas armazenada no localStorage do navegador e usada diretamente pelo frontend para chamadas à API
+- O que acontece se o usuário tentar fazer upload de um artigo que já está no banco de dados? O sistema detecta duplicata após extração usando DOI ou título+ano+autor, exibe mensagem informativa com detalhes do registro existente, e permite que usuário escolha entre descartar ou sobrescrever
+- Como o sistema detecta duplicatas se o artigo não tem DOI? Sistema usa combinação de título + ano de publicação + primeiro autor como chave de comparação alternativa
+- O que acontece se um artigo for ligeiramente modificado (nova versão do mesmo artigo)? Sistema detecta como duplicata se título e autores forem idênticos; usuário pode sobrescrever para atualizar metadados
+- Como o sistema trata duplicatas em rascunhos? Rascunhos também são verificados para evitar duplicação; se duplicata de rascunho for detectada, sistema sugere finalizar o rascunho existente ao invés de criar novo
 
 ## Requisitos *(obrigatório)*
 
@@ -145,6 +155,13 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-033**: Ao clicar em "Descartar", o sistema DEVE solicitar confirmação e então excluir permanentemente os dados extraídos
 - **RF-034**: Se o usuário fechar navegador/janela sem selecionar ação, o sistema DEVE salvar automaticamente os metadados com status "rascunho"
 - **RF-035**: O sistema DEVE permitir recuperação de rascunhos salvos automaticamente para finalização posterior
+- **RF-036**: O sistema DEVE detectar artigos duplicados após a extração de metadados, antes de permitir salvamento
+- **RF-037**: O sistema DEVE verificar duplicatas usando DOI como critério primário (se DOI estiver disponível nos metadados extraídos)
+- **RF-038**: Se DOI não estiver disponível, o sistema DEVE verificar duplicatas usando a combinação de título + ano de publicação + primeiro autor
+- **RF-039**: Quando duplicata for detectada, o sistema DEVE exibir mensagem informativa contendo: título do artigo existente, data do processamento original, status (finalizado/rascunho), e duas opções de ação ("Descartar" e "Sobrescrever")
+- **RF-040**: Ao escolher "Descartar" em duplicata detectada, o sistema DEVE descartar os metadados recém-extraídos e manter o registro original inalterado
+- **RF-041**: Ao escolher "Sobrescrever" em duplicata detectada, o sistema DEVE substituir completamente o registro existente pelos novos metadados extraídos e atualizar o timestamp de última modificação
+- **RF-042**: O sistema DEVE verificar duplicatas tanto em artigos finalizados quanto em rascunhos pendentes
 
 ### Entidades Principais
 
@@ -169,6 +186,7 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **CS-009**: O tempo de configuração inicial do servidor não ultrapassa 10 minutos para usuários familiarizados com Docker (simplificado sem necessidade de GPU)
 - **CS-010**: Usuários conseguem editar e salvar correções em metadados extraídos em menos de 30 segundos por campo
 - **CS-011**: Usuários conseguem configurar sua chave de API em menos de 1 minuto na primeira utilização do sistema
+- **CS-012**: O sistema detecta 100% de artigos duplicados quando DOI está disponível e pelo menos 95% quando usa combinação título+ano+autor, evitando duplicação indevida na base de dados
 
 ## Dependências *(opcional)*
 
