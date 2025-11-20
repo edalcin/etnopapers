@@ -15,6 +15,7 @@
 - Q: O que acontece se usuário fechar janela sem salvar? → A: Salvar automaticamente como rascunho. Após extração, apresentar botões "Salvar" (finalizar no BD), "Editar" (abrir interface de edição) e "Descartar" (excluir dados extraídos)
 - Q: Como será feita a extração de metadados? → A: Usando APIs externas (Gemini, ChatGPT, Claude) com chave fornecida pelo usuário. A chave é armazenada apenas no navegador (browser storage), nunca no servidor
 - Q: Como evitar duplicação de artigos na base de dados? → A: Sistema verifica duplicatas após extração de metadados usando DOI (se disponível) ou combinação título+ano+primeiro autor. Se duplicata for detectada, usuário é informado e pode optar por descartar ou sobrescrever o registro existente
+- Q: O sistema deve usar contexto do pesquisador para melhorar extração? → A: Sim, pesquisador pode configurar perfil opcional (área de especialização, região de foco, idiomas/línguas indígenas relevantes, comunidades estudadas) que é incluído como contexto no prompt enviado à API de IA, melhorando precisão da extração
 
 ## Cenários de Usuário e Testes *(obrigatório)*
 
@@ -195,6 +196,11 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-061**: Ao extrair metadados, o sistema DEVE tentar identificar se a localização mencionada refere-se a município/cidade (hierárquico) ou território tradicional/comunitário
 - **RF-062**: O sistema DEVE normalizar e reutilizar registros de países, estados e municípios para evitar duplicação
 - **RF-063**: O sistema DEVE permitir associação de coordenadas geográficas a municípios e territórios de forma opcional
+- **RF-064**: O sistema DEVE permitir que o usuário configure opcionalmente um perfil de pesquisador contendo: área de especialização, região geográfica de foco, idiomas/línguas indígenas relevantes e tipos de comunidades estudadas
+- **RF-065**: O perfil do pesquisador DEVE ser armazenado apenas no navegador (localStorage), nunca no servidor
+- **RF-066**: Ao extrair metadados de um PDF, o sistema DEVE incluir o perfil do pesquisador (se configurado) como contexto adicional no prompt enviado à API de IA
+- **RF-067**: O sistema DEVE permitir que o usuário edite, visualize ou desabilite temporariamente seu perfil de pesquisador a qualquer momento
+- **RF-068**: Se o perfil estiver desabilitado, o sistema DEVE fazer extração genérica sem contexto personalizado
 
 ### Entidades Principais
 
@@ -210,6 +216,7 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **Nome Vernacular**: Representa nomes populares de plantas utilizados por comunidades tradicionais. Uma espécie pode ter múltiplos nomes vernaculares, e um nome vernacular pode referir-se a múltiplas espécies (homonímia). Atributos incluem: identificador único, nome popular (ex: "unha-de-gato", "ipê-roxo", "yãpinã"), idioma ou língua (ex: "português", "Yanomami", "Guarani"), descrição da região onde o nome é usado, relacionamento N:M com espécies de plantas
 - **Associação Espécie-Nome Vernacular**: Tabela que conecta espécies a nomes vernaculares. Atributos incluem: referência à espécie, referência ao nome vernacular, fonte da informação, nível de confiança da associação (alta/média/baixa)
 - **Dados de Estudo**: Representa informações metodológicas do estudo. Atributos incluem: identificador único, período do estudo (data de início e fim), métodos de coleta de dados, tipo de amostragem, tamanho da amostra, relacionamento 1:1 com o artigo correspondente
+- **Perfil do Pesquisador**: Configuração opcional armazenada no navegador para personalizar extração de metadados. Atributos incluem: área de especialização/foco (ex: "etnobotânica amazônica", "plantas medicinais"), região geográfica de interesse (ex: "Amazônia brasileira", "Alto Rio Negro"), idiomas e línguas indígenas relevantes (lista, ex: ["Yanomami", "Baniwa", "Tukano"]), tipos de comunidades estudadas (lista, ex: ["indígena", "ribeirinha"]), estado do perfil (ativo/desabilitado)
 
 ## Critérios de Sucesso *(obrigatório)*
 

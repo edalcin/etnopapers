@@ -126,6 +126,7 @@ Headers: { "Content-Type": "application/json", "x-api-key": "<user_key>", "anthr
 - Sistema usará prompts estruturados em português solicitando extração em formato JSON
 - Template de prompt será configurável via variável de ambiente
 - Resposta esperada em JSON com campos padronizados
+- **Personalização via Perfil do Pesquisador**: Se configurado, o prompt incluirá contexto adicional sobre a área de especialização, região de foco e idiomas/comunidades relevantes (detalhes na seção "Perfil do Pesquisador e Personalização de Prompt")
 
 ### API de Taxonomia Botânica
 
@@ -898,6 +899,328 @@ export const LocalizacaoSelector: React.FC<LocalizacaoSelectorProps> = ({
       <button onClick={handleSubmit}>Adicionar Localização</button>
     </div>
   );
+};
+```
+
+## Perfil do Pesquisador e Personalização de Prompt
+
+### Motivação
+
+Permitir que o pesquisador configure um perfil com seu contexto de trabalho melhora significativamente a qualidade da extração de metadados:
+
+**Benefícios**:
+- ✅ IA prioriza informações relevantes para a área de especialização
+- ✅ Melhor reconhecimento de nomes vernaculares na região/idioma de foco
+- ✅ Sugestões mais precisas de localizações conhecidas
+- ✅ Identificação de padrões baseados no histórico do pesquisador
+
+### Estrutura do Perfil
+
+**Armazenamento**: localStorage do navegador (nunca enviado ao servidor)
+
+```typescript
+interface ResearcherProfile {
+  enabled: boolean;  // Perfil ativo ou desabilitado
+  specialization: string;  // ex: "Etnobotânica amazônica", "Plantas medicinais"
+  geographicFocus: string;  // ex: "Amazônia brasileira", "Alto Rio Negro"
+  languages: string[];  // ex: ["português", "Yanomami", "Baniwa", "Tukano"]
+  communityTypes: string[];  // ex: ["indígena", "ribeirinha"]
+  lastUpdated: string;  // ISO timestamp
+}
+```
+
+**Exemplo de Perfil**:
+```json
+{
+  "enabled": true,
+  "specialization": "Etnobotânica de comunidades indígenas amazônicas",
+  "geographicFocus": "Alto Rio Negro, Amazonas, Brasil",
+  "languages": ["português", "Yanomami", "Baniwa", "Tukano"],
+  "communityTypes": ["indígena"],
+  "lastUpdated": "2025-11-20T10:30:00Z"
+}
+```
+
+### Prompt Enriquecido com Contexto
+
+**Prompt Base (sem perfil)**:
+```
+Você é um assistente especializado em extrair metadados de artigos científicos sobre etnobotânica.
+Analise o artigo fornecido e extraia as seguintes informações em formato JSON:
+- título, autores, ano de publicação, DOI, resumo
+- região geográfica do estudo
+- comunidades tradicionais envolvidas
+- espécies de plantas (nomes científicos e vernaculares)
+- métodos de coleta de dados
+[...]
+```
+
+**Prompt Enriquecido (com perfil do pesquisador)**:
+```
+Você é um assistente especializado em extrair metadados de artigos científicos sobre etnobotânica.
+
+CONTEXTO DO PESQUISADOR:
+- Área de especialização: Etnobotânica de comunidades indígenas amazônicas
+- Região geográfica de foco: Alto Rio Negro, Amazonas, Brasil
+- Idiomas/línguas relevantes: português, Yanomami, Baniwa, Tukano
+- Tipos de comunidades estudadas: indígena
+
+Com base neste contexto, analise o artigo fornecido e extraia as seguintes informações em formato JSON:
+- título, autores, ano de publicação, DOI, resumo
+- região geográfica do estudo (dar prioridade a municípios/territórios no Alto Rio Negro)
+- comunidades tradicionais envolvidas (especialmente comunidades indígenas)
+- espécies de plantas:
+  * nomes científicos (binomiais)
+  * nomes vernaculares (priorizar nomes em Yanomami, Baniwa, Tukano e português)
+  * para cada nome vernacular, indicar o idioma se possível
+- métodos de coleta de dados
+[...]
+
+IMPORTANTE: Ao identificar nomes vernaculares de plantas, preste atenção especial aos idiomas
+Yanomami, Baniwa e Tukano, pois são línguas relevantes para a área de pesquisa deste usuário.
+```
+
+### Implementação Frontend
+
+**Hook React para Perfil**:
+```typescript
+// hooks/useResearcherProfile.ts
+import { useState, useEffect } from 'react';
+
+const PROFILE_KEY = 'etnopapers_researcher_profile';
+
+export const useResearcherProfile = () => {
+  const [profile, setProfile] = useState<ResearcherProfile | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(PROFILE_KEY);
+    if (stored) {
+      setProfile(JSON.parse(stored));
+    }
+  }, []);
+
+  const updateProfile = (newProfile: ResearcherProfile) => {
+    newProfile.lastUpdated = new Date().toISOString();
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
+    setProfile(newProfile);
+  };
+
+  const disableProfile = () => {
+    if (profile) {
+      const disabled = { ...profile, enabled: false };
+      updateProfile(disabled);
+    }
+  };
+
+  const enableProfile = () => {
+    if (profile) {
+      const enabled = { ...profile, enabled: true };
+      updateProfile(enabled);
+    }
+  };
+
+  const clearProfile = () => {
+    localStorage.removeItem(PROFILE_KEY);
+    setProfile(null);
+  };
+
+  return { profile, updateProfile, disableProfile, enableProfile, clearProfile };
+};
+```
+
+**Componente de Configuração**:
+```typescript
+import React, { useState } from 'react';
+import { useResearcherProfile } from '../hooks/useResearcherProfile';
+
+export const ProfileSettings: React.FC = () => {
+  const { profile, updateProfile, disableProfile, enableProfile } = useResearcherProfile();
+
+  const [specialization, setSpecialization] = useState(profile?.specialization || '');
+  const [geographicFocus, setGeographicFocus] = useState(profile?.geographicFocus || '');
+  const [languages, setLanguages] = useState(profile?.languages.join(', ') || '');
+  const [communityTypes, setCommunityTypes] = useState<string[]>(profile?.communityTypes || []);
+
+  const handleSave = () => {
+    updateProfile({
+      enabled: true,
+      specialization,
+      geographicFocus,
+      languages: languages.split(',').map(l => l.trim()).filter(Boolean),
+      communityTypes,
+      lastUpdated: new Date().toISOString()
+    });
+  };
+
+  return (
+    <div className="profile-settings">
+      <h2>Perfil do Pesquisador</h2>
+      <p>Configure seu perfil para melhorar a precisão da extração de metadados</p>
+
+      <label>
+        Área de Especialização:
+        <input
+          type="text"
+          placeholder="ex: Etnobotânica amazônica, Plantas medicinais"
+          value={specialization}
+          onChange={e => setSpecialization(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Região Geográfica de Foco:
+        <input
+          type="text"
+          placeholder="ex: Amazônia brasileira, Alto Rio Negro"
+          value={geographicFocus}
+          onChange={e => setGeographicFocus(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Idiomas/Línguas Indígenas Relevantes (separados por vírgula):
+        <input
+          type="text"
+          placeholder="ex: português, Yanomami, Baniwa, Tukano"
+          value={languages}
+          onChange={e => setLanguages(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Tipos de Comunidades Estudadas:
+        <div>
+          {['indígena', 'quilombola', 'ribeirinha', 'caiçara', 'seringueira', 'pantaneira'].map(type => (
+            <label key={type}>
+              <input
+                type="checkbox"
+                checked={communityTypes.includes(type)}
+                onChange={e => {
+                  if (e.target.checked) {
+                    setCommunityTypes([...communityTypes, type]);
+                  } else {
+                    setCommunityTypes(communityTypes.filter(t => t !== type));
+                  }
+                }}
+              />
+              {type}
+            </label>
+          ))}
+        </div>
+      </label>
+
+      <button onClick={handleSave}>Salvar Perfil</button>
+
+      {profile && (
+        <>
+          <button onClick={profile.enabled ? disableProfile : enableProfile}>
+            {profile.enabled ? 'Desabilitar Perfil' : 'Habilitar Perfil'}
+          </button>
+          <p className="profile-status">
+            Status: {profile.enabled ? '✅ Ativo' : '⚠️ Desabilitado'}
+            {profile.lastUpdated && ` (última atualização: ${new Date(profile.lastUpdated).toLocaleString()})`}
+          </p>
+        </>
+      )}
+    </div>
+  );
+};
+```
+
+### Uso no Prompt de Extração
+
+**Função para Construir Prompt**:
+```typescript
+// utils/buildExtractionPrompt.ts
+export const buildExtractionPrompt = (
+  pdfText: string,
+  profile?: ResearcherProfile | null
+): string => {
+  let prompt = `Você é um assistente especializado em extrair metadados de artigos científicos sobre etnobotânica.\n\n`;
+
+  // Adicionar contexto do pesquisador se perfil estiver habilitado
+  if (profile && profile.enabled) {
+    prompt += `CONTEXTO DO PESQUISADOR:\n`;
+    prompt += `- Área de especialização: ${profile.specialization}\n`;
+    prompt += `- Região geográfica de foco: ${profile.geographicFocus}\n`;
+    prompt += `- Idiomas/línguas relevantes: ${profile.languages.join(', ')}\n`;
+    prompt += `- Tipos de comunidades estudadas: ${profile.communityTypes.join(', ')}\n\n`;
+  }
+
+  prompt += `Analise o artigo fornecido e extraia as seguintes informações em formato JSON:\n`;
+  prompt += `- título, autores, ano de publicação, DOI, resumo\n`;
+
+  if (profile && profile.enabled && profile.geographicFocus) {
+    prompt += `- região geográfica do estudo (dar prioridade a localizações em ${profile.geographicFocus})\n`;
+  } else {
+    prompt += `- região geográfica do estudo\n`;
+  }
+
+  if (profile && profile.enabled && profile.communityTypes.length > 0) {
+    prompt += `- comunidades tradicionais envolvidas (especialmente comunidades ${profile.communityTypes.join(', ')})\n`;
+  } else {
+    prompt += `- comunidades tradicionais envolvidas\n`;
+  }
+
+  prompt += `- espécies de plantas:\n`;
+  prompt += `  * nomes científicos (binomiais)\n`;
+  prompt += `  * nomes vernaculares\n`;
+
+  if (profile && profile.enabled && profile.languages.length > 0) {
+    prompt += `  * para nomes vernaculares, priorizar nomes em: ${profile.languages.join(', ')}\n`;
+    prompt += `  * para cada nome vernacular, indicar o idioma se possível\n`;
+  }
+
+  prompt += `- métodos de coleta de dados\n`;
+  prompt += `- tipo de amostragem\n\n`;
+
+  if (profile && profile.enabled && profile.languages.length > 0) {
+    const indigenousLangs = profile.languages.filter(l => l !== 'português' && l !== 'espanhol' && l !== 'inglês');
+    if (indigenousLangs.length > 0) {
+      prompt += `IMPORTANTE: Ao identificar nomes vernaculares de plantas, preste atenção especial aos idiomas `;
+      prompt += `${indigenousLangs.join(', ')}, pois são línguas relevantes para a área de pesquisa deste usuário.\n\n`;
+    }
+  }
+
+  prompt += `ARTIGO:\n${pdfText}\n\n`;
+  prompt += `Retorne APENAS o JSON estruturado, sem texto adicional.`;
+
+  return prompt;
+};
+```
+
+**Uso na Chamada à API de IA**:
+```typescript
+// services/aiExtraction.ts
+import { buildExtractionPrompt } from '../utils/buildExtractionPrompt';
+import { useResearcherProfile } from '../hooks/useResearcherProfile';
+
+export const extractMetadataFromPDF = async (
+  pdfText: string,
+  apiKey: string,
+  provider: 'gemini' | 'chatgpt' | 'claude'
+) => {
+  const { profile } = useResearcherProfile();
+
+  // Construir prompt com contexto do perfil (se habilitado)
+  const prompt = buildExtractionPrompt(pdfText, profile);
+
+  // Fazer chamada à API selecionada
+  if (provider === 'gemini') {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+
+    // Processar resposta...
+  }
+  // ... outros provedores
 };
 ```
 
