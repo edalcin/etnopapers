@@ -36,7 +36,8 @@ Este documento detalha as decisões tecnológicas para implementar o sistema de 
   "react-hook-form": "^7.48.0",
   "react-dropzone": "^14.2.3",
   "pdf-lib": "^1.17.1",
-  "zustand": "^4.4.0"
+  "zustand": "^4.4.0",
+  "@tanstack/react-table": "^8.10.0"
 }
 ```
 
@@ -46,6 +47,7 @@ Este documento detalha as decisões tecnológicas para implementar o sistema de 
 - `react-dropzone`: Upload de arquivos PDF drag-and-drop
 - `pdf-lib`: Manipulação e validação de PDFs no navegador
 - `zustand`: Gestão de estado leve para API keys e metadados em edição
+- `@tanstack/react-table`: Tabela headless com ordenação, filtros e paginação integrados (anteriormente react-table v8)
 
 ### Backend
 
@@ -226,6 +228,8 @@ services:
 - Interface de edição manual
 - Validação de formulários
 - Auto-save de rascunhos
+- **Tabela de artigos com ordenação, filtros e paginação**
+- **Interface de download do banco de dados**
 
 **Backend**:
 - API REST para CRUD de metadados
@@ -234,6 +238,9 @@ services:
 - Cache de consultas taxonômicas
 - Servir frontend estático
 - Logging e monitoramento
+- **Endpoint para listagem paginada de artigos**
+- **Endpoint para download do arquivo SQLite completo**
+- **Verificação de integridade do banco antes de download**
 
 ### Fluxo de Processamento
 
@@ -323,15 +330,185 @@ interface AppState {
 - **Code Splitting**: Lazy load componentes de edição (não necessários na tela inicial)
 - **PDF Preview**: Não renderizar preview completo, apenas metadados
 - **Debounce**: Auto-save com debounce de 2 segundos ao editar
+- **Tabela Virtual**: Usar @tanstack/react-table com paginação client-side (50 itens por página)
+- **Filtro com Debounce**: Busca/filtro com debounce de 300ms para evitar re-renders excessivos
+- **Memoização**: Usar React.memo para linhas da tabela evitar re-renders desnecessários
 
 **Backend**:
 - **Connection Pooling**: SQLite em modo WAL (Write-Ahead Logging) para concorrência
 - **Cache de Taxonomia**: Dicionário em memória (10.000 espécies = ~5 MB RAM)
 - **Async I/O**: FastAPI com async/await para operações de BD e API externa
+- **Paginação no BD**: Queries com LIMIT/OFFSET para listas grandes
+- **Streaming de Download**: Usar FileResponse do FastAPI para downloads grandes (evita carregar arquivo completo em memória)
 
 **Docker**:
 - **Imagem Otimizada**: Multi-stage build reduz tamanho final para ~100 MB
 - **Volumes**: Apenas /data montado, melhor I/O performance
+
+### Implementação de Tabela de Artigos
+
+**Decisão: TanStack Table (React Table v8)**
+
+**Justificativa**:
+- **Headless**: Controle total sobre renderização e estilização
+- **TypeScript First**: Tipagem forte nativa
+- **Performance**: Virtualização e paginação client-side eficientes
+- **Funcionalidades Built-in**: Ordenação, filtros, paginação sem bibliotecas adicionais
+- **Bundle Size**: ~15KB gzipped (muito leve)
+
+**Alternativas Consideradas**:
+- **AG-Grid**: Muito pesado (~500KB), excesso de features
+- **Material-UI DataGrid**: Acoplado ao Material-UI, menos flexível
+- **Custom Table**: Reimplementar ordenação/filtros do zero (não vale o esforço)
+
+**Estrutura da Tabela**:
+```typescript
+interface ArticleRow {
+  id: number;
+  titulo: string;
+  ano_publicacao: number;
+  autores: string[];  // Mostrar apenas primeiro autor + "et al."
+  status: 'finalizado' | 'rascunho';
+  data_processamento: string;
+  total_especies: number;
+}
+
+const columns: ColumnDef<ArticleRow>[] = [
+  { accessorKey: 'titulo', header: 'Título', sortable: true },
+  { accessorKey: 'ano_publicacao', header: 'Ano', sortable: true },
+  { accessorKey: 'autores', header: 'Autores', sortable: false },  // Não ordenável (array)
+  { accessorKey: 'status', header: 'Status', sortable: true },
+  { accessorKey: 'data_processamento', header: 'Processado em', sortable: true },
+  { accessorKey: 'total_especies', header: 'Espécies', sortable: true }
+];
+```
+
+**Filtro Global**:
+```typescript
+const [globalFilter, setGlobalFilter] = useState('');
+
+// Debounced filter
+const debouncedFilter = useMemo(
+  () => debounce((value: string) => setGlobalFilter(value), 300),
+  []
+);
+
+// Busca em múltiplos campos
+const filterFn = (row, columnId, filterValue) => {
+  const searchableFields = [
+    row.getValue('titulo'),
+    row.getValue('ano_publicacao')?.toString(),
+    row.getValue('autores')?.join(' '),
+    row.getValue('status')
+  ];
+
+  return searchableFields.some(field =>
+    field?.toLowerCase().includes(filterValue.toLowerCase())
+  );
+};
+```
+
+**Paginação**:
+- **Client-side**: Todos os dados carregados de uma vez
+- **50 itens por página**: Balanceamento entre scroll e performance
+- **Navegação**: Primeira, Anterior, Próxima, Última página
+- **Indicador**: "Mostrando 1-50 de 237 artigos"
+
+### Download do Banco de Dados
+
+**Decisão: Streaming com FastAPI FileResponse**
+
+**Justificativa**:
+- **Eficiência de Memória**: Não carrega arquivo completo em RAM
+- **Suporte Nativo**: FastAPI FileResponse otimizada para arquivos grandes
+- **Compatibilidade**: Funciona com qualquer tamanho de banco
+- **Simplicidade**: Menos código que implementação custom
+
+**Implementação Backend**:
+```python
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+import sqlite3
+import shutil
+from datetime import datetime
+
+@app.get("/api/database/download")
+async def download_database():
+    """
+    Endpoint para download do banco SQLite completo.
+    Verifica integridade antes de enviar.
+    """
+    db_path = os.getenv('DATABASE_PATH', '/data/etnopapers.db')
+
+    # Verificar integridade
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA integrity_check;")
+    integrity = cursor.fetchone()[0]
+    conn.close()
+
+    if integrity != "ok":
+        raise HTTPException(status_code=500, detail="Database integrity check failed")
+
+    # Gerar nome com data
+    date_str = datetime.now().strftime('%Y%m%d')
+    filename = f"etnopapers_{date_str}.db"
+
+    return FileResponse(
+        path=db_path,
+        media_type='application/x-sqlite3',
+        filename=filename,
+        headers={
+            'Content-Disposition': f'attachment; filename="{filename}"'
+        }
+    )
+```
+
+**Implementação Frontend**:
+```typescript
+async function downloadDatabase() {
+  try {
+    const response = await fetch('/api/database/download');
+
+    if (!response.ok) {
+      throw new Error('Download failed');
+    }
+
+    // Obter nome do arquivo do header
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'etnopapers.db';
+
+    // Criar blob e trigger download
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    // Feedback
+    toast.success(`Banco de dados baixado: ${filename}`);
+  } catch (error) {
+    toast.error('Erro ao baixar banco de dados');
+  }
+}
+```
+
+**Considerações de Segurança**:
+- **Verificação de Integridade**: PRAGMA integrity_check antes de download
+- **Rate Limiting**: Limitar downloads para evitar abuso (ex: 1 download por minuto por IP)
+- **Tamanho Máximo**: Alertar se banco > 100MB (pode demorar)
+- **Permissões**: Endpoint acessível apenas se usuário tem permissão (futuro: autenticação)
+
+**Casos de Uso do Download**:
+1. **Backup Manual**: Usuário baixa periodicamente para backup local
+2. **Análise Externa**: Importar em R, Python, Excel para análises estatísticas
+3. **Migração**: Mover dados para outro servidor
+4. **Auditoria**: Revisão completa dos dados coletados
+5. **Compartilhamento**: Enviar dados completos para colaboradores
 
 ## Pontos de Decisão Técnica Pendentes
 

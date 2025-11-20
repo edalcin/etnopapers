@@ -44,6 +44,8 @@ tags:
     description: Gerenciamento de rascunhos
   - name: Taxonomy
     description: Validação taxonômica
+  - name: Database
+    description: Download e informações do banco de dados
 
 paths:
   /articles:
@@ -463,6 +465,81 @@ paths:
                 $ref: '#/components/schemas/CommunityDetailed'
         '404':
           description: Comunidade não encontrada
+
+  /database/download:
+    get:
+      tags:
+        - Database
+      summary: Download do banco de dados completo
+      description: |
+        Baixa o arquivo SQLite completo contendo todos os dados do sistema.
+        O arquivo é verificado quanto à integridade antes do download.
+        Nome do arquivo inclui data atual: etnopapers_YYYYMMDD.db
+      responses:
+        '200':
+          description: Arquivo SQLite para download
+          content:
+            application/x-sqlite3:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: Nome do arquivo para download
+              schema:
+                type: string
+                example: 'attachment; filename="etnopapers_20251120.db"'
+            Content-Length:
+              description: Tamanho do arquivo em bytes
+              schema:
+                type: integer
+        '500':
+          description: Erro de integridade do banco de dados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /database/info:
+    get:
+      tags:
+        - Database
+      summary: Informações sobre o banco de dados
+      description: |
+        Retorna informações úteis sobre o banco de dados:
+        tamanho, número de artigos, última modificação
+      responses:
+        '200':
+          description: Informações do banco de dados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  size_bytes:
+                    type: integer
+                    description: Tamanho do arquivo do banco em bytes
+                    example: 2048576
+                  size_mb:
+                    type: number
+                    description: Tamanho do arquivo em megabytes
+                    example: 1.95
+                  total_articles:
+                    type: integer
+                    description: Número total de artigos
+                    example: 237
+                  total_species:
+                    type: integer
+                    description: Número total de espécies únicas
+                    example: 156
+                  last_modified:
+                    type: string
+                    format: date-time
+                    description: Data da última modificação
+                  integrity_status:
+                    type: string
+                    enum: [ok, corrupted]
+                    description: Status de integridade do banco
 
   /health:
     get:

@@ -260,6 +260,25 @@ docker logs -f etnopapers
 
 ## Usando o Sistema: Processando Seu Primeiro Artigo
 
+### Visão Geral da Página Principal
+
+Ao acessar o sistema, você verá:
+
+**Seção Superior: Upload de PDF**
+- Área de arraste e solte (drag & drop)
+- Botão "Selecionar PDF"
+- Botão "Download Base de Dados" (no canto superior direito)
+
+**Seção Inferior: Tabela de Artigos Processados**
+- Lista de todos os artigos já inseridos no banco
+- Colunas: Título, Ano, Autores, Status, Data de Processamento, Nº Espécies
+- Campo de busca/filtro no topo da tabela
+- Colunas ordenáveis (clique no cabeçalho)
+- Paginação automática (50 artigos por página)
+
+Se ainda não houver artigos processados, você verá:
+> **"Nenhum artigo processado ainda. Faça upload do primeiro PDF!"**
+
 ### Passo 1: Upload de PDF
 
 1. Na tela principal, clique em **"Selecionar PDF"** ou arraste um arquivo
@@ -363,35 +382,207 @@ Ao adicionar/editar espécie:
 
 ---
 
-## Consultando Histórico de Artigos
+## Navegando pela Tabela de Artigos
 
-### Visualizar Todos os Artigos
+### Visualizar Artigos Processados
 
-1. Menu: **"Histórico"**
-2. Lista exibe:
+A tabela na página principal exibe automaticamente todos os artigos processados.
+
+**Colunas da Tabela**:
+- **Título**: Título completo do artigo
+- **Ano**: Ano de publicação
+- **Autores**: Primeiro autor + "et al." (se múltiplos autores)
+- **Status**: Finalizado ou Rascunho
+- **Processado em**: Data e hora do processamento
+- **Espécies**: Número de espécies de plantas mencionadas
+
+### Ordenar Artigos
+
+Clique no cabeçalho de qualquer coluna para ordenar:
+
+1. **Primeiro clique**: Ordem crescente ↑
+2. **Segundo clique**: Ordem decrescente ↓
+3. **Terceiro clique**: Remove ordenação
+
+**Colunas ordenáveis**:
+- Título (alfabética)
+- Ano (numérica)
+- Status (alfabética)
+- Data de processamento (cronológica)
+- Número de espécies (numérica)
+
+### Buscar e Filtrar Artigos
+
+**Campo de Busca** (acima da tabela):
+
+1. Digite qualquer termo no campo de busca
+2. Sistema filtra em tempo real (300ms de delay)
+3. Busca em todos os campos visíveis:
    - Título
    - Ano
    - Autores
-   - Número de espécies
-   - Status (finalizado/rascunho)
+   - Status
 
-### Filtros Disponíveis
+**Exemplos**:
+- Digite `"2023"` → mostra artigos de 2023
+- Digite `"Silva"` → mostra artigos com autor Silva
+- Digite `"Amazônia"` → mostra artigos com "Amazônia" no título
+- Digite `"rascunho"` → mostra apenas rascunhos
 
-- **Ano de publicação**: Slider 1900-2100
-- **Status**: Finalizado, Rascunho, Todos
-- **Busca textual**: Título, autores, DOI
+**Limpar Filtro**:
+- Clique no ❌ no campo de busca
+- Ou apague o texto manualmente
 
-### Detalhes de Artigo
+**Sem Resultados**:
+Se nenhum artigo corresponder ao filtro, você verá:
+> **"Nenhum artigo encontrado com esse filtro"**
 
-1. Clique em um artigo da lista
-2. Visualiza metadados completos:
-   - Informações bibliográficas
+### Paginação
+
+A tabela exibe **50 artigos por página**.
+
+**Navegação**:
+- **Primeira** página: ⏮️
+- **Anterior**: ◀️
+- **Próxima**: ▶️
+- **Última** página: ⏭️
+
+**Indicador** (abaixo da tabela):
+> "Mostrando 1-50 de 237 artigos"
+
+**Ir para página específica**:
+- Digite o número da página
+- Pressione Enter
+
+### Visualizar Detalhes de um Artigo
+
+1. Clique em qualquer linha da tabela
+2. Sistema abre modal/página com todos os metadados:
+   - Informações bibliográficas completas
    - Regiões e comunidades
-   - Espécies mencionadas com usos
-   - Dados metodológicos
-3. Botões de ação:
+   - Espécies mencionadas com usos e partes utilizadas
+   - Dados metodológicos do estudo
+3. **Botões de ação**:
    - **"Editar"**: Modificar metadados
-   - **"Excluir"**: Remover artigo (confirmação)
+   - **"Excluir"**: Remover artigo (solicita confirmação)
+   - **"Fechar"**: Voltar para tabela
+
+---
+
+## Download do Banco de Dados
+
+### Como Baixar
+
+**Botão "Download Base de Dados"** (canto superior direito):
+
+1. Clique no botão
+2. Sistema:
+   - Verifica integridade do banco (PRAGMA integrity_check)
+   - Gera arquivo com nome: `etnopapers_YYYYMMDD.db`
+   - Inicia download automaticamente
+3. Aguarde conclusão (varia conforme tamanho)
+
+**Exemplo de nome**:
+- `etnopapers_20251120.db` (processado em 20 de novembro de 2025)
+
+### Tamanho do Arquivo
+
+O tamanho varia conforme número de artigos processados:
+
+| Artigos | Tamanho Estimado |
+|---------|------------------|
+| 10      | ~200 KB          |
+| 100     | ~2 MB            |
+| 1.000   | ~20 MB           |
+| 10.000  | ~200 MB          |
+
+**Download Demorado?**
+- Bancos > 50 MB podem levar alguns minutos
+- Aguarde pacientemente
+- Progresso exibido pelo navegador
+
+### O que fazer com o arquivo baixado?
+
+**1. Backup Local**
+```bash
+# Copiar para diretório de backup
+cp etnopapers_20251120.db ~/Backups/Etnopapers/
+```
+
+**2. Abrir em ferramenta SQLite**
+
+**DB Browser for SQLite** (recomendado):
+- Download: https://sqlitebrowser.org/
+- Abra o arquivo .db baixado
+- Navegue pelas tabelas visualmente
+- Execute queries SQL
+
+**DBeaver**:
+- Ferramenta universal de banco de dados
+- Suporta SQLite e dezenas de outros bancos
+- Download: https://dbeaver.io/
+
+**3. Importar em Python/R para Análise**
+
+**Python**:
+```python
+import sqlite3
+import pandas as pd
+
+# Conectar ao banco
+conn = sqlite3.connect('etnopapers_20251120.db')
+
+# Carregar artigos em DataFrame
+df_artigos = pd.read_sql_query("SELECT * FROM ArtigosCientificos", conn)
+
+# Carregar espécies
+df_especies = pd.read_sql_query("SELECT * FROM EspeciesPlantas", conn)
+
+# Análise...
+print(df_artigos.describe())
+
+conn.close()
+```
+
+**R**:
+```r
+library(DBI)
+library(RSQLite)
+
+# Conectar ao banco
+conn <- dbConnect(SQLite(), "etnopapers_20251120.db")
+
+# Carregar tabelas
+artigos <- dbReadTable(conn, "ArtigosCientificos")
+especies <- dbReadTable(conn, "EspeciesPlantas")
+
+# Análise...
+summary(artigos)
+
+dbDisconnect(conn)
+```
+
+**4. Compartilhar com Colaboradores**
+
+Envie o arquivo `.db` por:
+- Email (se < 25 MB)
+- Google Drive / Dropbox
+- Pendrive / HD externo
+
+Colaboradores podem importar em suas instâncias do Etnopapers.
+
+### Informações do Banco de Dados
+
+Para verificar informações **antes** de baixar:
+
+**Menu**: **"Configurações"** → **"Info do Banco"**
+
+Exibe:
+- **Tamanho**: 2.5 MB (2,621,440 bytes)
+- **Total de artigos**: 237
+- **Total de espécies**: 156
+- **Última modificação**: 2025-11-20 15:30:45
+- **Status de integridade**: ✅ OK
 
 ---
 

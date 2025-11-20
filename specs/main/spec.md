@@ -20,11 +20,11 @@
 
 ### História de Usuário 1 - Upload e Extração Básica de PDF (Prioridade: P1)
 
-Um pesquisador acessa o sistema através de uma página web, fornece sua chave de API para um serviço de IA (Gemini, ChatGPT ou Claude) que fica armazenada apenas no navegador, faz o upload de um artigo científico em PDF sobre etnobotânica, e o sistema extrai automaticamente os metadados disponíveis no artigo usando a API de IA selecionada. Após o processamento, o sistema exibe um resumo estruturado dos metadados extraídos na mesma página, sem armazenar o arquivo PDF original nem a chave de API no servidor.
+Um pesquisador acessa o sistema através de uma página web, fornece sua chave de API para um serviço de IA (Gemini, ChatGPT ou Claude) que fica armazenada apenas no navegador, faz o upload de um artigo científico em PDF sobre etnobotânica, e o sistema extrai automaticamente os metadados disponíveis no artigo usando a API de IA selecionada. A página principal exibe uma tabela com os artigos já processados, permitindo busca e ordenação. Após o processamento do novo PDF, o sistema exibe um resumo estruturado dos metadados extraídos na mesma página, sem armazenar o arquivo PDF original nem a chave de API no servidor. O pesquisador também pode fazer download completo do banco de dados SQLite para backup ou análise externa.
 
-**Por que esta prioridade**: Esta é a funcionalidade central do sistema. Sem ela, nenhum outro componente tem valor. Representa o MVP completo e entregável.
+**Por que esta prioridade**: Esta é a funcionalidade central do sistema. Sem ela, nenhum outro componente tem valor. Representa o MVP completo e entregável. A visualização dos artigos já processados e a funcionalidade de download são essenciais para o pesquisador ter visibilidade completa dos dados coletados.
 
-**Teste Independente**: Pode ser totalmente testado fazendo upload de um único PDF e verificando se os metadados são extraídos e exibidos corretamente. Entrega valor imediato ao permitir que usuários extraiam dados de artigos sem processamento manual.
+**Teste Independente**: Pode ser totalmente testado fazendo upload de um único PDF e verificando se os metadados são extraídos e exibidos corretamente. Entrega valor imediato ao permitir que usuários extraiam dados de artigos sem processamento manual. A tabela e funcionalidade de download podem ser testadas após processar múltiplos artigos.
 
 **Cenários de Aceitação**:
 
@@ -38,6 +38,11 @@ Um pesquisador acessa o sistema através de uma página web, fornece sua chave d
 8. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Editar", **Então** o sistema abre a interface de edição manual permitindo correções e complementações
 9. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Descartar", **Então** o sistema exclui os dados extraídos e solicita confirmação antes de descartar
 10. **Dado** que o usuário fechou a janela/navegador sem clicar em nenhum botão, **Quando** o usuário retorna ao sistema, **Então** os dados extraídos estão salvos como rascunho e podem ser recuperados
+11. **Dado** que o usuário está na página principal, **Quando** a página carrega, **Então** o sistema exibe uma tabela com todos os artigos já processados, mostrando colunas: título, ano, autores, status, data de processamento e número de espécies
+12. **Dado** que a tabela de artigos está visível, **Quando** o usuário clica no cabeçalho de uma coluna, **Então** a tabela é ordenada por aquela coluna (crescente/decrescente alternadamente)
+13. **Dado** que a tabela de artigos está visível, **Quando** o usuário digita texto no campo de busca/filtro, **Então** a tabela filtra em tempo real mostrando apenas artigos que contenham o texto buscado em qualquer campo visível
+14. **Dado** que o usuário está na página principal, **Quando** o usuário clica no botão "Download Base de Dados", **Então** o sistema inicia o download do arquivo SQLite completo (.db) contendo todos os artigos e metadados
+15. **Dado** que o usuário clicou em "Download Base de Dados", **Quando** o download é concluído, **Então** o arquivo tem nome descritivo incluindo data (ex: etnopapers_20251120.db) e pode ser aberto em qualquer ferramenta SQLite
 
 ---
 
@@ -115,6 +120,13 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - Como o sistema detecta duplicatas se o artigo não tem DOI? Sistema usa combinação de título + ano de publicação + primeiro autor como chave de comparação alternativa
 - O que acontece se um artigo for ligeiramente modificado (nova versão do mesmo artigo)? Sistema detecta como duplicata se título e autores forem idênticos; usuário pode sobrescrever para atualizar metadados
 - Como o sistema trata duplicatas em rascunhos? Rascunhos também são verificados para evitar duplicação; se duplicata de rascunho for detectada, sistema sugere finalizar o rascunho existente ao invés de criar novo
+- O que acontece se não houver artigos processados ainda? Tabela exibe mensagem amigável "Nenhum artigo processado ainda. Faça upload do primeiro PDF!" e botão de download fica desabilitado
+- Como a tabela se comporta com muitos artigos (ex: 1000+ artigos)? Sistema implementa paginação automática (50 artigos por página) para manter performance
+- O que acontece se o usuário filtrar a tabela e não houver resultados? Sistema exibe mensagem "Nenhum artigo encontrado com esse filtro" e permite limpar o filtro facilmente
+- Como funciona o download se o banco de dados for muito grande (ex: 100MB+)? Sistema gera arquivo e inicia download normalmente; navegador gerencia o progresso do download
+- O que acontece se o download do banco de dados falhar no meio? Usuário pode tentar novamente clicando no botão de download; arquivo é gerado a cada requisição
+- Como o sistema garante que o arquivo baixado não está corrompido? Backend usa checksum SQLite PRAGMA integrity_check antes de disponibilizar download
+- Usuário pode baixar o banco de dados enquanto processa um novo artigo? Sim, download é independente do processamento; ambos podem ocorrer simultaneamente
 
 ## Requisitos *(obrigatório)*
 
@@ -162,6 +174,16 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-040**: Ao escolher "Descartar" em duplicata detectada, o sistema DEVE descartar os metadados recém-extraídos e manter o registro original inalterado
 - **RF-041**: Ao escolher "Sobrescrever" em duplicata detectada, o sistema DEVE substituir completamente o registro existente pelos novos metadados extraídos e atualizar o timestamp de última modificação
 - **RF-042**: O sistema DEVE verificar duplicatas tanto em artigos finalizados quanto em rascunhos pendentes
+- **RF-043**: O sistema DEVE exibir na página principal uma tabela com todos os artigos já processados e armazenados no banco de dados
+- **RF-044**: A tabela de artigos DEVE exibir as seguintes colunas: título, ano de publicação, lista de autores, status (finalizado/rascunho), data de processamento e número de espécies mencionadas
+- **RF-045**: Cada coluna da tabela DEVE ser ordenável (clicável), alternando entre ordem crescente e decrescente
+- **RF-046**: A tabela DEVE incluir campo de busca/filtro que permite filtrar artigos em tempo real por qualquer conteúdo visível nas colunas
+- **RF-047**: O filtro de busca DEVE ser case-insensitive (não distinguir maiúsculas/minúsculas) e buscar por substring (conteúdo parcial)
+- **RF-048**: O sistema DEVE fornecer botão "Download Base de Dados" visível na página principal
+- **RF-049**: Ao clicar em "Download Base de Dados", o sistema DEVE gerar e baixar o arquivo SQLite completo (.db) contendo todos os dados
+- **RF-050**: O arquivo de download DEVE ter nome descritivo incluindo data no formato: etnopapers_YYYYMMDD.db (ex: etnopapers_20251120.db)
+- **RF-051**: O download do banco de dados DEVE incluir todas as tabelas e dados: artigos, espécies, regiões, comunidades, dados de estudo e relacionamentos
+- **RF-052**: A tabela de artigos DEVE exibir mensagem apropriada quando não houver artigos processados (ex: "Nenhum artigo processado ainda. Faça upload do primeiro PDF!")
 
 ### Entidades Principais
 
@@ -187,6 +209,12 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **CS-010**: Usuários conseguem editar e salvar correções em metadados extraídos em menos de 30 segundos por campo
 - **CS-011**: Usuários conseguem configurar sua chave de API em menos de 1 minuto na primeira utilização do sistema
 - **CS-012**: O sistema detecta 100% de artigos duplicados quando DOI está disponível e pelo menos 95% quando usa combinação título+ano+autor, evitando duplicação indevida na base de dados
+- **CS-013**: A tabela de artigos carrega e exibe até 1000 artigos com tempo de resposta inferior a 2 segundos
+- **CS-014**: O filtro/busca da tabela responde em tempo real (menos de 500ms) ao digitar, mesmo com 1000+ artigos
+- **CS-015**: Usuários conseguem ordenar a tabela por qualquer coluna com 1 clique, alternando entre crescente/decrescente
+- **CS-016**: O download completo do banco de dados SQLite é iniciado em menos de 3 segundos após clicar no botão
+- **CS-017**: O arquivo SQLite baixado pode ser aberto em qualquer ferramenta SQLite sem erros de integridade (100% de compatibilidade)
+- **CS-018**: Usuários conseguem localizar um artigo específico usando o filtro em menos de 10 segundos, independentemente do tamanho da base
 
 ## Dependências *(opcional)*
 
