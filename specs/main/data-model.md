@@ -18,37 +18,39 @@ Este documento define o schema completo do banco de dados SQLite para armazename
 └──────────┬──────────┘
            │
            │ 1:N
-           ├──────────────────────┐
-           │                      │
-           │                      │
-     ┌─────▼──────┐        ┌──────▼──────────┐
-     │DadosEstudo │        │ArtigoRegiao     │
-     │   (1:1)    │        │ (Associação)    │
-     └────────────┘        └─────┬───────────┘
-                                 │ N:1
-                           ┌─────▼──────┐
-                           │  Regioes   │
-                           └─────┬──────┘
-                                 │ 1:N
-                      ┌──────────▼────────────┐
-                      │RegiaoComunidade       │
-                      │   (Associação)        │
-                      └──────────┬────────────┘
-                                 │ N:1
-                           ┌─────▼──────────┐
-                           │  Comunidades   │
-                           └────────────────┘
+           ├────────────────────────────────┐
+           │                                │
+           │                                │
+     ┌─────▼──────┐              ┌──────▼──────────┐
+     │DadosEstudo │              │ArtigoLocalizacao│
+     │   (1:1)    │              │  (Associação)   │
+     └────────────┘              └─────┬───────────┘
+                                       │ N:1
+                              ┌────────┴────────┐
+                              │                 │
+                     ┌────────▼──────┐   ┌──────▼─────────┐
+                     │   Municipios  │   │  Territorios   │
+                     │ (Hierárquico) │   │  (Comunitário) │
+                     └───────┬───────┘   └────────┬───────┘
+                             │ N:1                │ N:1
+                     ┌───────▼────────┐    ┌──────▼────────┐
+                     │    Estados     │    │  Comunidades  │
+                     └───────┬────────┘    └───────────────┘
+                             │ N:1
+                     ┌───────▼────────┐
+                     │     Paises     │
+                     └────────────────┘
 
-┌──────────────────┐
-│ArtigosCientificos│
-└────────┬─────────┘
-         │ N:M
-    ┌────▼────────────┐
-    │ArtigoEspecie    │
-    │  (Associação)   │
-    └────┬────────────┘
-         │ N:1
-    ┌────▼──────────┐
+┌──────────────────┐                      ┌──────────────────┐
+│ArtigosCientificos│                      │ NomesVernaculares│
+└────────┬─────────┘                      └────────┬─────────┘
+         │ N:M                                     │ N:M
+    ┌────▼────────────┐                 ┌──────────▼──────────┐
+    │ArtigoEspecie    │                 │EspecieNomeVernacular│
+    │  (Associação)   │                 │    (Associação)     │
+    └────┬────────────┘                 └──────────┬──────────┘
+         │ N:1                                     │ N:1
+    ┌────▼──────────┐◄────────────────────────────┘
     │EspeciesPlantas│
     └───────────────┘
 ```
@@ -156,20 +158,95 @@ O sistema implementa verificação de duplicatas após extração de metadados p
 
 ---
 
-### 2. Regioes
+### 2. Paises
 
-**Descrição**: Representa regiões geográficas onde estudos etnobotânicos foram conduzidos.
+**Descrição**: Representa países onde estudos etnobotânicos foram conduzidos. Nível mais alto da hierarquia geográfica.
 
 **Schema SQL**:
 ```sql
-CREATE TABLE Regioes (
+CREATE TABLE Paises (
     -- Identificação
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL UNIQUE,  -- Nome do país (ex: "Brasil", "Peru")
+    codigo_iso TEXT UNIQUE,  -- Código ISO 3166-1 alpha-2 (ex: "BR", "PE")
 
-    -- Localização
-    descricao TEXT NOT NULL,  -- Descrição textual (ex: "Floresta Amazônica, Rio Negro")
-    pais TEXT,
-    estado_provincia TEXT,
+    -- Auditoria
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Índices
+CREATE UNIQUE INDEX idx_paises_nome ON Paises(nome);
+CREATE INDEX idx_paises_codigo ON Paises(codigo_iso);
+```
+
+**Campos**:
+- `id`: Chave primária
+- `nome`: Nome do país (obrigatório, único)
+- `codigo_iso`: Código ISO de 2 letras (opcional, único)
+- `data_criacao`: Timestamp de criação
+
+**Regras de Negócio**:
+- Países são reutilizados entre artigos (normalização)
+- Nome deve ser único para evitar duplicatas
+- Código ISO facilita integração com APIs externas
+
+---
+
+### 3. Estados
+
+**Descrição**: Representa estados, províncias ou divisões administrativas de primeiro nível dentro de um país.
+
+**Schema SQL**:
+```sql
+CREATE TABLE Estados (
+    -- Identificação
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,  -- Nome do estado (ex: "Amazonas", "Acre")
+    sigla TEXT,  -- Sigla do estado (ex: "AM", "AC")
+
+    -- Hierarquia
+    pais_id INTEGER NOT NULL,
+
+    -- Auditoria
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (pais_id) REFERENCES Paises(id) ON DELETE RESTRICT,
+    UNIQUE(nome, pais_id)  -- Nome único dentro do país
+);
+
+-- Índices
+CREATE INDEX idx_estados_pais ON Estados(pais_id);
+CREATE INDEX idx_estados_nome ON Estados(nome);
+CREATE INDEX idx_estados_sigla ON Estados(sigla);
+```
+
+**Campos**:
+- `id`: Chave primária
+- `nome`: Nome do estado/província (obrigatório)
+- `sigla`: Sigla ou código do estado (opcional)
+- `pais_id`: Referência ao país (obrigatório)
+- `data_criacao`: Timestamp de criação
+
+**Regras de Negócio**:
+- Cada estado pertence a um único país
+- Combinação nome+país deve ser única
+- Estados são reutilizados entre artigos
+
+---
+
+### 4. Municipios
+
+**Descrição**: Representa municípios, cidades ou divisões administrativas de segundo nível dentro de um estado.
+
+**Schema SQL**:
+```sql
+CREATE TABLE Municipios (
+    -- Identificação
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,  -- Nome do município (ex: "Manaus", "São Gabriel da Cachoeira")
+
+    -- Hierarquia
+    estado_id INTEGER NOT NULL,
 
     -- Coordenadas (opcional)
     latitude REAL,
@@ -180,57 +257,159 @@ CREATE TABLE Regioes (
 
     -- Validações
     CHECK (latitude IS NULL OR (latitude >= -90 AND latitude <= 90)),
-    CHECK (longitude IS NULL OR (longitude >= -180 AND longitude <= 180))
+    CHECK (longitude IS NULL OR (longitude >= -180 AND longitude <= 180)),
+    FOREIGN KEY (estado_id) REFERENCES Estados(id) ON DELETE RESTRICT,
+    UNIQUE(nome, estado_id)  -- Nome único dentro do estado
 );
 
 -- Índices
-CREATE INDEX idx_regioes_pais ON Regioes(pais);
-CREATE INDEX idx_regioes_estado ON Regioes(estado_provincia);
-CREATE INDEX idx_regioes_coords ON Regioes(latitude, longitude);
+CREATE INDEX idx_municipios_estado ON Municipios(estado_id);
+CREATE INDEX idx_municipios_nome ON Municipios(nome);
+CREATE INDEX idx_municipios_coords ON Municipios(latitude, longitude);
 ```
 
 **Campos**:
 - `id`: Chave primária
-- `descricao`: Descrição textual da região (obrigatório)
-- `pais`: Nome do país
-- `estado_provincia`: Estado, província ou divisão administrativa
-- `latitude`, `longitude`: Coordenadas geográficas (opcional, extraído se disponível no artigo)
-- `data_criacao`: Timestamp de criação do registro
+- `nome`: Nome do município/cidade (obrigatório)
+- `estado_id`: Referência ao estado (obrigatório)
+- `latitude`, `longitude`: Coordenadas geográficas do município (opcional)
+- `data_criacao`: Timestamp de criação
 
 **Regras de Negócio**:
-- Regiões podem ser reutilizadas entre artigos (normalização)
-- Coordenadas são opcionais e podem ser adicionadas manualmente
-- Descrição deve ser única para evitar duplicatas sutis (implementado em nível de aplicação)
+- Cada município pertence a um único estado
+- Combinação nome+estado deve ser única
+- Coordenadas podem ser obtidas de APIs de geocodificação
+- Municípios são reutilizados entre artigos
 
 ---
 
-### 3. ArtigoRegiao
+### 5. Territorios
 
-**Descrição**: Tabela de associação N:M entre Artigos e Regiões (um artigo pode ter múltiplas regiões de estudo).
+**Descrição**: Representa territórios comunitários sem definição espacial precisa ou relação com hierarquia geográfica tradicional. Espaços utilizados por comunidades tradicionais que não correspondem a divisões administrativas formais.
 
 **Schema SQL**:
 ```sql
-CREATE TABLE ArtigoRegiao (
-    artigo_id INTEGER NOT NULL,
-    regiao_id INTEGER NOT NULL,
+CREATE TABLE Territorios (
+    -- Identificação
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,  -- Nome do território (ex: "Terra Indígena Yanomami", "Território Quilombola Ivaporunduva")
+    descricao TEXT,  -- Descrição detalhada do território e seus limites
 
-    PRIMARY KEY (artigo_id, regiao_id),
-    FOREIGN KEY (artigo_id) REFERENCES ArtigosCientificos(id) ON DELETE CASCADE,
-    FOREIGN KEY (regiao_id) REFERENCES Regioes(id) ON DELETE RESTRICT
+    -- Relação com Comunidade
+    comunidade_id INTEGER,  -- Opcional: comunidade associada ao território
+
+    -- Localização Aproximada (opcional)
+    descricao_localizacao TEXT,  -- Descrição textual (ex: "Região do Alto Rio Negro")
+    latitude REAL,  -- Coordenadas aproximadas do centro ou ponto de referência
+    longitude REAL,
+
+    -- Auditoria
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Validações
+    CHECK (latitude IS NULL OR (latitude >= -90 AND latitude <= 90)),
+    CHECK (longitude IS NULL OR (longitude >= -180 AND longitude <= 180)),
+    FOREIGN KEY (comunidade_id) REFERENCES Comunidades(id) ON DELETE SET NULL
 );
 
 -- Índices
-CREATE INDEX idx_artigo_regiao_artigo ON ArtigoRegiao(artigo_id);
-CREATE INDEX idx_artigo_regiao_regiao ON ArtigoRegiao(regiao_id);
+CREATE INDEX idx_territorios_nome ON Territorios(nome);
+CREATE INDEX idx_territorios_comunidade ON Territorios(comunidade_id);
+CREATE INDEX idx_territorios_coords ON Territorios(latitude, longitude);
 ```
 
+**Campos**:
+- `id`: Chave primária
+- `nome`: Nome do território (obrigatório)
+- `descricao`: Descrição detalhada incluindo limites, características
+- `comunidade_id`: Comunidade associada ao território (opcional)
+- `descricao_localizacao`: Descrição textual da localização
+- `latitude`, `longitude`: Coordenadas aproximadas (opcional)
+- `data_criacao`: Timestamp de criação
+
 **Regras de Negócio**:
-- `ON DELETE CASCADE`: Se artigo for excluído, associações são removidas
-- `ON DELETE RESTRICT`: Regiões não podem ser excluídas se estiverem associadas a artigos
+- Territórios NÃO possuem relação hierárquica com países/estados/municípios
+- Representam espaços comunitários tradicionais que podem sobrepor ou transcender limites administrativos
+- Coordenadas são aproximadas e opcionais (podem não ter definição espacial precisa)
+- Territórios podem existir sem comunidade associada (ex: território ancestral desocupado)
+- Um território pode ser referenciado por múltiplos artigos
+
+**Exemplos de Territórios**:
+- Terras Indígenas demarcadas ou em processo de demarcação
+- Territórios quilombolas
+- Áreas de uso tradicional de comunidades ribeirinhas
+- Reservas extrativistas comunitárias
+- Territórios sagrados ou de importância cultural
 
 ---
 
-### 4. Comunidades
+### 6. ArtigoLocalizacao
+
+**Descrição**: Tabela de associação que permite vincular artigos a localizações. Um artigo pode estar associado a municípios (hierarquia geográfica) OU a territórios comunitários, mas não necessariamente ambos.
+
+**Schema SQL**:
+```sql
+CREATE TABLE ArtigoLocalizacao (
+    -- Identificação
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    artigo_id INTEGER NOT NULL,
+
+    -- Localização (apenas um dos dois deve ser preenchido)
+    municipio_id INTEGER,  -- Localização hierárquica (País > Estado > Município)
+    territorio_id INTEGER,  -- Localização comunitária (sem hierarquia)
+
+    -- Auditoria
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Validações
+    CHECK ((municipio_id IS NOT NULL AND territorio_id IS NULL) OR
+           (municipio_id IS NULL AND territorio_id IS NOT NULL)),
+    FOREIGN KEY (artigo_id) REFERENCES ArtigosCientificos(id) ON DELETE CASCADE,
+    FOREIGN KEY (municipio_id) REFERENCES Municipios(id) ON DELETE RESTRICT,
+    FOREIGN KEY (territorio_id) REFERENCES Territorios(id) ON DELETE RESTRICT
+);
+
+-- Índices
+CREATE INDEX idx_artigo_loc_artigo ON ArtigoLocalizacao(artigo_id);
+CREATE INDEX idx_artigo_loc_municipio ON ArtigoLocalizacao(municipio_id);
+CREATE INDEX idx_artigo_loc_territorio ON ArtigoLocalizacao(territorio_id);
+```
+
+**Campos**:
+- `id`: Chave primária
+- `artigo_id`: Referência ao artigo (obrigatório)
+- `municipio_id`: Referência a município (exclusivo com território)
+- `territorio_id`: Referência a território (exclusivo com município)
+- `data_criacao`: Timestamp de criação
+
+**Regras de Negócio**:
+- Um registro deve ter OU `municipio_id` OU `territorio_id`, nunca ambos
+- Um artigo pode ter múltiplas localizações (mix de municípios e territórios)
+- `ON DELETE CASCADE`: Se artigo for excluído, associações são removidas
+- `ON DELETE RESTRICT`: Municípios/territórios não podem ser excluídos se associados a artigos
+
+**Exemplos de Uso**:
+1. Artigo sobre estudo em município específico:
+   ```sql
+   INSERT INTO ArtigoLocalizacao (artigo_id, municipio_id)
+   VALUES (123, 45);  -- São Gabriel da Cachoeira, AM
+   ```
+
+2. Artigo sobre estudo em território tradicional:
+   ```sql
+   INSERT INTO ArtigoLocalizacao (artigo_id, territorio_id)
+   VALUES (123, 67);  -- Terra Indígena Alto Rio Negro
+   ```
+
+3. Artigo com múltiplas localizações (mix):
+   ```sql
+   INSERT INTO ArtigoLocalizacao (artigo_id, municipio_id) VALUES (123, 45);
+   INSERT INTO ArtigoLocalizacao (artigo_id, territorio_id) VALUES (123, 67);
+   ```
+
+---
+
+### 7. Comunidades
 
 **Descrição**: Representa comunidades tradicionais estudadas nos artigos (indígenas, quilombolas, ribeirinhas, etc.).
 
@@ -239,8 +418,6 @@ CREATE INDEX idx_artigo_regiao_regiao ON ArtigoRegiao(regiao_id);
 CREATE TABLE Comunidades (
     -- Identificação
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    -- Identificação
     nome TEXT NOT NULL,  -- Nome ou descrição da comunidade
     tipo_comunidade TEXT,  -- 'indígena', 'quilombola', 'ribeirinha', 'caiçara', etc.
 
@@ -269,36 +446,11 @@ CREATE INDEX idx_comunidades_nome ON Comunidades(nome);
 - Comunidades são reutilizadas entre artigos
 - Tipo de comunidade é controlado por enum (pode ser expandido conforme necessário)
 - Nome deve ser único (implementado em nível de aplicação)
+- Comunidades são associadas a Territórios (não diretamente a municípios)
 
 ---
 
-### 5. RegiaoComunidade
-
-**Descrição**: Associação N:M entre Regiões e Comunidades (uma região pode ter múltiplas comunidades).
-
-**Schema SQL**:
-```sql
-CREATE TABLE RegiaoComunidade (
-    regiao_id INTEGER NOT NULL,
-    comunidade_id INTEGER NOT NULL,
-
-    PRIMARY KEY (regiao_id, comunidade_id),
-    FOREIGN KEY (regiao_id) REFERENCES Regioes(id) ON DELETE CASCADE,
-    FOREIGN KEY (comunidade_id) REFERENCES Comunidades(id) ON DELETE RESTRICT
-);
-
--- Índices
-CREATE INDEX idx_regiao_comunidade_regiao ON RegiaoComunidade(regiao_id);
-CREATE INDEX idx_regiao_comunidade_comunidade ON RegiaoComunidade(comunidade_id);
-```
-
-**Regras de Negócio**:
-- Permite modelar que uma comunidade está localizada em uma região específica
-- Comunidades podem estar em múltiplas regiões (ex: comunidades nômades)
-
----
-
-### 6. EspeciesPlantas
+### 8. EspeciesPlantas
 
 **Descrição**: Catálogo normalizado de espécies de plantas mencionadas nos artigos. Garante unicidade por nome científico.
 
@@ -318,9 +470,6 @@ CREATE TABLE EspeciesPlantas (
     sinonimo_de_id INTEGER,  -- Se for sinônimo, referencia espécie aceita
     status_validacao TEXT DEFAULT 'não validado',  -- 'validado' | 'não validado' | 'erro'
     fonte_validacao TEXT,  -- 'GBIF' | 'Tropicos' | 'manual'
-
-    -- Nomes Populares
-    nomes_vernaculares TEXT,  -- JSON array: ["nome1", "nome2", "nome3"]
 
     -- Usos Reportados
     usos_reportados TEXT,  -- JSON array: ["medicinal", "alimentício", "ritual"]
@@ -351,7 +500,6 @@ CREATE INDEX idx_especies_sinonimo ON EspeciesPlantas(sinonimo_de_id);
 - `sinonimo_de_id`: Se este nome é sinônimo, aponta para espécie aceita
 - `status_validacao`: Estado da validação taxonômica
 - `fonte_validacao`: API usada para validação (GBIF, Tropicos, ou manual)
-- `nomes_vernaculares`: JSON array com nomes populares (ex: `["ipê-roxo", "pau d'arco"]`)
 - `usos_reportados`: JSON array com usos mencionados nos artigos
 - `data_criacao`: Timestamp de criação
 - `data_ultima_validacao`: Timestamp da última validação taxonômica
@@ -361,10 +509,122 @@ CREATE INDEX idx_especies_sinonimo ON EspeciesPlantas(sinonimo_de_id);
 - Se API de taxonomia retornar que o nome extraído é sinônimo, criar registro apontando para espécie aceita
 - Campo `usos_reportados` é agregado de todos os artigos que mencionam a espécie
 - Validação taxonômica pode ser re-executada periodicamente (ex: anualmente) para atualizar nomenclatura
+- **Nomes vernaculares são armazenados em tabela separada com relação N:N** (ver NomesVernaculares)
 
 ---
 
-### 7. ArtigoEspecie
+### 9. NomesVernaculares
+
+**Descrição**: Catálogo de nomes populares/vernaculares de plantas. Uma espécie pode ter múltiplos nomes vernaculares, e um nome vernacular pode referir-se a múltiplas espécies (relação N:N).
+
+**Schema SQL**:
+```sql
+CREATE TABLE NomesVernaculares (
+    -- Identificação
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,  -- Nome vernacular (ex: "ipê-roxo", "pau d'arco", "unha-de-gato")
+
+    -- Contexto Linguístico/Cultural
+    idioma TEXT,  -- Idioma ou língua (ex: "português", "Yanomami", "Guarani")
+    regiao_uso TEXT,  -- Descrição da região onde o nome é usado
+
+    -- Auditoria
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Índice composto para evitar duplicatas de nome+idioma
+    UNIQUE(nome, idioma)
+);
+
+-- Índices
+CREATE INDEX idx_nomes_vern_nome ON NomesVernaculares(nome);
+CREATE INDEX idx_nomes_vern_idioma ON NomesVernaculares(idioma);
+```
+
+**Campos**:
+- `id`: Chave primária
+- `nome`: Nome vernacular (obrigatório)
+- `idioma`: Idioma ou língua indígena do nome (opcional)
+- `regiao_uso`: Descrição da região onde este nome é utilizado (opcional)
+- `data_criacao`: Timestamp de criação
+
+**Regras de Negócio**:
+- Combinação nome+idioma deve ser única (mesmo nome em idiomas diferentes são registros distintos)
+- Nomes vernaculares são reutilizados entre espécies (permite homonímia)
+- Campo `idioma` é essencial para distinguir nomes vernaculares em línguas indígenas diferentes
+- Um nome vernacular pode estar associado a múltiplas espécies (ex: "capim" pode referir-se a diversas gramíneas)
+
+**Exemplos**:
+- ("unha-de-gato", "português", "Amazônia") → pode referir-se a Uncaria tomentosa ou Uncaria guianensis
+- ("ipê-roxo", "português", "Brasil") → pode referir-se a Handroanthus impetiginosus
+- ("yãpinã", "Yanomami", "Alto Rio Negro") → nome indígena para espécie específica
+
+---
+
+### 10. EspecieNomeVernacular
+
+**Descrição**: Tabela de associação N:M entre Espécies de Plantas e Nomes Vernaculares. Permite que uma espécie tenha múltiplos nomes populares e que um nome popular refira-se a múltiplas espécies.
+
+**Schema SQL**:
+```sql
+CREATE TABLE EspecieNomeVernacular (
+    especie_id INTEGER NOT NULL,
+    nome_vernacular_id INTEGER NOT NULL,
+
+    -- Contexto da Associação
+    fonte_informacao TEXT,  -- De onde veio esta associação (ex: "artigo #123", "comunidade Baniwa")
+    confianca TEXT DEFAULT 'média',  -- 'alta', 'média', 'baixa' - nível de confiança na associação
+
+    -- Auditoria
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (especie_id, nome_vernacular_id),
+    FOREIGN KEY (especie_id) REFERENCES EspeciesPlantas(id) ON DELETE CASCADE,
+    FOREIGN KEY (nome_vernacular_id) REFERENCES NomesVernaculares(id) ON DELETE RESTRICT,
+    CHECK (confianca IN ('alta', 'média', 'baixa'))
+);
+
+-- Índices
+CREATE INDEX idx_esp_nome_vern_especie ON EspecieNomeVernacular(especie_id);
+CREATE INDEX idx_esp_nome_vern_nome ON EspecieNomeVernacular(nome_vernacular_id);
+```
+
+**Campos**:
+- `especie_id`: Referência à espécie (obrigatório)
+- `nome_vernacular_id`: Referência ao nome vernacular (obrigatório)
+- `fonte_informacao`: Origem desta associação (opcional)
+- `confianca`: Nível de confiança na associação (padrão: 'média')
+- `data_criacao`: Timestamp de criação
+
+**Regras de Negócio**:
+- Permite modelar homonímia (um nome popular para múltiplas espécies)
+- Permite modelar sinonímia vernacular (múltiplos nomes para uma espécie)
+- Campo `confianca` indica qualidade da associação (útil para casos ambíguos)
+- `ON DELETE CASCADE`: Se espécie for excluída, associações são removidas
+- `ON DELETE RESTRICT`: Nomes vernaculares não podem ser excluídos se associados a espécies
+
+**Exemplos de Uso**:
+1. Uma espécie com múltiplos nomes vernaculares:
+   ```sql
+   -- Uncaria tomentosa tem vários nomes populares
+   INSERT INTO EspecieNomeVernacular (especie_id, nome_vernacular_id, confianca)
+   VALUES
+     (1, 5, 'alta'),  -- "unha-de-gato" em português
+     (1, 6, 'alta'),  -- "uña de gato" em espanhol
+     (1, 7, 'média'); -- "cat's claw" em inglês
+   ```
+
+2. Um nome vernacular referindo-se a múltiplas espécies (homonímia):
+   ```sql
+   -- "capim-limão" pode referir-se a diferentes espécies
+   INSERT INTO EspecieNomeVernacular (especie_id, nome_vernacular_id, confianca)
+   VALUES
+     (10, 20, 'alta'),  -- Cymbopogon citratus (mais comum)
+     (11, 20, 'média'); -- Melissa officinalis (menos comum, mas também chamada assim)
+   ```
+
+---
+
+### 11. ArtigoEspecie
 
 **Descrição**: Associação N:M entre Artigos e Espécies de Plantas. Um artigo menciona múltiplas espécies, e uma espécie aparece em múltiplos artigos.
 
@@ -399,7 +659,7 @@ CREATE INDEX idx_artigo_especie_especie ON ArtigoEspecie(especie_id);
 
 ---
 
-### 8. DadosEstudo
+### 12. DadosEstudo
 
 **Descrição**: Informações metodológicas sobre o estudo conduzido no artigo. Relação 1:1 com ArtigosCientificos.
 
@@ -507,17 +767,27 @@ SELECT
     de.tipo_amostragem,
     de.tamanho_amostra,
 
-    -- Agregações
-    GROUP_CONCAT(DISTINCT r.descricao) AS regioes,
+    -- Agregações de Localização
+    GROUP_CONCAT(DISTINCT
+        CASE
+            WHEN al.municipio_id IS NOT NULL THEN
+                m.nome || ', ' || e.sigla || ', ' || p.nome
+            WHEN al.territorio_id IS NOT NULL THEN
+                t.nome || ' (território)'
+        END
+    ) AS localizacoes,
+
     GROUP_CONCAT(DISTINCT c.nome) AS comunidades,
     COUNT(DISTINCT ae.especie_id) AS total_especies
 
 FROM ArtigosCientificos a
 LEFT JOIN DadosEstudo de ON a.id = de.artigo_id
-LEFT JOIN ArtigoRegiao ar ON a.id = ar.artigo_id
-LEFT JOIN Regioes r ON ar.regiao_id = r.id
-LEFT JOIN RegiaoComunidade rc ON r.id = rc.regiao_id
-LEFT JOIN Comunidades c ON rc.comunidade_id = c.id
+LEFT JOIN ArtigoLocalizacao al ON a.id = al.artigo_id
+LEFT JOIN Municipios m ON al.municipio_id = m.id
+LEFT JOIN Estados e ON m.estado_id = e.id
+LEFT JOIN Paises p ON e.pais_id = p.id
+LEFT JOIN Territorios t ON al.territorio_id = t.id
+LEFT JOIN Comunidades c ON t.comunidade_id = c.id
 LEFT JOIN ArtigoEspecie ae ON a.id = ae.artigo_id
 GROUP BY a.id;
 ```
@@ -552,20 +822,69 @@ VALUES (
     45
 );
 
--- 3. Inserir ou reutilizar região
-INSERT OR IGNORE INTO Regioes (descricao, pais, estado_provincia)
-VALUES ('Rio Negro, Amazonas', 'Brasil', 'Amazonas');
+-- 3A. OPÇÃO 1: Inserir localização hierárquica (município)
+-- Inserir ou reutilizar país
+INSERT OR IGNORE INTO Paises (nome, codigo_iso) VALUES ('Brasil', 'BR');
 
-INSERT INTO ArtigoRegiao (artigo_id, regiao_id)
+-- Inserir ou reutilizar estado
+INSERT OR IGNORE INTO Estados (nome, sigla, pais_id)
+VALUES ('Amazonas', 'AM', (SELECT id FROM Paises WHERE codigo_iso = 'BR'));
+
+-- Inserir ou reutilizar município
+INSERT OR IGNORE INTO Municipios (nome, estado_id)
+VALUES ('São Gabriel da Cachoeira', (SELECT id FROM Estados WHERE sigla = 'AM'));
+
+-- Associar artigo ao município
+INSERT INTO ArtigoLocalizacao (artigo_id, municipio_id)
 VALUES (
     last_insert_rowid(),  -- ID do artigo
-    (SELECT id FROM Regioes WHERE descricao = 'Rio Negro, Amazonas')
+    (SELECT id FROM Municipios WHERE nome = 'São Gabriel da Cachoeira')
+);
+
+-- 3B. OPÇÃO 2: Inserir localização por território comunitário
+-- Inserir ou reutilizar comunidade
+INSERT OR IGNORE INTO Comunidades (nome, tipo_comunidade)
+VALUES ('Comunidade Baniwa do Rio Içana', 'indígena');
+
+-- Inserir território
+INSERT INTO Territorios (nome, descricao, comunidade_id, descricao_localizacao)
+VALUES (
+    'Terra Indígena Alto Rio Negro',
+    'Território tradicional do povo Baniwa no Alto Rio Negro',
+    (SELECT id FROM Comunidades WHERE nome = 'Comunidade Baniwa do Rio Içana'),
+    'Região do Alto Rio Negro, fronteira Brasil-Colômbia'
+);
+
+-- Associar artigo ao território
+INSERT INTO ArtigoLocalizacao (artigo_id, territorio_id)
+VALUES (
+    last_insert_rowid(),  -- ID do artigo
+    (SELECT id FROM Territorios WHERE nome = 'Terra Indígena Alto Rio Negro')
 );
 
 -- 4. Inserir ou reutilizar espécie
 INSERT OR IGNORE INTO EspeciesPlantas (nome_cientifico, familia_botanica, status_validacao)
 VALUES ('Uncaria tomentosa', 'Rubiaceae', 'não validado');
 
+-- 5. Inserir nomes vernaculares para a espécie
+INSERT OR IGNORE INTO NomesVernaculares (nome, idioma) VALUES ('unha-de-gato', 'português');
+INSERT OR IGNORE INTO NomesVernaculares (nome, idioma) VALUES ('uña de gato', 'espanhol');
+
+-- Associar nomes vernaculares à espécie
+INSERT OR IGNORE INTO EspecieNomeVernacular (especie_id, nome_vernacular_id, confianca)
+VALUES
+    (
+        (SELECT id FROM EspeciesPlantas WHERE nome_cientifico = 'Uncaria tomentosa'),
+        (SELECT id FROM NomesVernaculares WHERE nome = 'unha-de-gato' AND idioma = 'português'),
+        'alta'
+    ),
+    (
+        (SELECT id FROM EspeciesPlantas WHERE nome_cientifico = 'Uncaria tomentosa'),
+        (SELECT id FROM NomesVernaculares WHERE nome = 'uña de gato' AND idioma = 'espanhol'),
+        'alta'
+    );
+
+-- 6. Associar espécie ao artigo
 INSERT INTO ArtigoEspecie (artigo_id, especie_id, contexto_uso, parte_planta_utilizada)
 VALUES (
     last_insert_rowid(),  -- ID do artigo
@@ -701,6 +1020,170 @@ WHERE status_validacao = 'não validado'
 ORDER BY data_criacao DESC;
 ```
 
+### Buscar espécie por nome vernacular
+
+```sql
+-- Buscar todas as espécies conhecidas como "unha-de-gato"
+SELECT
+    e.id,
+    e.nome_cientifico,
+    e.familia_botanica,
+    nv.nome AS nome_vernacular,
+    nv.idioma,
+    env.confianca
+FROM EspeciesPlantas e
+JOIN EspecieNomeVernacular env ON e.id = env.especie_id
+JOIN NomesVernaculares nv ON env.nome_vernacular_id = nv.id
+WHERE nv.nome = 'unha-de-gato'
+ORDER BY env.confianca DESC, e.nome_cientifico;
+```
+
+### Listar todos os nomes vernaculares de uma espécie
+
+```sql
+-- Listar todos os nomes populares de Uncaria tomentosa
+SELECT
+    nv.nome,
+    nv.idioma,
+    nv.regiao_uso,
+    env.confianca,
+    env.fonte_informacao
+FROM EspeciesPlantas e
+JOIN EspecieNomeVernacular env ON e.id = env.especie_id
+JOIN NomesVernaculares nv ON env.nome_vernacular_id = nv.id
+WHERE e.nome_cientifico = 'Uncaria tomentosa'
+ORDER BY nv.idioma, nv.nome;
+```
+
+### Buscar artigos por localização hierárquica
+
+```sql
+-- Buscar artigos realizados no estado do Amazonas
+SELECT DISTINCT
+    a.id,
+    a.titulo,
+    a.ano_publicacao,
+    m.nome AS municipio,
+    e.nome AS estado,
+    p.nome AS pais
+FROM ArtigosCientificos a
+JOIN ArtigoLocalizacao al ON a.id = al.artigo_id
+JOIN Municipios m ON al.municipio_id = m.id
+JOIN Estados e ON m.estado_id = e.id
+JOIN Paises p ON e.pais_id = p.id
+WHERE e.sigla = 'AM'
+ORDER BY a.ano_publicacao DESC;
+
+-- Buscar artigos por país
+SELECT DISTINCT
+    a.id,
+    a.titulo,
+    a.ano_publicacao,
+    p.nome AS pais,
+    COUNT(DISTINCT m.id) AS total_municipios
+FROM ArtigosCientificos a
+JOIN ArtigoLocalizacao al ON a.id = al.artigo_id
+JOIN Municipios m ON al.municipio_id = m.id
+JOIN Estados e ON m.estado_id = e.id
+JOIN Paises p ON e.pais_id = p.id
+WHERE p.codigo_iso = 'BR'
+GROUP BY a.id, a.titulo, a.ano_publicacao, p.nome
+ORDER BY a.ano_publicacao DESC;
+```
+
+### Buscar artigos por território
+
+```sql
+-- Buscar artigos realizados em territórios indígenas
+SELECT DISTINCT
+    a.id,
+    a.titulo,
+    a.ano_publicacao,
+    t.nome AS territorio,
+    c.nome AS comunidade,
+    c.tipo_comunidade
+FROM ArtigosCientificos a
+JOIN ArtigoLocalizacao al ON a.id = al.artigo_id
+JOIN Territorios t ON al.territorio_id = t.id
+LEFT JOIN Comunidades c ON t.comunidade_id = c.id
+WHERE c.tipo_comunidade = 'indígena'
+ORDER BY a.ano_publicacao DESC;
+```
+
+### Listar espécies com múltiplos nomes vernaculares (sinonímia vernacular)
+
+```sql
+-- Espécies com mais de 3 nomes vernaculares diferentes
+SELECT
+    e.nome_cientifico,
+    e.familia_botanica,
+    GROUP_CONCAT(nv.nome || ' (' || nv.idioma || ')', '; ') AS nomes_vernaculares,
+    COUNT(DISTINCT nv.id) AS total_nomes
+FROM EspeciesPlantas e
+JOIN EspecieNomeVernacular env ON e.id = env.especie_id
+JOIN NomesVernaculares nv ON env.nome_vernacular_id = nv.id
+GROUP BY e.id
+HAVING COUNT(DISTINCT nv.id) > 3
+ORDER BY total_nomes DESC;
+```
+
+### Detectar homonímia (nome vernacular referindo-se a múltiplas espécies)
+
+```sql
+-- Nomes vernaculares que referem-se a múltiplas espécies
+SELECT
+    nv.nome,
+    nv.idioma,
+    COUNT(DISTINCT e.id) AS total_especies,
+    GROUP_CONCAT(e.nome_cientifico, ', ') AS especies
+FROM NomesVernaculares nv
+JOIN EspecieNomeVernacular env ON nv.id = env.nome_vernacular_id
+JOIN EspeciesPlantas e ON env.especie_id = e.id
+GROUP BY nv.id
+HAVING COUNT(DISTINCT e.id) > 1
+ORDER BY total_especies DESC;
+```
+
+### Estatísticas de localização
+
+```sql
+-- Distribuição de artigos por tipo de localização
+SELECT
+    CASE
+        WHEN al.municipio_id IS NOT NULL THEN 'Município (hierárquico)'
+        WHEN al.territorio_id IS NOT NULL THEN 'Território (comunitário)'
+    END AS tipo_localizacao,
+    COUNT(DISTINCT a.id) AS total_artigos
+FROM ArtigosCientificos a
+JOIN ArtigoLocalizacao al ON a.id = al.artigo_id
+GROUP BY tipo_localizacao;
+
+-- Top 10 municípios com mais artigos
+SELECT
+    m.nome AS municipio,
+    e.sigla AS estado,
+    COUNT(DISTINCT al.artigo_id) AS total_artigos
+FROM Municipios m
+JOIN Estados e ON m.estado_id = e.id
+JOIN ArtigoLocalizacao al ON m.id = al.municipio_id
+GROUP BY m.id
+ORDER BY total_artigos DESC
+LIMIT 10;
+
+-- Top 10 territórios com mais artigos
+SELECT
+    t.nome AS territorio,
+    c.nome AS comunidade,
+    c.tipo_comunidade,
+    COUNT(DISTINCT al.artigo_id) AS total_artigos
+FROM Territorios t
+LEFT JOIN Comunidades c ON t.comunidade_id = c.id
+JOIN ArtigoLocalizacao al ON t.id = al.territorio_id
+GROUP BY t.id
+ORDER BY total_artigos DESC
+LIMIT 10;
+```
+
 ---
 
 ## Migração e Versionamento
@@ -736,29 +1219,37 @@ def downgrade():
 
 ### Índices Criados
 
-**Total de índices**: 18 índices criados para otimizar queries comuns:
+**Total de índices**: 29 índices criados para otimizar queries comuns:
 - Busca por status de artigos
 - Filtros por ano de publicação
 - Lookup de espécies por nome científico
 - Queries de associação N:M
+- Hierarquia geográfica (país → estado → município)
+- Busca por nomes vernaculares e idioma
+- Localização por município ou território
 
 ### Estimativas de Tamanho
 
 Para **1.000 artigos** com média de:
 - 5 espécies por artigo
-- 2 regiões por artigo
-- 3 comunidades por região
+- 3 nomes vernaculares por espécie
+- 2 localizações por artigo (mix de municípios e territórios)
+- 1 comunidade por território
 
 **Tamanho estimado**:
 - ArtigosCientificos: ~500 KB
 - EspeciesPlantas: ~100 KB (assumindo 200 espécies únicas)
-- Regioes: ~30 KB (assumindo 50 regiões únicas)
-- Comunidades: ~20 KB (assumindo 30 comunidades únicas)
-- Tabelas de associação: ~150 KB
-- **Total**: ~800 KB para 1.000 artigos
+- NomesVernaculares: ~60 KB (assumindo 600 nomes únicos)
+- Paises: ~2 KB (assumindo 10 países)
+- Estados: ~10 KB (assumindo 50 estados)
+- Municipios: ~40 KB (assumindo 200 municípios únicos)
+- Territorios: ~50 KB (assumindo 100 territórios únicos)
+- Comunidades: ~20 KB (assumindo 50 comunidades únicas)
+- Tabelas de associação: ~250 KB
+- **Total**: ~1.0 MB para 1.000 artigos
 
-Para **10.000 artigos**: ~8 MB
-Para **100.000 artigos**: ~80 MB
+Para **10.000 artigos**: ~10 MB
+Para **100.000 artigos**: ~100 MB
 
 SQLite performa bem até centenas de milhares de registros com os índices adequados.
 

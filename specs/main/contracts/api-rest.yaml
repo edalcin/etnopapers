@@ -46,6 +46,10 @@ tags:
     description: Validação taxonômica
   - name: Database
     description: Download e informações do banco de dados
+  - name: Locations
+    description: Hierarquia geográfica (países, estados, municípios) e territórios comunitários
+  - name: Vernacular Names
+    description: Gerenciamento de nomes vernaculares de plantas (relação N:N com espécies)
 
 paths:
   /articles:
@@ -963,3 +967,100 @@ components:
             type: array
             items:
               type: string
+
+    # Novos schemas para hierarquia geográfica
+    Pais:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        codigo_iso:
+          type: string
+          example: "BR"
+
+    Estado:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        sigla:
+          type: string
+          example: "AM"
+        pais_id:
+          type: integer
+
+    Municipio:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        estado_id:
+          type: integer
+        latitude:
+          type: number
+          format: float
+          nullable: true
+        longitude:
+          type: number
+          format: float
+          nullable: true
+
+    Territorio:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+          example: "Terra Indígena Yanomami"
+        descricao:
+          type: string
+        descricao_localizacao:
+          type: string
+          nullable: true
+        comunidade_id:
+          type: integer
+          nullable: true
+        latitude:
+          type: number
+          format: float
+          nullable: true
+        longitude:
+          type: number
+          format: float
+          nullable: true
+
+    NomeVernacular:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+          example: "unha-de-gato"
+        idioma:
+          type: string
+          example: "português"
+        regiao_uso:
+          type: string
+          nullable: true
+
+    EspecieNomeVernacular:
+      type: object
+      properties:
+        especie_id:
+          type: integer
+        nome_vernacular_id:
+          type: integer
+        fonte_informacao:
+          type: string
+          nullable: true
+        confianca:
+          type: string
+          enum: [alta, média, baixa]

@@ -592,6 +592,511 @@ async function downloadDatabase() {
 
 **Recomendação**: Começar com Gemini (quota gratuita generosa), migrar para Claude se precisar escalar com baixo custo.
 
+## Implementação de Hierarquia Geográfica e Territórios
+
+### Estrutura de Dados
+
+**Hierarquia Geográfica (País → Estado → Município)**:
+```typescript
+interface Pais {
+  id: number;
+  nome: string;
+  codigo_iso: string;  // ex: "BR", "PE"
+}
+
+interface Estado {
+  id: number;
+  nome: string;
+  sigla: string;  // ex: "AM", "AC"
+  pais_id: number;
+}
+
+interface Municipio {
+  id: number;
+  nome: string;
+  estado_id: number;
+  latitude?: number;
+  longitude?: number;
+}
+```
+
+**Território Comunitário**:
+```typescript
+interface Territorio {
+  id: number;
+  nome: string;  // ex: "Terra Indígena Yanomami"
+  descricao: string;  // descrição detalhada
+  descricao_localizacao?: string;  // ex: "Região do Alto Rio Negro"
+  comunidade_id?: number;
+  latitude?: number;
+  longitude?: number;
+}
+```
+
+**Localização de Artigo (polimórfica)**:
+```typescript
+interface ArtigoLocalizacao {
+  id: number;
+  artigo_id: number;
+  // Apenas um dos dois deve ser preenchido:
+  municipio_id?: number;  // localização hierárquica
+  territorio_id?: number;  // localização comunitária
+}
+```
+
+### Backend: Endpoints de Localização
+
+**FastAPI - Rotas de Localização**:
+```python
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Optional, List
+
+router = APIRouter(prefix="/api/localizacoes", tags=["Localizações"])
+
+class LocalizacaoHierarquica(BaseModel):
+    pais: str
+    estado: str
+    municipio: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+class LocalizacaoTerritorial(BaseModel):
+    nome_territorio: str
+    descricao: str
+    comunidade_id: Optional[int] = None
+    descricao_localizacao: Optional[str] = None
+
+@router.post("/hierarquica")
+async def criar_localizacao_hierarquica(loc: LocalizacaoHierarquica):
+    """Cria ou retorna localização hierárquica existente"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    # 1. Obter ou criar país
+    cursor.execute("INSERT OR IGNORE INTO Paises (nome) VALUES (?)", (loc.pais,))
+    cursor.execute("SELECT id FROM Paises WHERE nome = ?", (loc.pais,))
+    pais_id = cursor.fetchone()[0]
+
+    # 2. Obter ou criar estado
+    cursor.execute(
+        "INSERT OR IGNORE INTO Estados (nome, pais_id) VALUES (?, ?)",
+        (loc.estado, pais_id)
+    )
+    cursor.execute(
+        "SELECT id FROM Estados WHERE nome = ? AND pais_id = ?",
+        (loc.estado, pais_id)
+    )
+    estado_id = cursor.fetchone()[0]
+
+    # 3. Obter ou criar município
+    cursor.execute(
+        """INSERT OR IGNORE INTO Municipios
+           (nome, estado_id, latitude, longitude)
+           VALUES (?, ?, ?, ?)""",
+        (loc.municipio, estado_id, loc.latitude, loc.longitude)
+    )
+    cursor.execute(
+        "SELECT id FROM Municipios WHERE nome = ? AND estado_id = ?",
+        (loc.municipio, estado_id)
+    )
+    municipio_id = cursor.fetchone()[0]
+
+    conn.commit()
+    conn.close()
+
+    return {"municipio_id": municipio_id}
+
+@router.post("/territorio")
+async def criar_territorio(territorio: LocalizacaoTerritorial):
+    """Cria território comunitário"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """INSERT INTO Territorios
+           (nome, descricao, comunidade_id, descricao_localizacao)
+           VALUES (?, ?, ?, ?)""",
+        (territorio.nome_territorio, territorio.descricao,
+         territorio.comunidade_id, territorio.descricao_localizacao)
+    )
+
+    territorio_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return {"territorio_id": territorio_id}
+
+@router.get("/hierarquica/buscar")
+async def buscar_hierarquia(pais: str, estado: Optional[str] = None,
+                             municipio: Optional[str] = None):
+    """Busca hierarquia geográfica para autocomplete"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    if not estado:
+        # Retornar estados do país
+        cursor.execute(
+            """SELECT e.id, e.nome, e.sigla
+               FROM Estados e
+               JOIN Paises p ON e.pais_id = p.id
+               WHERE p.nome = ?""",
+            (pais,)
+        )
+        results = [{"id": r[0], "nome": r[1], "sigla": r[2]}
+                   for r in cursor.fetchall()]
+    elif not municipio:
+        # Retornar municípios do estado
+        cursor.execute(
+            """SELECT m.id, m.nome
+               FROM Municipios m
+               JOIN Estados e ON m.estado_id = e.id
+               WHERE e.nome = ?""",
+            (estado,)
+        )
+        results = [{"id": r[0], "nome": r[1]} for r in cursor.fetchall()]
+
+    conn.close()
+    return {"results": results}
+```
+
+### Frontend: Componente de Seleção de Localização
+
+**React Component com Autocomplete**:
+```typescript
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+interface LocalizacaoSelectorProps {
+  onLocalizacaoSelect: (localizacao: LocalizacaoData) => void;
+}
+
+type LocalizacaoData = {
+  tipo: 'hierarquica' | 'territorial';
+  municipio_id?: number;
+  territorio_id?: number;
+};
+
+export const LocalizacaoSelector: React.FC<LocalizacaoSelectorProps> = ({
+  onLocalizacaoSelect
+}) => {
+  const [tipoLocalizacao, setTipoLocalizacao] = useState<'hierarquica' | 'territorial'>('hierarquica');
+
+  const [pais, setPais] = useState('Brasil');
+  const [estados, setEstados] = useState([]);
+  const [municipios, setMunicipios] = useState([]);
+
+  const [estadoSelecionado, setEstadoSelecionado] = useState('');
+  const [municipioSelecionado, setMunicipioSelecionado] = useState('');
+
+  // Território
+  const [nomeTerritorio, setNomeTerritorio] = useState('');
+  const [descricaoTerritorio, setDescricaoTerritorio] = useState('');
+
+  useEffect(() => {
+    if (tipoLocalizacao === 'hierarquica' && pais) {
+      // Carregar estados
+      axios.get(`/api/localizacoes/hierarquica/buscar?pais=${pais}`)
+        .then(res => setEstados(res.data.results));
+    }
+  }, [pais]);
+
+  useEffect(() => {
+    if (estadoSelecionado) {
+      // Carregar municípios
+      axios.get(`/api/localizacoes/hierarquica/buscar?pais=${pais}&estado=${estadoSelecionado}`)
+        .then(res => setMunicipios(res.data.results));
+    }
+  }, [estadoSelecionado]);
+
+  const handleSubmit = async () => {
+    if (tipoLocalizacao === 'hierarquica' && municipioSelecionado) {
+      const response = await axios.post('/api/localizacoes/hierarquica', {
+        pais,
+        estado: estadoSelecionado,
+        municipio: municipioSelecionado
+      });
+
+      onLocalizacaoSelect({
+        tipo: 'hierarquica',
+        municipio_id: response.data.municipio_id
+      });
+    } else if (tipoLocalizacao === 'territorial' && nomeTerritorio) {
+      const response = await axios.post('/api/localizacoes/territorio', {
+        nome_territorio: nomeTerritorio,
+        descricao: descricaoTerritorio
+      });
+
+      onLocalizacaoSelect({
+        tipo: 'territorial',
+        territorio_id: response.data.territorio_id
+      });
+    }
+  };
+
+  return (
+    <div>
+      <h3>Localização do Estudo</h3>
+
+      <div>
+        <label>
+          <input
+            type="radio"
+            value="hierarquica"
+            checked={tipoLocalizacao === 'hierarquica'}
+            onChange={() => setTipoLocalizacao('hierarquica')}
+          />
+          Município/Cidade
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            value="territorial"
+            checked={tipoLocalizacao === 'territorial'}
+            onChange={() => setTipoLocalizacao('territorial')}
+          />
+          Território Comunitário
+        </label>
+      </div>
+
+      {tipoLocalizacao === 'hierarquica' ? (
+        <>
+          <select value={pais} onChange={e => setPais(e.target.value)}>
+            <option value="Brasil">Brasil</option>
+            <option value="Peru">Peru</option>
+            {/* Adicionar mais países */}
+          </select>
+
+          <select value={estadoSelecionado} onChange={e => setEstadoSelecionado(e.target.value)}>
+            <option value="">Selecione o Estado</option>
+            {estados.map(e => <option key={e.id} value={e.nome}>{e.nome}</option>)}
+          </select>
+
+          <select value={municipioSelecionado} onChange={e => setMunicipioSelecionado(e.target.value)}>
+            <option value="">Selecione o Município</option>
+            {municipios.map(m => <option key={m.id} value={m.nome}>{m.nome}</option>)}
+          </select>
+        </>
+      ) : (
+        <>
+          <input
+            type="text"
+            placeholder="Nome do Território (ex: Terra Indígena Yanomami)"
+            value={nomeTerritorio}
+            onChange={e => setNomeTerritorio(e.target.value)}
+          />
+
+          <textarea
+            placeholder="Descrição detalhada do território e seus limites"
+            value={descricaoTerritorio}
+            onChange={e => setDescricaoTerritorio(e.target.value)}
+          />
+        </>
+      )}
+
+      <button onClick={handleSubmit}>Adicionar Localização</button>
+    </div>
+  );
+};
+```
+
+## Implementação de Nomes Vernaculares (N:N)
+
+### Estrutura de Dados
+
+```typescript
+interface NomeVernacular {
+  id: number;
+  nome: string;  // ex: "unha-de-gato", "ipê-roxo"
+  idioma: string;  // ex: "português", "Yanomami", "Guarani"
+  regiao_uso?: string;
+}
+
+interface EspecieNomeVernacular {
+  especie_id: number;
+  nome_vernacular_id: number;
+  fonte_informacao?: string;
+  confianca: 'alta' | 'média' | 'baixa';
+}
+```
+
+### Backend: Endpoints de Nomes Vernaculares
+
+```python
+@router.post("/especies/{especie_id}/nomes-vernaculares")
+async def adicionar_nome_vernacular(
+    especie_id: int,
+    nome: str,
+    idioma: str = "português",
+    regiao_uso: Optional[str] = None,
+    confianca: str = "média"
+):
+    """Adiciona nome vernacular a uma espécie"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    # 1. Criar ou obter nome vernacular
+    cursor.execute(
+        "INSERT OR IGNORE INTO NomesVernaculares (nome, idioma, regiao_uso) VALUES (?, ?, ?)",
+        (nome, idioma, regiao_uso)
+    )
+    cursor.execute(
+        "SELECT id FROM NomesVernaculares WHERE nome = ? AND idioma = ?",
+        (nome, idioma)
+    )
+    nome_vern_id = cursor.fetchone()[0]
+
+    # 2. Associar à espécie
+    cursor.execute(
+        """INSERT OR REPLACE INTO EspecieNomeVernacular
+           (especie_id, nome_vernacular_id, confianca)
+           VALUES (?, ?, ?)""",
+        (especie_id, nome_vern_id, confianca)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"nome_vernacular_id": nome_vern_id}
+
+@router.get("/especies/{especie_id}/nomes-vernaculares")
+async def listar_nomes_vernaculares(especie_id: int):
+    """Lista todos os nomes vernaculares de uma espécie"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """SELECT nv.nome, nv.idioma, nv.regiao_uso, env.confianca
+           FROM NomesVernaculares nv
+           JOIN EspecieNomeVernacular env ON nv.id = env.nome_vernacular_id
+           WHERE env.especie_id = ?""",
+        (especie_id,)
+    )
+
+    results = [{
+        "nome": r[0],
+        "idioma": r[1],
+        "regiao_uso": r[2],
+        "confianca": r[3]
+    } for r in cursor.fetchall()]
+
+    conn.close()
+    return {"nomes_vernaculares": results}
+
+@router.get("/nomes-vernaculares/buscar")
+async def buscar_por_nome_vernacular(nome: str):
+    """Busca espécies por nome vernacular (homonímia)"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """SELECT e.id, e.nome_cientifico, e.familia_botanica, env.confianca
+           FROM EspeciesPlantas e
+           JOIN EspecieNomeVernacular env ON e.id = env.especie_id
+           JOIN NomesVernaculares nv ON env.nome_vernacular_id = nv.id
+           WHERE nv.nome LIKE ?
+           ORDER BY env.confianca DESC""",
+        (f"%{nome}%",)
+    )
+
+    results = [{
+        "especie_id": r[0],
+        "nome_cientifico": r[1],
+        "familia": r[2],
+        "confianca": r[3]
+    } for r in cursor.fetchall()]
+
+    conn.close()
+    return {"especies": results}
+```
+
+### Frontend: Gerenciamento de Nomes Vernaculares
+
+```typescript
+interface NomeVernacularInputProps {
+  especieId: number;
+  onAdd: () => void;
+}
+
+export const NomeVernacularInput: React.FC<NomeVernacularInputProps> = ({
+  especieId,
+  onAdd
+}) => {
+  const [nome, setNome] = useState('');
+  const [idioma, setIdioma] = useState('português');
+  const [regiaoUso, setRegiaoUso] = useState('');
+  const [nomesExistentes, setNomesExistentes] = useState([]);
+
+  useEffect(() => {
+    // Carregar nomes vernaculares existentes
+    axios.get(`/api/especies/${especieId}/nomes-vernaculares`)
+      .then(res => setNomesExistentes(res.data.nomes_vernaculares));
+  }, [especieId]);
+
+  const handleAdd = async () => {
+    await axios.post(`/api/especies/${especieId}/nomes-vernaculares`, {
+      nome,
+      idioma,
+      regiao_uso: regiaoUso || undefined
+    });
+
+    setNome('');
+    setRegiaoUso('');
+    onAdd();
+  };
+
+  return (
+    <div>
+      <h4>Nomes Vernaculares (Nomes Populares)</h4>
+
+      <div>
+        <input
+          type="text"
+          placeholder="Nome popular (ex: unha-de-gato)"
+          value={nome}
+          onChange={e => setNome(e.target.value)}
+        />
+
+        <select value={idioma} onChange={e => setIdioma(e.target.value)}>
+          <option value="português">Português</option>
+          <option value="espanhol">Espanhol</option>
+          <option value="inglês">Inglês</option>
+          <option value="Yanomami">Yanomami</option>
+          <option value="Guarani">Guarani</option>
+          <option value="Baniwa">Baniwa</option>
+          <option value="outro">Outro idioma</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Região onde é usado (opcional)"
+          value={regiaoUso}
+          onChange={e => setRegiaoUso(e.target.value)}
+        />
+
+        <button onClick={handleAdd}>Adicionar Nome</button>
+      </div>
+
+      <div>
+        <h5>Nomes Cadastrados:</h5>
+        <ul>
+          {nomesExistentes.map((nv, idx) => (
+            <li key={idx}>
+              {nv.nome} ({nv.idioma})
+              {nv.regiao_uso && ` - ${nv.regiao_uso}`}
+              <span className={`confianca-${nv.confianca}`}>
+                [{nv.confianca}]
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+```
+
 ## Próximos Passos
 
 1. **Definir schema detalhado do SQLite** (data-model.md)

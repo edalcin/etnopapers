@@ -184,14 +184,32 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-050**: O arquivo de download DEVE ter nome descritivo incluindo data no formato: etnopapers_YYYYMMDD.db (ex: etnopapers_20251120.db)
 - **RF-051**: O download do banco de dados DEVE incluir todas as tabelas e dados: artigos, espécies, regiões, comunidades, dados de estudo e relacionamentos
 - **RF-052**: A tabela de artigos DEVE exibir mensagem apropriada quando não houver artigos processados (ex: "Nenhum artigo processado ainda. Faça upload do primeiro PDF!")
+- **RF-053**: O sistema DEVE armazenar localizações geográficas usando hierarquia administrativa de três níveis: País → Estado/Província → Município/Cidade
+- **RF-054**: O sistema DEVE armazenar territórios comunitários como entidades separadas, independentes da hierarquia geográfica administrativa
+- **RF-055**: Um artigo PODE estar associado a múltiplas localizações, incluindo qualquer combinação de municípios (hierárquicos) e territórios (comunitários)
+- **RF-056**: O sistema DEVE permitir que territórios estejam associados a comunidades tradicionais, mas esta associação é opcional
+- **RF-057**: O sistema DEVE armazenar nomes vernaculares de plantas em tabela separada com relação N:M com espécies
+- **RF-058**: Cada nome vernacular DEVE incluir opcionalmente o idioma ou língua (ex: português, Yanomami, Guarani) e região de uso
+- **RF-059**: O sistema DEVE permitir que um nome vernacular esteja associado a múltiplas espécies (homonímia) e que uma espécie tenha múltiplos nomes vernaculares
+- **RF-060**: Cada associação entre espécie e nome vernacular DEVE incluir nível de confiança (alta, média, baixa) e opcionalmente a fonte da informação
+- **RF-061**: Ao extrair metadados, o sistema DEVE tentar identificar se a localização mencionada refere-se a município/cidade (hierárquico) ou território tradicional/comunitário
+- **RF-062**: O sistema DEVE normalizar e reutilizar registros de países, estados e municípios para evitar duplicação
+- **RF-063**: O sistema DEVE permitir associação de coordenadas geográficas a municípios e territórios de forma opcional
 
 ### Entidades Principais
 
 - **Artigo Científico**: Representa um paper acadêmico processado pelo sistema. Atributos incluem: identificador único, data de processamento, título, ano de publicação, autores (lista), resumo, DOI, local de publicação, status de finalização (rascunho/finalizado), status de processamento, indicador se foi editado manualmente, timestamp de última modificação
-- **Região de Estudo**: Representa a localização geográfica onde o estudo foi conduzido. Atributos incluem: identificador único, descrição da região, país, estado/província, coordenadas geográficas (se disponíveis), relacionamento com múltiplos artigos
-- **Comunidade Tradicional**: Representa grupos comunitários estudados nos artigos. Atributos incluem: identificador único, nome ou descrição da comunidade, tipo de comunidade (indígena, quilombola, ribeirinha, etc.), relacionamento com artigos e regiões
-- **Espécie de Planta**: Representa plantas identificadas nos estudos. Atributos incluem: identificador único, nome científico (binomial) como chave de unicidade, autores do nome científico, nomes vernaculares (lista de nomes populares em diferentes idiomas/dialetos), família botânica, nome aceito atual validado via API, status de validação taxonômica, usos reportados, relacionamento com artigos onde foi mencionada
-- **Dados de Estudo**: Representa informações metodológicas do estudo. Atributos incluem: identificador único, período do estudo (data de início e fim), métodos de coleta de dados, tipo de amostragem, tamanho da amostra, relacionamento com o artigo correspondente
+- **Hierarquia Geográfica**: Representa localizações administrativas tradicionais organizadas hierarquicamente:
+  - **País**: Nível mais alto da hierarquia (ex: Brasil, Peru). Atributos: identificador único, nome, código ISO 3166-1 alpha-2
+  - **Estado/Província**: Divisão administrativa de primeiro nível dentro de um país (ex: Amazonas, Acre). Atributos: identificador único, nome, sigla, referência ao país
+  - **Município/Cidade**: Divisão administrativa de segundo nível dentro de um estado (ex: Manaus, São Gabriel da Cachoeira). Atributos: identificador único, nome, coordenadas geográficas (opcional), referência ao estado
+- **Território**: Representa espaços comunitários tradicionais sem definição espacial precisa ou relação com hierarquia geográfica administrativa. Territórios podem sobrepor ou transcender limites administrativos formais. Atributos incluem: identificador único, nome do território (ex: "Terra Indígena Yanomami", "Território Quilombola Ivaporunduva"), descrição detalhada, descrição textual da localização, coordenadas aproximadas (opcional), referência à comunidade associada (opcional), relacionamento com múltiplos artigos
+- **Comunidade Tradicional**: Representa grupos comunitários estudados nos artigos. Atributos incluem: identificador único, nome ou descrição da comunidade, tipo de comunidade (indígena, quilombola, ribeirinha, caiçara, seringueira, pantaneira, outro), relacionamento com territórios, data de criação
+- **Localização de Artigo**: Tabela de associação que vincula artigos a localizações, permitindo que um artigo esteja associado a municípios (hierarquia geográfica) OU a territórios comunitários. Um artigo pode ter múltiplas localizações de ambos os tipos. Atributos: identificador único, referência ao artigo, referência ao município (exclusivo com território), referência ao território (exclusivo com município)
+- **Espécie de Planta**: Representa plantas identificadas nos estudos. Atributos incluem: identificador único, nome científico (binomial) como chave de unicidade, autores do nome científico, família botânica, nome aceito atual validado via API, sinônimo (referência a outra espécie se aplicável), status de validação taxonômica, usos reportados (agregado de todos os artigos), relacionamento N:M com nomes vernaculares, relacionamento com artigos onde foi mencionada
+- **Nome Vernacular**: Representa nomes populares de plantas utilizados por comunidades tradicionais. Uma espécie pode ter múltiplos nomes vernaculares, e um nome vernacular pode referir-se a múltiplas espécies (homonímia). Atributos incluem: identificador único, nome popular (ex: "unha-de-gato", "ipê-roxo", "yãpinã"), idioma ou língua (ex: "português", "Yanomami", "Guarani"), descrição da região onde o nome é usado, relacionamento N:M com espécies de plantas
+- **Associação Espécie-Nome Vernacular**: Tabela que conecta espécies a nomes vernaculares. Atributos incluem: referência à espécie, referência ao nome vernacular, fonte da informação, nível de confiança da associação (alta/média/baixa)
+- **Dados de Estudo**: Representa informações metodológicas do estudo. Atributos incluem: identificador único, período do estudo (data de início e fim), métodos de coleta de dados, tipo de amostragem, tamanho da amostra, relacionamento 1:1 com o artigo correspondente
 
 ## Critérios de Sucesso *(obrigatório)*
 
