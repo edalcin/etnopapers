@@ -96,6 +96,9 @@ CREATE INDEX idx_artigos_status ON ArtigosCientificos(status);
 CREATE INDEX idx_artigos_ano ON ArtigosCientificos(ano_publicacao);
 CREATE INDEX idx_artigos_doi ON ArtigosCientificos(doi);
 CREATE INDEX idx_artigos_data_proc ON ArtigosCientificos(data_processamento);
+
+-- Índice composto para detecção de duplicatas (quando DOI não disponível)
+CREATE INDEX idx_artigos_duplicatas ON ArtigosCientificos(titulo, ano_publicacao);
 ```
 
 **Campos**:
@@ -116,6 +119,40 @@ CREATE INDEX idx_artigos_data_proc ON ArtigosCientificos(data_processamento);
 - Rascunhos com mais de 7 dias podem ser excluídos automaticamente (limpeza agendada)
 - DOI deve ser validado em formato (10.xxxx/xxxx) se fornecido
 - Autores armazenados como JSON para permitir lista de tamanho variável
+- **Detecção de duplicatas**: Sistema previne duplicação usando estratégia em duas camadas (detalhes abaixo)
+
+**Detecção de Duplicatas**:
+
+O sistema implementa verificação de duplicatas após extração de metadados para evitar processamento redundante:
+
+**Estratégia de Detecção**:
+1. **Critério Primário - DOI**: Se DOI estiver disponível, verifica unicidade via constraint UNIQUE
+   ```sql
+   SELECT id, titulo, data_processamento, status
+   FROM ArtigosCientificos
+   WHERE doi = ? AND doi IS NOT NULL;
+   ```
+
+2. **Critério Secundário - Título + Ano + Autor**: Se DOI não disponível, usa combinação:
+   ```sql
+   SELECT id, titulo, autores, data_processamento, status
+   FROM ArtigosCientificos
+   WHERE titulo = ? AND ano_publicacao = ?;
+   -- Backend verifica primeiro autor do JSON array
+   ```
+
+**Fluxo de Detecção**:
+1. Após extração de metadados, antes de salvar
+2. Se duplicata encontrada: exibir mensagem com detalhes do registro existente
+3. Usuário escolhe:
+   - **Descartar**: Abandona novos metadados, mantém registro original
+   - **Sobrescrever**: Substitui registro existente, atualiza `data_ultima_modificacao`
+
+**Considerações**:
+- DOI garante 100% de precisão na detecção
+- Título+Ano+Autor pode ter falsos positivos em casos de artigos muito similares (estimativa: <5%)
+- Verificação inclui tanto artigos finalizados quanto rascunhos
+- Sobrescrever preserva `id` original mas atualiza todos os outros campos
 
 ---
 
@@ -536,6 +573,76 @@ VALUES (
     'Medicinal para inflamações',
     '["casca", "raiz"]'
 );
+```
+
+### Verificar duplicatas antes de inserir
+
+```sql
+-- Verificação primária: por DOI (se disponível)
+SELECT
+    id,
+    titulo,
+    ano_publicacao,
+    autores,
+    data_processamento,
+    status,
+    editado_manualmente
+FROM ArtigosCientificos
+WHERE doi = '10.1234/exemplo.2023'
+  AND doi IS NOT NULL;
+
+-- Se retornar resultado: duplicata detectada
+-- Se retornar vazio: prosseguir para verificação secundária
+
+-- Verificação secundária: por título + ano (quando DOI não disponível)
+SELECT
+    id,
+    titulo,
+    ano_publicacao,
+    autores,
+    data_processamento,
+    status
+FROM ArtigosCientificos
+WHERE titulo = 'Etnobotânica da comunidade ribeirinha do Rio Negro'
+  AND ano_publicacao = 2023;
+
+-- Backend: extrair primeiro autor do JSON array e comparar
+-- Se título+ano+autor coincidirem: duplicata detectada
+
+-- Verificar duplicatas incluindo rascunhos
+SELECT
+    id,
+    titulo,
+    ano_publicacao,
+    status,
+    data_processamento,
+    CASE
+        WHEN status = 'rascunho' THEN 'Rascunho pendente desde ' || data_processamento
+        WHEN status = 'finalizado' THEN 'Finalizado em ' || data_processamento
+    END as status_descricao
+FROM ArtigosCientificos
+WHERE doi = ?
+   OR (titulo = ? AND ano_publicacao = ?)
+ORDER BY data_processamento DESC;
+```
+
+### Sobrescrever artigo duplicado
+
+```sql
+-- Quando usuário escolhe "Sobrescrever" em duplicata detectada
+UPDATE ArtigosCientificos
+SET
+    titulo = 'Novo título (se diferente)',
+    ano_publicacao = 2024,
+    autores = '["Silva, A.B.", "Santos, C.D.", "Oliveira, E.F."]',
+    resumo = 'Novo resumo...',
+    local_publicacao = 'Nova revista',
+    status = 'finalizado',
+    editado_manualmente = 1,
+    data_ultima_modificacao = CURRENT_TIMESTAMP
+WHERE id = ?;  -- ID do registro duplicado encontrado
+
+-- Trigger atualiza automaticamente data_ultima_modificacao
 ```
 
 ### Consultar artigos por espécie
