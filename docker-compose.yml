@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  etnopapers:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: etnopapers
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - DATABASE_PATH=/data/etnopapers.db
+      - LOG_LEVEL=info
+      - TAXONOMY_API_TIMEOUT=5
+      - CACHE_TTL_DAYS=30
+      - ENVIRONMENT=development
+    volumes:
+      - ./data:/data
+    networks:
+      - etnopapers-net
+    restart: unless-stopped
+
+networks:
+  etnopapers-net:
+    driver: bridge
