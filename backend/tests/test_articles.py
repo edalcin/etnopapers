@@ -20,7 +20,8 @@ class TestArticleService:
         )
 
         assert result is not None
-        assert result["id"] > 0
+        assert "_id" in result
+        assert isinstance(result["_id"], str)
         assert result["titulo"] == "Test Article"
         assert result["ano_publicacao"] == 2023
         assert result["doi"] == "10.1234/test"
@@ -35,14 +36,14 @@ class TestArticleService:
         )
 
         # Retrieve it
-        result = ArticleService.get_article_by_id(created["id"])
+        result = ArticleService.get_article_by_id(created["_id"])
 
         assert result is not None
         assert result["titulo"] == "Get Test"
 
     def test_get_nonexistent_article(self, db):
         """Test retrieving a non-existent article"""
-        result = ArticleService.get_article_by_id(99999)
+        result = ArticleService.get_article_by_id("507f1f77bcf86cd799439011")  # Invalid ObjectId
         assert result is None
 
     def test_list_articles(self, db):
@@ -90,7 +91,7 @@ class TestArticleService:
         )
 
         updated = ArticleService.update_article(
-            created["id"],
+            created["_id"],
             titulo="Updated Title",
             status="finalizado",
         )
@@ -107,16 +108,16 @@ class TestArticleService:
         )
 
         # Delete it
-        result = ArticleService.delete_article(created["id"])
+        result = ArticleService.delete_article(created["_id"])
         assert result is True
 
         # Verify it's gone
-        found = ArticleService.get_article_by_id(created["id"])
+        found = ArticleService.get_article_by_id(created["_id"])
         assert found is None
 
     def test_delete_nonexistent_article(self, db):
         """Test deleting a non-existent article"""
-        result = ArticleService.delete_article(99999)
+        result = ArticleService.delete_article("507f1f77bcf86cd799439011")  # Invalid ObjectId
         assert result is False
 
     def test_search_articles(self, db):
