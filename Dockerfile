@@ -26,7 +26,7 @@ FROM python:3.11-alpine
 WORKDIR /app
 
 # Install system dependencies
-RUN apk add --no-cache sqlite libsqlite3
+RUN apk add --no-cache sqlite
 
 # Install Python dependencies
 COPY backend/requirements.txt .
