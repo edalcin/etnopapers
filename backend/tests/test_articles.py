@@ -3,7 +3,7 @@ Unit tests for article service and endpoints
 """
 
 import pytest
-from services import ArticleService
+from backend.services import ArticleService
 
 
 class TestArticleService:

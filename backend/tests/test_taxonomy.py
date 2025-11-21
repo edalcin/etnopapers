@@ -4,7 +4,7 @@ Tests for taxonomy validation service
 
 import pytest
 import asyncio
-from services.taxonomy_service import TaxonomyService
+from backend.services.taxonomy_service import TaxonomyService
 
 
 class TestTaxonomyService:

@@ -3,7 +3,7 @@ Tests for duplicate detection service
 """
 
 import pytest
-from services import ArticleService, DuplicateChecker
+from backend.services import ArticleService, DuplicateChecker
 
 
 class TestDuplicateChecker:
