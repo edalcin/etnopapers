@@ -1,84 +1,53 @@
 """
-Database initialization script for Etnopapers
+Database initialization for Mongita
 
-This script initializes the SQLite database with the complete schema.
-Run once before starting the application.
+Mongita is schema-less, so initialization just creates collections and indexes.
+No SQL schema files needed!
 """
 
-import sqlite3
 import logging
-from pathlib import Path
+from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
 
 
-def init_database(db_path: str = "data/etnopapers.db") -> bool:
+def init_database(db_path: str = "data/etnopapers", backend: str = "disk") -> bool:
     """
-    Initialize SQLite database with schema
+    Initialize Mongita database with collections and indexes
 
     Args:
-        db_path: Path to database file
+        db_path: Path to database directory
+        backend: "disk" (persistent) or "memory" (test)
 
     Returns:
-        True if successful, False otherwise
+        True if successful
     """
     try:
-        # Create directory if it doesn't exist
-        db_file = Path(db_path)
-        db_file.parent.mkdir(parents=True, exist_ok=True)
+        # Initialize database connection
+        db = get_db()
 
-        # Connect to database
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        # Read schema
-        schema_path = Path(__file__).parent / "schema.sql"
-        with open(schema_path, "r", encoding="utf-8") as f:
-            schema_sql = f.read()
-
-        # Execute schema
-        cursor.executescript(schema_sql)
-
-        # Verify tables were created
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
-        )
-        tables = cursor.fetchall()
-        table_names = [t[0] for t in tables]
-
-        expected_tables = [
-            "ArtigosCientificos",
-            "DadosEstudo",
-            "Paises",
-            "Estados",
-            "Municipios",
-            "Territorios",
-            "ArtigoLocalizacao",
-            "EspeciesPlantas",
-            "NomesVernaculares",
-            "EspecieNomeVernacular",
-            "ArtigoEspecie",
-            "Comunidades",
+        # Verify collections exist
+        collections = db.db.list_collection_names()
+        expected_collections = [
+            "referencias",
+            "especies_plantas",
+            "comunidades_indígenas",
+            "localizacoes",
         ]
 
-        if not all(t in table_names for t in expected_tables):
-            logger.error(f"Missing tables. Found: {table_names}")
-            return False
-
-        # Check pragmas
-        cursor.execute("PRAGMA foreign_keys;")
-        fk_enabled = cursor.fetchone()[0] == 1
-
-        cursor.execute("PRAGMA journal_mode;")
-        journal_mode = cursor.fetchone()[0].upper()
-
         logger.info(f"Database initialized: {db_path}")
-        logger.info(f"Tables: {len(table_names)} created")
-        logger.info(f"Foreign keys: {'Enabled' if fk_enabled else 'Disabled'}")
-        logger.info(f"Journal mode: {journal_mode}")
+        logger.info(f"Backend: {backend}")
+        logger.info(f"Collections: {len(collections)} created")
+        logger.info(f"Collections: {', '.join(collections)}")
 
-        conn.commit()
-        conn.close()
+        for collection_name in expected_collections:
+            if collection_name in collections:
+                stats = db.get_collection_stats(collection_name)
+                logger.info(
+                    f"  - {collection_name}: {stats['document_count']} documents"
+                )
+
+        logger.info("✓ Mongita database ready for use (schema-less)")
         return True
 
     except Exception as e:

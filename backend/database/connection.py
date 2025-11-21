@@ -1,160 +1,178 @@
 """
-SQLite database connection management for Etnopapers
+Mongita database connection management for Etnopapers
+
+Mongita is an embedded MongoDB-compatible document database.
+This module provides connection and query management using PyMongo API.
 """
 
-import sqlite3
+import os
 import logging
-from contextlib import contextmanager
-from typing import Optional
 from pathlib import Path
+from typing import Optional
+from mongita import MongitaClientDisk, MongitaClientMemory
+from bson import ObjectId
 
 logger = logging.getLogger(__name__)
 
 
 class DatabaseConnection:
-    """Manages SQLite database connections"""
+    """Manages Mongita database connection and collections"""
 
     _instance: Optional["DatabaseConnection"] = None
-    _db_path: str = "data/etnopapers.db"
+    _db_path: str = "data/etnopapers"
 
-    def __init__(self, db_path: str = "data/etnopapers.db"):
+    def __init__(self, db_path: str = "data/etnopapers", backend: str = "disk"):
+        """
+        Initialize Mongita database connection
+
+        Args:
+            db_path: Directory path for Mongita files
+            backend: "disk" (persistent) or "memory" (test)
+        """
         self._db_path = db_path
+        self._backend = backend
         self._initialize_db()
 
     @classmethod
-    def get_instance(cls, db_path: str = "data/etnopapers.db") -> "DatabaseConnection":
+    def get_instance(
+        cls, db_path: str = "data/etnopapers", backend: str = "disk"
+    ) -> "DatabaseConnection":
         """Get singleton instance of DatabaseConnection"""
         if cls._instance is None:
-            cls._instance = cls(db_path)
+            cls._instance = cls(db_path, backend)
         return cls._instance
 
     def _initialize_db(self):
-        """Initialize database if needed"""
+        """Initialize Mongita client and create database"""
         try:
-            # Create directory if needed
-            db_file = Path(self._db_path)
-            db_file.parent.mkdir(parents=True, exist_ok=True)
+            # Create directory if using disk backend
+            if self._backend == "disk":
+                db_dir = Path(self._db_path)
+                db_dir.mkdir(parents=True, exist_ok=True)
+                self.client = MongitaClientDisk(database_dir=self._db_path)
+            else:
+                self.client = MongitaClientMemory()
 
-            # Test connection
-            conn = self.get_connection()
-            cursor = conn.cursor()
+            # Get database
+            self.db = self.client["etnopapers"]
 
-            # Enable foreign keys
-            cursor.execute("PRAGMA foreign_keys = ON;")
+            # Initialize collections and indexes
+            self._create_collections()
 
-            # Set WAL mode
-            cursor.execute("PRAGMA journal_mode = WAL;")
-
-            cursor.execute("PRAGMA synchronous = NORMAL;")
-            cursor.execute("PRAGMA cache_size = -64000;")
-
-            conn.commit()
-            conn.close()
-
-            logger.info(f"Database initialized: {self._db_path}")
+            logger.info(f"Mongita database initialized: {self._db_path}")
 
         except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
+            logger.error(f"Failed to initialize Mongita database: {e}")
             raise
 
-    def get_connection(self) -> sqlite3.Connection:
-        """Get a new database connection"""
-        conn = sqlite3.connect(self._db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    @contextmanager
-    def get_cursor(self):
-        """Context manager for database cursor"""
-        conn = self.get_connection()
-        cursor = conn.cursor()
+    def _create_collections(self):
+        """Create collections with indexes if they don't exist"""
         try:
-            yield cursor
-            conn.commit()
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"Database error: {e}")
-            raise
-        finally:
-            cursor.close()
-            conn.close()
+            # Get list of existing collections
+            existing_collections = self.db.list_collection_names()
 
-    def execute_query(self, query: str, params: tuple = None):
-        """Execute a SELECT query"""
-        try:
-            with self.get_cursor() as cursor:
-                if params:
-                    cursor.execute(query, params)
-                else:
-                    cursor.execute(query)
-                return cursor.fetchall()
+            # Collection: referencias (main documents)
+            if "referencias" not in existing_collections:
+                self.db.create_collection("referencias")
+                logger.info("Created collection: referencias")
+
+            # Create indexes for referencias
+            self.db["referencias"].create_index("doi", unique=True)
+            self.db["referencias"].create_index("status")
+            self.db["referencias"].create_index("ano_publicacao")
+            self.db["referencias"].create_index("data_processamento")
+            self.db["referencias"].create_index([("especies.especie_id", 1)])
+            self.db["referencias"].create_index(
+                [("comunidades.comunidade_id", 1)]
+            )
+            self.db["referencias"].create_index([("localizacoes.territorio", 1)])
+
+            # Collection: especies_plantas (taxonomy deduplication)
+            if "especies_plantas" not in existing_collections:
+                self.db.create_collection("especies_plantas")
+                logger.info("Created collection: especies_plantas")
+
+            self.db["especies_plantas"].create_index("nome_cientifico", unique=True)
+            self.db["especies_plantas"].create_index("familia_botanica")
+            self.db["especies_plantas"].create_index("status_validacao")
+
+            # Collection: comunidades_indígenas
+            if "comunidades_indígenas" not in existing_collections:
+                self.db.create_collection("comunidades_indígenas")
+                logger.info("Created collection: comunidades_indígenas")
+
+            self.db["comunidades_indígenas"].create_index("nome")
+            self.db["comunidades_indígenas"].create_index("tipo")
+
+            # Collection: localizacoes (optional, for large datasets)
+            if "localizacoes" not in existing_collections:
+                self.db.create_collection("localizacoes")
+                logger.info("Created collection: localizacoes")
+
+            logger.info(
+                f"Collections ready: {', '.join(self.db.list_collection_names())}"
+            )
+
         except Exception as e:
-            logger.error(f"Query error: {e}")
+            logger.error(f"Error creating collections: {e}")
             raise
 
-    def execute_update(self, query: str, params: tuple = None) -> int:
-        """Execute INSERT/UPDATE/DELETE query"""
-        try:
-            with self.get_cursor() as cursor:
-                if params:
-                    cursor.execute(query, params)
-                else:
-                    cursor.execute(query)
-                return cursor.rowcount
-        except Exception as e:
-            logger.error(f"Update error: {e}")
-            raise
-
-    def get_integrity_check(self) -> list:
-        """Run PRAGMA integrity_check"""
-        try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
-            cursor.execute("PRAGMA integrity_check;")
-            result = cursor.fetchall()
-            conn.close()
-            return result
-        except Exception as e:
-            logger.error(f"Integrity check error: {e}")
-            raise
+    def get_collection(self, collection_name: str):
+        """Get a collection from the database"""
+        return self.db[collection_name]
 
     def get_database_info(self) -> dict:
         """Get database statistics"""
         try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
+            collections = self.db.list_collection_names()
+            collection_info = {}
 
-            # Get database size
-            db_size = Path(self._db_path).stat().st_size if Path(self._db_path).exists() else 0
+            for collection_name in collections:
+                count = self.db[collection_name].count_documents({})
+                collection_info[collection_name] = count
 
-            # Get table counts
-            cursor.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
-            )
-            tables = [t[0] for t in cursor.fetchall()]
-
-            table_info = {}
-            for table in tables:
-                cursor.execute(f"SELECT COUNT(*) FROM {table};")
-                count = cursor.fetchone()[0]
-                table_info[table] = count
-
-            conn.close()
+            # Calculate directory size if disk-based
+            size_bytes = 0
+            if self._backend == "disk":
+                db_path = Path(self._db_path)
+                if db_path.exists():
+                    for file_path in db_path.rglob("*"):
+                        if file_path.is_file():
+                            size_bytes += file_path.stat().st_size
 
             return {
                 "db_path": self._db_path,
-                "size_bytes": db_size,
-                "size_mb": db_size / (1024 * 1024),
-                "tables": len(tables),
-                "table_info": table_info,
+                "backend": self._backend,
+                "size_bytes": size_bytes,
+                "size_mb": size_bytes / (1024 * 1024),
+                "collections": len(collections),
+                "collection_info": collection_info,
             }
 
         except Exception as e:
             logger.error(f"Database info error: {e}")
             raise
 
+    def get_collection_stats(self, collection_name: str) -> dict:
+        """Get statistics for a specific collection"""
+        try:
+            collection = self.db[collection_name]
+            count = collection.count_documents({})
+
+            return {
+                "collection": collection_name,
+                "document_count": count,
+                "indexes": list(collection.list_indexes()),
+            }
+
+        except Exception as e:
+            logger.error(f"Collection stats error: {e}")
+            raise
+
 
 # Singleton instance
 def get_db() -> DatabaseConnection:
     """Get database connection instance"""
-    return DatabaseConnection.get_instance()
+    backend = os.getenv("DATABASE_BACKEND", "disk")
+    db_path = os.getenv("DATABASE_PATH", "data/etnopapers")
+    return DatabaseConnection.get_instance(db_path, backend)

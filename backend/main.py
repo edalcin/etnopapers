@@ -2,6 +2,7 @@
 Etnopapers Backend - Main FastAPI Application
 """
 
+import os
 import logging
 import json
 from pathlib import Path
@@ -18,11 +19,12 @@ from backend.routers import articles_router, species_router, database_router
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Initialize database
-logger.info("Initializing database...")
-init_database(settings.DATABASE_PATH)
+# Initialize Mongita database
+logger.info("Initializing Mongita database...")
+backend = os.getenv("DATABASE_BACKEND", "disk")
+init_database(settings.DATABASE_PATH, backend)
 db = get_db()
-logger.info("Database initialized successfully")
+logger.info("Mongita database initialized successfully")
 
 # Create FastAPI app
 app = FastAPI(
