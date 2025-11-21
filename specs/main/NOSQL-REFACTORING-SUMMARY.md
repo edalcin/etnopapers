@@ -119,18 +119,7 @@ JSON reflete perfeitamente a hierarquia da pesquisa etnobotânica!
    - Estruturas JSON/BSON com exemplos reais
    - Índices de performance
    - Schemas Pydantic para validação
-   - Comparação com modelo SQLite anterior
    - Exemplos de queries agregadas
-
-3. **`mongita-migration-guide.md`** (NOVO - 500+ linhas)
-   - Passo a passo implementação Mongita
-   - Inicialização de cliente e banco
-   - Schemas Pydantic completos
-   - Service layer (CRUD operations)
-   - Routers FastAPI prontos
-   - Script de migração SQLite → Mongita
-   - Atualização Docker/docker-compose
-   - Checklist completo
 
 ---
 
@@ -198,36 +187,33 @@ BSON é ~20% mais eficiente que JSON puro (compressão binária).
 
 ## 🔄 Processo de Implementação
 
-### Fase 1: Setup (1-2 dias)
+**Status**: ✅ COMPLETO - Começar do zero com Mongita
+
+### Fase 1: Setup ✅
 - ✅ Instalar Mongita + PyMongo
 - ✅ Configurar `backend/database.py`
 - ✅ Criar modelos Pydantic
 - ✅ Implementar índices
 
-### Fase 2: Service Layer (2-3 dias)
+### Fase 2: Service Layer ✅
 - ✅ Implementar ReferenceService (CRUD)
 - ✅ Implementar SpeciesService
 - ✅ Implementar CommunityService
 - ✅ Escrever testes unitários
 
-### Fase 3: API (1-2 dias)
+### Fase 3: API ✅
 - ✅ Routers FastAPI para referencias
 - ✅ Routers para species
 - ✅ Routers para comunidades
 - ✅ Error handling
 
-### Fase 4: Migração (1 dia)
-- ✅ Script migração SQLite → Mongita
-- ✅ Validação de dados
-- ✅ Testes de integridade
-
-### Fase 5: Deploy (1 dia)
+### Fase 4: Deploy ✅
 - ✅ Atualizar Dockerfile
 - ✅ Docker Compose
 - ✅ Testes em container
 - ✅ Documentação
 
-**Total estimado: 1-2 semanas** (desenvolvimento + testes)
+**Sistema pronto para começar do zero com Mongita!**
 
 ---
 
@@ -293,28 +279,28 @@ def create_reference(ref_data):
 
 ## ✅ Próximos Passos
 
-### Imediato
-1. ✅ Revisão desta especificação com stakeholders
-2. ⬜ Implementar primeira fase (setup + models)
-3. ⬜ Escrever testes para service layer
-4. ⬜ Rodar script migração em dados de teste
+### Imediato (Desenvolvimento)
+1. ✅ Especificação Mongita completa
+2. ✅ Backend implementado com Mongita
+3. ⬜ Frontend React (em desenvolvimento)
+4. ⬜ Testes de integração E2E
 
-### Curto Prazo
+### Curto Prazo (Deploy)
 5. ⬜ Deploy em homolog (container Docker)
-6. ⬜ Testes de carga (performance com Mongita vs SQLite)
-7. ⬜ Treinamento da equipe
+6. ⬜ Testes de carga e performance
+7. ⬜ Testes de backup/restore
+8. ⬜ Documentação final para usuários
 
-### Futuro
-8. ⬜ Migração de produção (backup antes!)
+### Futuro (Escalabilidade)
 9. ⬜ Monitoramento em produção
-10. ⬜ Planejamento para MongoDB cloud (quando escalar)
+10. ⬜ Planejamento para MongoDB cloud (quando houver múltiplos servidores)
 
 ---
 
 ## 📞 Perguntas Frequentes
 
 **P: E se precisarmos voltar para SQLite?**
-R: A mudança é reversível - há um script de migração que cria SQLite a partir de Mongita. Mas recomendamos ficar com Mongita (Mongita → MongoDB é caminho natural).
+R: Não há dados legados para migrar - sistema começa do zero com Mongita. Recomendamos ficar com Mongita (Mongita → MongoDB é caminho natural para escalabilidade).
 
 **P: Mongita é tão estável quanto SQLite?**
 R: Sim. Mongita usa BSON (formato binary de MongoDB, testado em bilhões de documentos). Recomendações: backups regulares + volume persistente em Docker.
@@ -335,10 +321,10 @@ R: MongoDB tem operadores poderosos (`$regex`, `$gt`, `$in`, agregação pipelin
 
 ## 📝 Referências na Documentação
 
-- `CLAUDE.md` - Visão geral arquitetura + padrões comuns
+- `CLAUDE.md` - Visão geral arquitetura + padrões comuns + dev commands
 - `data-model-nosql.md` - Especificação completa de coleções + schemas + exemplos
-- `mongita-migration-guide.md` - Passo a passo implementação com código pronto
-- `specs/main/mongita-migration-guide.md` - Script de migração SQLite → Mongita
+- `README.md` - Overview do projeto com Mongita
+- `quickstart.md` - Guia de instalação para UNRAID/Docker
 
 ---
 
