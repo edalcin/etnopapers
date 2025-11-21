@@ -4,9 +4,11 @@ Etnopapers Backend - Main FastAPI Application
 
 import logging
 import json
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from backend.config import settings
 from backend.database.connection import get_db
@@ -45,6 +47,12 @@ app.add_middleware(
 app.include_router(articles_router)
 app.include_router(species_router)
 app.include_router(database_router)
+
+# Serve frontend static files
+frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_dist)), name="static")
+    logger.info(f"Frontend static files mounted from {frontend_dist}")
 
 
 @app.on_event("startup")
@@ -85,7 +93,14 @@ async def health_check():
 
 @app.get("/")
 async def root():
-    """API root endpoint"""
+    """Root endpoint - serve frontend"""
+    frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+    index_file = frontend_dist / "index.html"
+
+    if index_file.exists():
+        return FileResponse(str(index_file))
+
+    # Fallback to API info if frontend not built
     return {
         "message": "Etnopapers API",
         "version": "0.1.0",
@@ -93,6 +108,27 @@ async def root():
         "redoc": "/redoc",
         "health": "/health",
     }
+
+
+@app.get("/{path:path}")
+async def serve_spa(path: str):
+    """Serve SPA - fallback to index.html for client-side routing"""
+    # Don't intercept API routes or special paths
+    if path.startswith("api/") or path in ["docs", "redoc", "openapi.json", "health"]:
+        return {"error": "Not found"}
+
+    frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+    file_path = frontend_dist / path
+
+    if file_path.exists() and file_path.is_file():
+        return FileResponse(str(file_path))
+
+    # Fallback to index.html for SPA routing
+    index_file = frontend_dist / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+
+    return {"error": "Not found"}
 
 
 if __name__ == "__main__":

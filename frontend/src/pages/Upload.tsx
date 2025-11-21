@@ -4,6 +4,8 @@ import MetadataDisplay from '@components/MetadataDisplay'
 import APIKeySetup from '@components/APIKeySetup'
 import { extractTextFromPDF } from '@services/pdfExtractor'
 import { extractWithGemini } from '@services/ai/geminiClient'
+import { extractWithOpenAI } from '@services/ai/openaiClient'
+import { extractWithClaude } from '@services/ai/claudeClient'
 import { useAPIKey, useSetExtractedData, useSetExtractLoading, useSetExtractError, useAddArticle } from '@store/useStore'
 import { articlesAPI } from '@services/api'
 import type { ExtractedMetadata } from '@types'
@@ -44,9 +46,24 @@ export default function Upload() {
         return
       }
 
-      // Extract with AI
-      console.log('Extracting metadata with Gemini...')
-      const metadata = await extractWithGemini(result.text, apiKey.key)
+      // Extract with AI based on provider
+      let metadata: ExtractedMetadata
+
+      switch (apiKey.provider) {
+        case 'openai':
+          console.log('Extracting metadata with OpenAI ChatGPT...')
+          metadata = await extractWithOpenAI(result.text, apiKey.key)
+          break
+        case 'claude':
+          console.log('Extracting metadata with Claude...')
+          metadata = await extractWithClaude(result.text, apiKey.key)
+          break
+        case 'gemini':
+        default:
+          console.log('Extracting metadata with Gemini...')
+          metadata = await extractWithGemini(result.text, apiKey.key)
+          break
+      }
 
       setExtractedData(metadata)
       setExtractedMetadata(metadata)
