@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PDFUpload from '@components/PDFUpload'
 import MetadataDisplay from '@components/MetadataDisplay'
+import ManualEditor from '@components/ManualEditor'
 import APIKeySetup from '@components/APIKeySetup'
 import { extractTextFromPDF } from '@services/pdfExtractor'
 import { extractWithGemini } from '@services/ai/geminiClient'
@@ -8,6 +9,7 @@ import { extractWithOpenAI } from '@services/ai/openaiClient'
 import { extractWithClaude } from '@services/ai/claudeClient'
 import { useAPIKey, useSetExtractedData, useSetExtractLoading, useSetExtractError, useAddArticle } from '@store/useStore'
 import { articlesAPI } from '@services/api'
+import { useAutoSaveDraft, getRecentDraft, clearAllDrafts } from '@hooks/useAutoSaveDraft'
 import type { ExtractedMetadata } from '@types'
 import './Upload.css'
 
@@ -18,11 +20,28 @@ export default function Upload() {
   const setExtractError = useSetExtractError()
   const addArticle = useAddArticle()
 
-  const [step, setStep] = useState<'upload' | 'config' | 'extract' | 'review'>('upload')
+  const [step, setStep] = useState<'upload' | 'config' | 'extract' | 'review' | 'edit'>('upload')
   const [pdfText, setPdfText] = useState<string>('')
   const [extractedMetadata, setExtractedMetadata] = useState<ExtractedMetadata | null>(null)
   const [isScanned, setIsScanned] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [duplicateWarning, setDuplicateWarning] = useState<any | null>(null)
+  const [showRecoverDraft, setShowRecoverDraft] = useState(false)
+  const [hasDraft, setHasDraft] = useState(false)
+
+  // Auto-save drafts
+  useAutoSaveDraft(extractedMetadata, {
+    enabled: step === 'review' || step === 'edit',
+  })
+
+  // Check for recovered draft on mount
+  useEffect(() => {
+    const recentDraft = getRecentDraft()
+    if (recentDraft) {
+      setHasDraft(true)
+      setShowRecoverDraft(true)
+    }
+  }, [])
 
   const handleUpload = async (file: File) => {
     try {
@@ -138,7 +157,31 @@ export default function Upload() {
   }
 
   const handleEdit = () => {
-    alert('Edição de metadados será implementada em TASK-017')
+    setStep('edit')
+  }
+
+  const handleEditorSave = async (editedData: ExtractedMetadata) => {
+    setExtractedMetadata(editedData)
+    setStep('review')
+  }
+
+  const handleEditorCancel = () => {
+    setStep('review')
+  }
+
+  const recoverDraft = () => {
+    const draft = getRecentDraft()
+    if (draft) {
+      setExtractedMetadata(draft)
+      setStep('review')
+      setShowRecoverDraft(false)
+    }
+  }
+
+  const discardDraft = () => {
+    clearAllDrafts()
+    setShowRecoverDraft(false)
+    setHasDraft(false)
   }
 
   return (
@@ -172,6 +215,24 @@ export default function Upload() {
         </div>
       )}
 
+      {/* Draft Recovery Banner */}
+      {showRecoverDraft && (
+        <div className="draft-recovery-banner">
+          <div className="draft-message">
+            <span>📝 Rascunho recuperado</span>
+            <p>Detectamos um rascunho salvo automaticamente. Deseja recuperá-lo?</p>
+          </div>
+          <div className="draft-actions">
+            <button onClick={recoverDraft} className="btn-recover">
+              Recuperar
+            </button>
+            <button onClick={discardDraft} className="btn-discard">
+              Descartar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Step 1: Upload */}
       {step === 'upload' && (
         <section className="step-section">
@@ -200,12 +261,35 @@ export default function Upload() {
       {/* Step 3 & 4: Metadata */}
       {(step === 'extract' || step === 'review') && extractedMetadata && (
         <section className="step-section">
+          {duplicateWarning && (
+            <div className="duplicate-warning">
+              <span>⚠️ Artigo Duplicado Detectado</span>
+              <p>
+                Um artigo similar já existe no banco de dados:
+                <strong>{duplicateWarning.titulo}</strong>
+              </p>
+              <button onClick={() => setDuplicateWarning(null)} className="close-btn">✕</button>
+            </div>
+          )}
+
           <MetadataDisplay
             data={extractedMetadata}
             isScanned={isScanned}
             onSave={handleSave}
             onEdit={handleEdit}
             onDiscard={handleDiscard}
+          />
+        </section>
+      )}
+
+      {/* Step 5: Manual Editor */}
+      {step === 'edit' && extractedMetadata && (
+        <section className="step-section">
+          <ManualEditor
+            initialData={extractedMetadata}
+            onSave={handleEditorSave}
+            onCancel={handleEditorCancel}
+            isDraft={hasDraft}
           />
         </section>
       )}

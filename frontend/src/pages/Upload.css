@@ -172,6 +172,113 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+/* Draft Recovery Banner */
+.draft-recovery-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+.draft-message {
+  flex: 1;
+}
+
+.draft-message span {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.draft-message p {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.95;
+}
+
+.draft-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-left: 1.5rem;
+  flex-shrink: 0;
+}
+
+.btn-recover,
+.btn-discard {
+  padding: 0.5rem 1rem;
+  border: 2px solid white;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.btn-recover {
+  background: white;
+  color: #667eea;
+}
+
+.btn-recover:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.btn-discard {
+  background: transparent;
+  color: white;
+}
+
+.btn-discard:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Duplicate Warning */
+.duplicate-warning {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  color: #856404;
+  padding: 1rem 1.5rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.duplicate-warning span {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.duplicate-warning p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.duplicate-warning strong {
+  display: inline-block;
+  background: rgba(255, 193, 7, 0.2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin: 0 4px;
+}
+
+.duplicate-warning .close-btn {
+  color: #856404;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
 @media (max-width: 768px) {
   .step-indicator {
     flex-wrap: wrap;
@@ -198,5 +305,32 @@
   .btn-continue {
     width: 100%;
     min-width: unset;
+  }
+
+  .draft-recovery-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .draft-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .draft-actions button {
+    flex: 1;
+  }
+
+  .duplicate-warning {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .duplicate-warning .close-btn {
+    margin-left: 0;
+    align-self: flex-end;
+    margin-top: -2rem;
   }
 }
