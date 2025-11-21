@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from config import settings
 from database.connection import get_db
 from database.init_db import init_database
-from routers import articles_router, species_router
+from routers import articles_router, species_router, database_router
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ app.add_middleware(
 # Include routers
 app.include_router(articles_router)
 app.include_router(species_router)
+app.include_router(database_router)
 
 
 @app.on_event("startup")

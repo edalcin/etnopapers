@@ -1,0 +1,279 @@
+.articles-table {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.loading,
+.error,
+.empty {
+  padding: 3rem;
+  text-align: center;
+  color: #666;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.empty {
+  background: #f9f9f9;
+}
+
+.empty p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.subtitle {
+  color: #999;
+  font-size: 0.95rem;
+  margin-top: 0.5rem !important;
+}
+
+.table-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.table-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.articles-table-element {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.articles-table-element thead {
+  background: #f9f9f9;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.articles-table-element th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-right: 1px solid #f0f0f0;
+}
+
+.articles-table-element th:last-child {
+  border-right: none;
+}
+
+.articles-table-element th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.3s;
+}
+
+.articles-table-element th.sortable:hover {
+  background: #f0f0f0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sort-indicator {
+  color: #667eea;
+  font-weight: bold;
+  font-size: 1.1rem;
+  min-width: 1rem;
+  text-align: center;
+}
+
+.articles-table-element tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.3s;
+}
+
+.articles-table-element tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.articles-table-element tbody tr.even {
+  background: #fafafa;
+}
+
+.articles-table-element td {
+  padding: 1rem;
+  border-right: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.articles-table-element td:last-child {
+  border-right: none;
+}
+
+.articles-table-element td.cell {
+  word-break: break-word;
+  max-width: 500px;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.table-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #f0f0f0;
+  background: #f9f9f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-btn {
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #764ba2;
+}
+
+.pagination-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.page-info {
+  color: #666;
+  font-size: 0.95rem;
+  min-width: 150px;
+  text-align: center;
+}
+
+.page-size-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.btn-retry {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-retry:hover {
+  background: #764ba2;
+}
+
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    min-width: unset;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .articles-table-element {
+    font-size: 0.85rem;
+  }
+
+  .articles-table-element th,
+  .articles-table-element td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .table-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .page-info {
+    flex-basis: 100%;
+  }
+}
