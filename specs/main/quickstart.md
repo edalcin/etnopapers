@@ -13,8 +13,9 @@ Este guia fornece instruções passo-a-passo para configurar e executar o Etnopa
 - ✅ Docker padrão (sem necessidade de GPU)
 - ✅ APIs externas de IA (Gemini, ChatGPT, Claude)
 - ✅ Chaves de API fornecidas pelo usuário
-- ✅ Banco de dados SQLite
+- ✅ Banco de dados Mongita (NoSQL, document-oriented, MongoDB-compatible)
 - ✅ Interface web responsiva
+- ✅ Docker leve: ~180-200MB (40% mais leve que SQL+ORM)
 
 ## Pré-requisitos
 
@@ -49,6 +50,23 @@ Você precisará de uma chave de API de **pelo menos um** dos seguintes provedor
 
 ## Instalação no UNRAID
 
+### Passo 0: Preparar Diretório no Host (IMPORTANTE!)
+
+⚠️ **Antes de instalar o container, você deve criar o diretório de dados no UNRAID:**
+
+1. Acesse o **UNRAID Web UI**
+2. Vá para **Main** → **Flash** ou abra Terminal SSH
+3. Execute:
+
+```bash
+mkdir -p /mnt/user/appdata/etnopapers/
+chmod 777 /mnt/user/appdata/etnopapers/
+```
+
+**Ou via UNRAID Web UI**:
+- Settings → Shares → appdata → Create
+- Ou use File Manager para criar pasta `etnopapers`
+
 ### Passo 1: Instalar via Community Applications
 
 1. Acesse o **UNRAID Web UI**
@@ -59,8 +77,11 @@ Você precisará de uma chave de API de **pelo menos um** dos seguintes provedor
 
 ```
 Container Name: etnopapers
-Port (WebUI): 8000 → 8000
+Port (WebUI): 8007 → 8000
 Path (Database): /mnt/user/appdata/etnopapers → /data
+Environment Variables:
+  DATABASE_BACKEND=disk
+  DATABASE_PATH=/data/etnopapers
 ```
 
 6. Clique em **Apply**
@@ -102,8 +123,9 @@ mkdir -p data
 Crie arquivo `.env` na raiz do projeto:
 
 ```env
-# Caminho do banco de dados
-DATABASE_PATH=/data/etnopapers.db
+# Banco de Dados (Mongita - NoSQL)
+DATABASE_BACKEND=disk                # disk (persistente) | memory (teste)
+DATABASE_PATH=/data/etnopapers       # Diretório onde Mongita armazena documentos BSON
 
 # Porta da aplicação
 PORT=8000
@@ -118,6 +140,11 @@ TAXONOMY_API_TIMEOUT=5
 CACHE_TTL_DAYS=30
 ```
 
+**Notas sobre Mongita**:
+- `DATABASE_PATH` é um **diretório**, não um arquivo (Mongita cria arquivos binários BSON internamente)
+- Mongita auto-cria a estrutura na primeira execução
+- Dados são armazenados em formato BSON (20% mais compacto que JSON)
+
 ### Passo 4: Executar com Docker Compose
 
 Crie arquivo `docker-compose.yml`:
@@ -127,19 +154,26 @@ version: '3.8'
 
 services:
   etnopapers:
-    image: etnopapers:latest
+    image: ghcr.io/edalcin/etnopapers:latest
     container_name: etnopapers
     ports:
       - "8000:8000"
     volumes:
       - ./data:/data
     environment:
-      - DATABASE_PATH=/data/etnopapers.db
+      - DATABASE_BACKEND=disk
+      - DATABASE_PATH=/data/etnopapers
       - PORT=8000
       - LOG_LEVEL=info
       - TAXONOMY_API_TIMEOUT=5
       - CACHE_TTL_DAYS=30
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 ```
 
 Execute:
@@ -183,11 +217,12 @@ docker run -d \
   --name etnopapers \
   -p 8000:8000 \
   -v $(pwd)/data:/data \
-  -e DATABASE_PATH=/data/etnopapers.db \
+  -e DATABASE_BACKEND=disk \
+  -e DATABASE_PATH=/data/etnopapers \
   -e PORT=8000 \
   -e LOG_LEVEL=info \
   --restart unless-stopped \
-  etnopapers:latest
+  ghcr.io/edalcin/etnopapers:latest
 ```
 
 ### Verificar Logs
@@ -658,72 +693,111 @@ docker-compose restart
 
 ## Backup e Manutenção
 
-### Backup do Banco de Dados
+### Backup do Banco de Dados (Mongita)
 
-**Localização**: `./data/etnopapers.db`
+**Localização**: `./data/etnopapers/` (diretório com arquivos BSON)
+
+⚠️ **IMPORTANTE**: Com Mongita, o banco é um **diretório**, não um único arquivo!
 
 **Backup Manual**:
 
 ```bash
-# Copiar arquivo do banco
-cp ./data/etnopapers.db ./backups/etnopapers_$(date +%Y%m%d).db
+# Copiar diretório inteiro do banco
+cp -r ./data/etnopapers ./backups/etnopapers_$(date +%Y%m%d)
+
+# Ou via tar (para compressão)
+tar -czf ./backups/etnopapers_$(date +%Y%m%d).tar.gz ./data/etnopapers/
 ```
 
-**Backup Automático** (agendado):
+**Backup Automático** (agendado para UNRAID):
 
 1. Criar script `backup.sh`:
 
 ```bash
 #!/bin/bash
 BACKUP_DIR="/mnt/user/backups/etnopapers"
+ETNO_DIR="/mnt/user/appdata/etnopapers"
 mkdir -p $BACKUP_DIR
-cp /mnt/user/appdata/etnopapers/etnopapers.db \
-   $BACKUP_DIR/etnopapers_$(date +%Y%m%d_%H%M%S).db
+
+# Fazer backup completo do diretório (com compressão)
+tar -czf $BACKUP_DIR/etnopapers_$(date +%Y%m%d_%H%M%S).tar.gz $ETNO_DIR/
+
 # Manter apenas últimos 30 backups
-ls -t $BACKUP_DIR/etnopapers_*.db | tail -n +31 | xargs rm -f
+ls -t $BACKUP_DIR/etnopapers_*.tar.gz | tail -n +31 | xargs rm -f
+
+echo "Backup Mongita concluído em $(date)" >> $BACKUP_DIR/backup.log
 ```
 
 2. Agendar no UNRAID User Scripts plugin:
    - Frequência: Diária
    - Horário: 03:00
 
-### Restaurar Backup
+### Restaurar Backup (Mongita)
 
 ```bash
 # Parar container
 docker-compose down
 
-# Restaurar arquivo
-cp ./backups/etnopapers_20251120.db ./data/etnopapers.db
+# Restaurar backup
+rm -rf ./data/etnopapers
+tar -xzf ./backups/etnopapers_20251120.tar.gz -C ./
+
+# Ou se usou cópia simples:
+# rm -rf ./data/etnopapers
+# cp -r ./backups/etnopapers_20251120 ./data/etnopapers
 
 # Reiniciar container
 docker-compose up -d
+
+# Verificar que Mongita inicializou corretamente
+docker-compose logs | grep "Database initialized"
 ```
 
-### Exportar Dados para CSV
+### Exportar Dados para CSV/JSON
 
 **Via Interface Web**:
 
-1. Menu: **"Exportar"** → **"CSV"**
+1. Menu: **"Exportar"** → **"CSV"** ou **"JSON"**
 2. Selecione dados:
-   - Artigos
+   - Referências (artigos)
    - Espécies
    - Regiões
    - Comunidades
-3. Clique em **"Baixar CSV"**
+3. Clique em **"Baixar"**
 
-**Via SQLite CLI** (acesso ao servidor):
+**Via Python** (acesso ao servidor):
 
-```bash
+```python
+# Script para exportar dados de Mongita para CSV
+from mongita import MongitaClientDisk
+import csv
+import json
+
 # Conectar ao banco
-sqlite3 ./data/etnopapers.db
+client = MongitaClientDisk(database_dir='./data/etnopapers')
+db = client['etnopapers']
 
-# Exportar artigos
-.headers on
-.mode csv
-.output artigos_export.csv
-SELECT * FROM ArtigosCientificos;
-.quit
+# Exportar referências para CSV
+with open('referencias_export.csv', 'w', newline='', encoding='utf-8') as f:
+    writer = csv.DictWriter(f, fieldnames=['_id', 'titulo', 'doi', 'ano_publicacao', 'autores', 'status'])
+    writer.writeheader()
+    for doc in db['referencias'].find():
+        # Converter ObjectId para string
+        doc['_id'] = str(doc['_id'])
+        doc['autores'] = '|'.join(doc.get('autores', []))
+        writer.writerow({k: doc.get(k) for k in writer.fieldnames})
+
+print("Referências exportadas para referencias_export.csv")
+
+# Exportar para JSON (mais completo, preserva estrutura)
+with open('referencias_export.json', 'w', encoding='utf-8') as f:
+    docs = []
+    for doc in db['referencias'].find():
+        doc['_id'] = str(doc['_id'])
+        docs.append(doc)
+    json.dump(docs, f, ensure_ascii=False, indent=2, default=str)
+
+print("Referências exportadas para referencias_export.json")
 ```
 
 ---
@@ -750,6 +824,44 @@ SELECT * FROM ArtigosCientificos;
    ```bash
    netstat -tuln | grep 8000
    ```
+
+### Problema: Diretório de dados não foi criado (Mongita)
+
+**Sintomas**: Container inicia mas gera erro `permission denied` ou dados não persistem
+
+**Causa**: Diretório `/mnt/user/appdata/etnopapers/` não existe no host UNRAID
+
+**Soluções**:
+
+1. **Criar diretório manualmente no UNRAID** (via SSH):
+   ```bash
+   mkdir -p /mnt/user/appdata/etnopapers/
+   chmod 777 /mnt/user/appdata/etnopapers/
+   ```
+
+2. **Ou via UNRAID Web UI**:
+   - Vá para: **Settings** → **Shares** → **appdata** → **Create**
+   - Ou use **File Manager** para criar pasta `etnopapers` dentro de `appdata`
+
+3. **Verificar que volume está mapeado corretamente**:
+   ```bash
+   docker inspect etnopapers | grep -A 5 Mounts
+   # Deve mostrar: /mnt/user/appdata/etnopapers → /data
+   ```
+
+4. **Se container já está rodando**:
+   ```bash
+   # Parar container
+   docker stop etnopapers
+
+   # Criar diretório
+   mkdir -p /mnt/user/appdata/etnopapers/
+
+   # Reiniciar
+   docker start etnopapers
+   ```
+
+**Mongita auto-criará** arquivos de banco no diretório na primeira inicialização.
 
 ### Problema: API key inválida
 
@@ -835,26 +947,44 @@ curl https://api.anthropic.com/v1/messages \
 3. Corrigir nome científico manualmente
 4. Aceitar status "não validado" temporariamente
 
-### Problema: Banco de dados corrompido
+### Problema: Banco de dados corrompido ou não responsivo (Mongita)
 
-**Sintomas**: Erros ao salvar artigos, interface não carrega
+**Sintomas**: Erros ao salvar referências, interface não carrega, dados perdidos
 
 **Soluções**:
 
-1. Verificar integridade:
+1. **Parar container**:
    ```bash
-   sqlite3 ./data/etnopapers.db "PRAGMA integrity_check;"
+   docker-compose down
    ```
 
-2. Se corrompido, restaurar backup:
+2. **Fazer backup do banco corrompido** (por segurança):
    ```bash
-   cp ./backups/etnopapers_ULTIMO.db ./data/etnopapers.db
+   cp -r ./data/etnopapers ./data/etnopapers_corrupted_backup
    ```
 
-3. Se sem backup, tentar recuperar:
+3. **Limpar cache e reiniciar** (tenta recuperar dados):
    ```bash
-   sqlite3 ./data/etnopapers.db ".recover" | sqlite3 ./data/etnopapers_recovered.db
+   # Se volumes está sujo, tente apenas reiniciar
+   docker-compose up -d
+   docker-compose logs -f  # Verificar logs
    ```
+
+4. **Se não funcionar, restaurar backup**:
+   ```bash
+   rm -rf ./data/etnopapers
+   tar -xzf ./backups/etnopapers_20251120.tar.gz -C ./
+   docker-compose up -d
+   ```
+
+5. **Último recurso: reset completo do banco** (⚠️ PERDE TODOS OS DADOS):
+   ```bash
+   docker-compose down
+   rm -rf ./data/etnopapers/*  # Apaga todos os arquivos BSON
+   docker-compose up -d        # Mongita recriará estrutura vazia
+   ```
+
+**Prevenção**: Faça backups regularmente (veja seção "Backup Automático")
 
 ---
 
@@ -862,7 +992,7 @@ curl https://api.anthropic.com/v1/messages \
 
 ### O PDF original fica armazenado no servidor?
 
-**Não.** Apenas metadados são armazenados no banco SQLite. O PDF é processado no navegador, enviado para API de IA, e descartado após extração.
+**Não.** Apenas metadados são armazenados no banco Mongita (NoSQL). O PDF é processado no navegador, enviado para API de IA, e descartado após extração. O servidor nunca recebe o PDF original.
 
 ### Minha chave de API é enviada para o servidor?
 
