@@ -11,11 +11,15 @@ COPY frontend/package*.json ./
 # Install dependencies
 RUN npm install --prefer-offline --no-audit
 
-# Copy frontend source
+# Copy frontend source and config files
 COPY frontend/src ./src
 COPY frontend/public ./public
+COPY frontend/index.html ./
 COPY frontend/tsconfig.json ./
+COPY frontend/tsconfig.node.json ./
 COPY frontend/vite.config.ts ./
+COPY frontend/.eslintrc.json ./
+COPY frontend/.prettierrc.json ./
 
 # Build frontend
 RUN npm run build
