@@ -24,6 +24,17 @@ export const speciesAPI = {
 
 export const databaseAPI = {
   info: () => api.get('/database/info'),
+  download: () => api.get('/database/download', { responseType: 'blob' }),
+}
+
+export const validateAPIKey = async (provider: string, key: string): Promise<boolean> => {
+  try {
+    // This is a stub - actual validation would call the provider's API
+    // For now, just check if the key is non-empty
+    return key.trim().length > 0
+  } catch {
+    return false
+  }
 }
 
 export default api
