@@ -25,12 +25,21 @@ export default function ArticlesTable() {
   const loadArticles = async () => {
     try {
       setLoading(true)
-      const response = await articlesAPI.list(1, 1000)
-      setArticles(response.data.items)
       setError(null)
+      const response = await articlesAPI.list(1, 1000)
+
+      // Validate response structure
+      if (!response.data || !Array.isArray(response.data.items)) {
+        console.error('Invalid response structure:', response.data)
+        setError('Resposta inválida do servidor. Tente novamente.')
+        return
+      }
+
+      setArticles(response.data.items)
     } catch (err) {
-      setError('Erro ao carregar artigos')
-      console.error(err)
+      const errorMsg = err instanceof Error ? err.message : 'Erro ao carregar artigos'
+      console.error('Error loading articles:', err)
+      setError(`Erro ao carregar artigos: ${errorMsg}`)
     } finally {
       setLoading(false)
     }

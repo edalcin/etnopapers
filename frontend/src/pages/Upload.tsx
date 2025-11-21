@@ -131,15 +131,14 @@ export default function Upload() {
       addArticle(response.data)
       setError(null)
 
-      // Reset form
-      setTimeout(() => {
-        setStep('upload')
-        setPdfText('')
-        setExtractedMetadata(null)
-        setIsScanned(false)
-      }, 1000)
-
+      // Show success message and reset form immediately
       alert('✅ Artigo salvo com sucesso!')
+
+      // Reset form state immediately after save
+      setStep('upload')
+      setPdfText('')
+      setExtractedMetadata(null)
+      setIsScanned(false)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao salvar'
       setError(errorMsg)

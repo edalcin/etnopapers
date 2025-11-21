@@ -7,8 +7,17 @@ const getApiBaseUrl = (): string => {
     return process.env.REACT_APP_API_URL
   }
 
-  // In development with Vite dev server, use absolute URL
+  // Check if running in Docker container or production
+  const hostname = window.location.hostname
+  const isDocker = hostname !== 'localhost' && hostname !== '127.0.0.1'
+
+  // In development with Vite dev server
   if (import.meta.env.DEV) {
+    // If accessed from Docker host address, use that for API calls
+    if (isDocker) {
+      return `http://${hostname}:8000/api`
+    }
+    // Otherwise use localhost
     return 'http://localhost:8000/api'
   }
 
@@ -18,12 +27,34 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl()
 
+// Log API URL for debugging
+console.log(`Etnopapers API URL: ${API_BASE_URL}`)
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 })
+
+// Add response interceptor for better error handling
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response) {
+      // Server responded with error status
+      console.error(`API Error [${error.response.status}]:`, error.response.data)
+    } else if (error.request) {
+      // Request was made but no response
+      console.error('API Error: No response from server', error.request)
+    } else {
+      // Error in request setup
+      console.error('API Error:', error.message)
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Articles
 export const articlesAPI = {
