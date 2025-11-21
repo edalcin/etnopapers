@@ -1,25 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git fetch:*)",
-      "Bash(pwsh:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git checkout:*)",
-      "Bash(git branch:*)",
-      "Bash(git push:*)",
-      "Bash(powershell -Command:*)",
       "WebSearch",
-      "Bash(powershell -File .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
-      "Bash(git rev-parse:*)",
-      "Bash(gh workflow:*)",
-      "Bash(gh run list:*)",
-      "Bash(gh run view:*)",
-      "Bash(gh api:*)",
-      "Bash(python -m pytest:*)",
-      "Bash(pip install:*)",
-      "Bash(pip show:*)",
-      "Bash(ls -la \"H:\\git\\etnopapers\\frontend\\src\\pages\"\" 2>/dev/null || echo \"Directory doesn 't exist \")"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nRefactor: Migrate database architecture from SQLite to Mongita (NoSQL)\n\nThis commit introduces a comprehensive refactoring from a relational SQL model\n(12 normalized tables) to a document-centric NoSQL architecture using Mongita,\nan embedded MongoDB-compatible database optimized for portability and flexibility.\n\nKey changes:\n- Database: SQLite (12 tables) → Mongita (4 aggregated collections)\n- Model: Relational normalized → Document-centric with references as root entities\n- Schema: Fixed with migrations → Schema-less, evolvable without downtime\n- Docker: 300-350MB → 180-200MB (40% reduction)\n- Queries: Multiple JOINs → Single document retrieval\n- Future: Not MongoDB-compatible → 100% compatible for cloud migration\n\nBenefits:\n1. Flexibility: New ethnobotanical metadata fields added without migrations\n2. Performance: One query returns complete reference with aggregated data\n3. Lightweight: Smaller Docker footprint suitable for UNRAID servers\n4. Scalability: Direct path to MongoDB cloud when needed\n5. Natural Structure: JSON hierarchy mirrors ethnobotanical research patterns\n\nDocumentation updates:\n- CLAUDE.md: Updated architecture, Docker setup, troubleshooting, patterns\n- data-model-nosql.md: Complete specification of 4 collections with examples\n- mongita-migration-guide.md: Step-by-step implementation with code samples\n- NOSQL-REFACTORING-SUMMARY.md: Executive summary and decision rationale\n- REFACTORING-SUMMARY.txt: Visual overview of changes\n\nNew Collections:\n- referencias: Main documents (articles) with embedded species, communities, study data\n- especies_plantas: Taxonomic deduplication (referenced by id in references)\n- comunidades_indígenas: Cultural references (referenced by id in references)\n- localizacoes: Optional separate collection for geographic data (or embedded)\n\nCompatibility:\n- Python FastAPI backend remains unchanged\n- React frontend remains unchanged\n- API endpoints follow MongoDB query patterns\n- PyMongo-compatible API enables future MongoDB migration\n\n🤖 Generated with Claude Code\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

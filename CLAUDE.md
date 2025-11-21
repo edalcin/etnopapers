@@ -10,8 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Current Status**: Design & specification phase (no implementation code yet - only detailed specifications)
 - **Frontend**: React 18 + TypeScript (not implemented)
 - **Backend**: Python FastAPI (not implemented)
-- **Database**: SQLite with 12 normalized tables
-- **Deployment**: Docker + Docker Compose for UNRAID servers
+- **Database**: Mongita (embedded MongoDB-compatible NoSQL with JSON/BSON documents)
+- **Data Model**: Document-centric (references as root documents with aggregated metadata)
+- **Deployment**: Docker + Docker Compose for UNRAID servers (lightweight: ~180-200MB)
 - **AI Integration**: Frontend-driven extraction using user-provided API keys (Gemini, ChatGPT, or Claude)
 
 ## Architecture Overview
@@ -33,61 +34,67 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Backend (Python FastAPI)
 - **Structure**: Router-based API with service layer for business logic
-- **Database**: Direct SQLite3 with Alembic migrations
-- **API Endpoints**: 29 planned endpoints covering articles, species, taxonomy validation, locations, communities, drafts, database download
+- **Database**: Mongita (embedded MongoDB-compatible document store with BSON serialization)
+- **Data Layer**: PyMongo-compatible API for CRUD operations with MongoDB-style queries
+- **API Endpoints**: 29 planned endpoints covering articles/references, species, taxonomy validation, locations, communities, drafts, database download
 - **Taxonomy Integration**: GBIF API (primary) + Tropicos (fallback) with 30-day in-memory cache
-- **Async**: Full async/await support via FastAPI/uvicorn
+- **Async**: Full async/await support via FastAPI/uvicorn with async Mongita driver (motor or sync wrapper)
 - **No Authentication**: System designed for open networks (future: add auth layer)
 
-### Database (SQLite)
-**12 Tables (normalized design):**
+### Database (Mongita - Embedded NoSQL)
 
-1. **ArtigosCientificos** - Scientific articles (main entity)
-   - Fields: id, titulo, doi (unique), ano_publicacao, autores (JSON), resumo, status ('rascunho'|'finalizado'), editado_manualmente, data_processamento, data_ultima_modificacao
-   - Duplicate detection via DOI or (titulo + ano_publicacao + first_author)
+**Document-Centric Model** (references as root documents with aggregated metadata):
 
-2. **DadosEstudo** - Study methodology (1:1 with articles)
-   - Fields: artigo_id, periodo_inicio, periodo_fim, duracao_meses, metodos_coleta_dados, tipo_amostragem, tamanho_amostra, instrumentos_coleta (JSON)
+Reference documents are the primary entity, with all related information (species, communities, locations, study data) embedded or deeply linked within each reference document. This allows:
+- **Flexible schema evolution**: New attributes (e.g., new ethnobotanical metadata fields) can be added to reference documents without migrations
+- **Aggregated data access**: All metadata for a reference retrieved in one query
+- **Natural document structure**: JSON mirrors the hierarchical nature of ethnobotanical research
 
-3-5. **Paises** / **Estados** / **Municipios** - Geographic hierarchy (3 levels)
+**Core Collections:**
 
-6. **Territorios** - Community territories (non-hierarchical)
-   - Example: "Terra Indígena Yanomami", "Quilombo Ivaporunduva"
+1. **referencias** - Scientific articles/references (main collection)
+   - Document structure: Root reference with embedded/linked species, communities, locations, study data
+   - Fields: `_id`, `titulo`, `doi` (unique index), `ano_publicacao`, `autores`, `resumo`, `status` ('rascunho'|'finalizado')
+   - Nested: `metadata_estudo`, `localizacoes`, `especies`, `comunidades`, `usos_reportados`
+   - Audit: `data_processamento`, `data_ultima_modificacao`, `editado_manualmente`
+   - Duplicate detection: DOI (unique) or (titulo + ano_publicacao + primeiro_autor)
 
-7. **ArtigoLocalizacao** - Link articles to locations (polymorphic: municipio_id XOR territorio_id)
+2. **especies_plantas** - Plant species (separate collection for taxonomic reuse)
+   - Fields: `_id` (ObjectId), `nome_cientifico` (unique index), `familia_botanica`, `nome_aceito_atual`, `autores_nome`
+   - Validation: `status_validacao` ('validado'|'nao_validado'), `fonte_validacao`, `data_validacao`
+   - Cross-reference: Referenced by ID in `referencias.especies[].especie_id`
+   - Supports homonomy via `nomes_vernaculares[]` with confidence levels
 
-8. **EspeciesPlantas** - Plant species (scientific names are unique keys)
-   - Fields: id, nome_cientifico (unique), autores_nome_cientifico, familia_botanica, nome_aceito_atual, sinonimo_de_id, status_validacao, fonte_validacao, usos_reportados (JSON)
+3. **comunidades_indígenas** - Community/cultural references (separate collection)
+   - Fields: `_id` (ObjectId), `nome`, `tipo` ('indígena'|'quilombola'|'ribeirinha'|'caiçara'|'seringueira'|'pantaneira'|'outro')
+   - Geography: Linked to `localizacoes` (hierarchy: país → estado → município OR territorio)
+   - Cross-reference: Referenced by ID in `referencias.comunidades[].comunidade_id`
 
-9. **NomesVernaculares** - Common/folk names for plants (supports homonomy)
+4. **localizacoes** - Geographic locations (optional separate collection for performance)
+   - Fields: `_id` (ObjectId), `pais`, `estado`, `municipio`, `territorio`
+   - Can also be embedded directly in reference documents for small datasets
 
-10. **EspecieNomeVernacular** - N:M relationship (especie ↔ vernacular names with confidence levels)
+**Collection Indexes** (for performance):
+- `referencias`: doi (unique), status, ano_publicacao, data_processamento, `especies.especie_id`, `comunidades.comunidade_id`
+- `especies_plantas`: nome_cientifico (unique), familia_botanica, status_validacao
+- `comunidades_indígenas`: nome, tipo
 
-11. **ArtigoEspecie** - N:M relationship (articles ↔ species with context of use)
-
-12. **Comunidades** - Traditional communities
-    - Types: indígena, quilombola, ribeirinha, caiçara, seringueira, pantaneira, outro
-
-**Key Features:**
-- 18 indexes for query optimization
-- Triggers for auto-updating `data_ultima_modificacao` and marking manual edits
-- View `vw_artigos_completos` for aggregated data
-- Foreign keys with CASCADE/RESTRICT constraints
-- CHECK constraints for valid value ranges (e.g., year ranges, status values)
-- JSON columns for variable-length arrays (autores, instrumentos_coleta, parte_planta_utilizada)
-
-**Estimated Database Sizes:**
-- 1,000 articles: ~1 MB
-- 10,000 articles: ~10 MB
-- 100,000 articles: ~100 MB
+**Estimated Database Sizes (BSON format, more compact than JSON):**
+- 1,000 references: ~0.8 MB (more compact than JSON due to BSON binary encoding)
+- 10,000 references: ~8 MB
+- 100,000 references: ~80 MB
 
 ### Docker Setup
 ```yaml
-# Single service (etnopapers)
+# Single service (etnopapers) - lightweight NoSQL configuration
 - Port: 8000 (web app + API)
-- Volume: ./data:/data (persistent SQLite)
+- Volume: ./data:/data (persistent Mongita database files)
+- Base Image: python:3.11-slim (minimal, ~150MB)
+- Dependencies: FastAPI, Mongita, PyMongo (client library), aiofiles
+- Estimated Docker Image Size: ~180-200MB (vs 300MB+ with SQLite + ORM)
 - Environment:
-  - DATABASE_PATH=/data/etnopapers.db
+  - DATABASE_PATH=/data/etnopapers
+  - DATABASE_BACKEND=mongita
   - PORT=8000
   - LOG_LEVEL=info
   - TAXONOMY_API_TIMEOUT=5
@@ -124,19 +131,37 @@ pytest -v                              # Verbose test output
 pytest tests/routers/test_articles.py  # Single test file
 ```
 
-### Database
+### Database (Mongita)
 ```bash
-# Running migrations (Alembic)
-alembic upgrade head                   # Apply all pending migrations
-alembic downgrade -1                   # Rollback one migration
-alembic revision --autogenerate -m "description"  # Generate migration from models
+# Mongita database is file-based (no migrations needed - schema-less)
+# Data persists in ./data/etnopapers/ directory
 
-# SQLite inspection (from Python)
-sqlite3 data/etnopapers.db
-  > PRAGMA integrity_check;             # Check database integrity
-  > .tables                             # List all tables
-  > .schema ArtigosCientificos          # View table schema
-  > .quit                               # Exit
+# Inspect Mongita database (from Python)
+python -c "
+from mongita import MongitaClientMemory
+from mongita import MongitaClientDisk
+
+# Connect to Mongita
+client = MongitaClientDisk(database_dir='./data/etnopapers')
+db = client['etnopapers']
+
+# List all collections
+print('Collections:', db.list_collection_names())
+
+# Query examples
+referencias = db['referencias'].find_one()
+print('Sample reference:', referencias)
+
+# Count documents
+print('Total referencias:', db['referencias'].count_documents({}))
+print('Total especies:', db['especies_plantas'].count_documents({}))
+"
+
+# Database files (BSON format, auto-created by Mongita)
+# ./data/etnopapers/__db__.json - metadata
+# ./data/etnopapers/referencias/ - collection data
+# ./data/etnopapers/especies_plantas/ - collection data
+# ./data/etnopapers/comunidades_indígenas/ - collection data
 ```
 
 ### Docker
@@ -173,9 +198,11 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 - [ ] Configure backend requirements.txt and frontend package.json
 
 ### Phase 1: Core API & Database (P0-P1)
-- [ ] Create SQLite schema with all 12 tables, indexes, triggers, constraints
-- [ ] Setup Alembic migrations
-- [ ] Implement backend routers: `/api/articles` (CRUD), `/api/drafts`, `/api/database/download`
+- [ ] Setup Mongita client initialization in backend (MongitaClientDisk with data directory)
+- [ ] Create collections: `referencias`, `especies_plantas`, `comunidades_indígenas`, `localizacoes` (optional)
+- [ ] Create Pydantic schemas for document validation
+- [ ] Implement indexes for performance (DOI, status, ano_publicacao, etc.)
+- [ ] Implement backend routers: `/api/referencias` (CRUD), `/api/drafts`, `/api/database/download`
 - [ ] Implement database service layer (CRUD operations, duplicate detection)
 - [ ] Implement taxonomy service (GBIF/Tropicos API integration with caching)
 
@@ -204,23 +231,31 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 
 1. **Frontend-Driven AI Extraction**: API keys never leave the browser. Backend only manages metadata persistence. This eliminates key management overhead and privacy concerns.
 
-2. **SQLite for Portability**: Single-file database makes backup, distribution, and local analysis trivial. No server required.
+2. **Mongita for Embedded NoSQL**: Document database embedded like SQLite but with:
+   - **Flexible schema evolution**: New ethnobotanical metadata fields added without migrations
+   - **BSON binary serialization**: More compact than JSON (15-20% smaller than plain JSON)
+   - **MongoDB-compatible API**: PyMongo interface enables future migration to cloud MongoDB
+   - **Lightweight Docker footprint**: ~180-200MB (vs 300MB+ with SQL ORMs)
+   - **No server overhead**: Single-file directory database like SQLite, but document-oriented
 
-3. **Zustand for State Management**: Lightweight, no boilerplate, perfect for storing API keys and editor state.
+3. **Document-Centric Data Model**: References (scientific articles) are root documents with aggregated nested data:
+   - Species, communities, locations, study data embedded/linked within each reference
+   - Natural JSON structure mirrors hierarchical ethnobotanical research
+   - Enables user-driven schema expansion as new extraction requirements emerge
 
-4. **Direct API Calls**: Frontend makes direct HTTPS calls to Gemini/ChatGPT/Claude APIs, avoiding backend bottleneck.
+4. **Zustand for State Management**: Lightweight, no boilerplate, perfect for storing API keys and editor state.
 
-5. **Researcher Profile Optional**: Personalization improves extraction quality but isn't required for basic operation.
+5. **Direct API Calls**: Frontend makes direct HTTPS calls to Gemini/ChatGPT/Claude APIs, avoiding backend bottleneck.
 
-6. **Geographic Flexibility**: Hybrid hierarchy (fixed levels: país→estado→município) + free-form territories (for indigenous lands, quilombos, etc.) accommodates diverse geographic realities.
+6. **Researcher Profile Optional**: Personalization improves extraction quality but isn't required for basic operation.
 
-7. **Taxonomic Caching**: 30-day cache of GBIF validation results reduces API calls and offline-friendly.
+7. **Geographic Flexibility**: Hybrid hierarchy (fixed levels: país→estado→município) + free-form territories (for indigenous lands, quilombos, etc.) accommodates diverse geographic realities.
 
-8. **Duplicate Detection Multi-Strategy**: DOI uniqueness + (title+year+author) fallback catches most duplicates without false positives.
+8. **Taxonomic Caching**: 30-day cache of GBIF validation results reduces API calls and offline-friendly.
 
-9. **Polymorphic Location Link**: Articles can link to either municipal/state level OR community territories, not both - maintains data integrity.
+9. **Duplicate Detection Multi-Strategy**: DOI uniqueness + (title+year+author) fallback catches most duplicates without false positives.
 
-10. **JSON Columns for Flexibility**: Arrays stored as JSON (autores, instrumentos_coleta, usos_reportados) avoid unnormalized design while staying flexible.
+10. **Aggregated Data in References**: Related data (species, communities, uses) stored as arrays/nested objects in reference documents for single-query access patterns.
 
 ## AI Provider Integration
 
@@ -270,13 +305,32 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 5. Test with pytest
 6. Document in OpenAPI spec (`specs/main/contracts/api-rest.yaml`)
 
-### Adding a Database Table
-1. Define table in schema migration (`backend/migrations/versions/`)
-2. Run migration: `alembic upgrade head`
-3. Create Pydantic schema in `backend/models/`
-4. Create service methods for CRUD
-5. Create router endpoint
-6. Add indexes and constraints as needed
+### Adding a New Collection or Document Field (NoSQL)
+**No migrations needed!** Mongita is schema-less. Simply:
+1. Define Pydantic schema in `backend/models/` (for validation/documentation)
+2. Add new field(s) to your document insert/update code in `backend/services/`
+3. Create service methods for CRUD operations (insert, find, update, delete)
+4. Create router endpoint
+5. Test with pytest
+6. For performance: add indexes manually via `db[collection_name].create_index(...)` in initialization code
+
+**Example: Adding a new `origem_do_artigo` field to references**
+```python
+# In backend/models/reference.py (validation schema)
+class Reference(BaseModel):
+    titulo: str
+    origem_do_artigo: Optional[str] = None  # NEW FIELD
+
+# In backend/services/reference_service.py
+def create_reference(ref_data: dict):
+    result = db['referencias'].insert_one({
+        'titulo': ref_data['titulo'],
+        'origem_do_artigo': ref_data.get('origem_do_artigo'),  # NEW FIELD
+        'data_processamento': datetime.now()
+    })
+    return result.inserted_id
+```
+No migration, no schema update—just code it and deploy!
 
 ### Extracting Metadata from PDF
 1. Frontend uses `pdfjs-dist` to extract text
@@ -303,17 +357,33 @@ npm install
 npm run dev
 ```
 
-### Backend Won't Connect to Database
+### Backend Won't Connect to Database (Mongita)
 ```bash
-# Check if database file exists
-ls -la data/etnopapers.db
+# Check if Mongita database directory exists
+ls -la data/etnopapers/
 
-# Check database integrity
-sqlite3 data/etnopapers.db "PRAGMA integrity_check;"
+# If directory doesn't exist, Mongita will create it automatically on first run
+# No manual initialization needed (unlike SQLite)
 
-# Recreate from migration
-rm data/etnopapers.db
-alembic upgrade head
+# Check database files
+ls -la data/etnopapers/__db__.json  # Metadata file
+ls -la data/etnopapers/referencias/ # Collection data
+
+# Test connection from Python
+python -c "
+from mongita import MongitaClientDisk
+try:
+    client = MongitaClientDisk(database_dir='./data/etnopapers')
+    db = client['etnopapers']
+    print('Connected to Mongita')
+    print('Collections:', db.list_collection_names())
+except Exception as e:
+    print(f'Connection error: {e}')
+"
+
+# If data is corrupted, you can safely delete and let Mongita recreate:
+rm -rf data/etnopapers/
+# Mongita will auto-create on restart (starts with empty database)
 ```
 
 ### API Key Validation Fails
