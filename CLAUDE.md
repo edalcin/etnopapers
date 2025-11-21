@@ -30,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `ManualEditor`: Edit and correct extracted data
   - `ArticlesTable`: Browse all articles with sort/filter/pagination
   - `ResearcherProfile`: Optional personalization for extraction context
-  - `DatabaseDownload`: Download complete SQLite backup
+  - `DatabaseDownload`: Download Mongita database backup (zip archive)
 
 ### Backend (Python FastAPI)
 - **Structure**: Router-based API with service layer for business logic
@@ -94,7 +94,7 @@ Reference documents are the primary entity, with all related information (specie
 - Estimated Docker Image Size: ~180-200MB (vs 300MB+ with SQLite + ORM)
 - Environment:
   - DATABASE_PATH=/data/etnopapers
-  - DATABASE_BACKEND=mongita
+  - DATABASE_BACKEND=disk
   - PORT=8000
   - LOG_LEVEL=info
   - TAXONOMY_API_TIMEOUT=5
@@ -231,31 +231,38 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 
 1. **Frontend-Driven AI Extraction**: API keys never leave the browser. Backend only manages metadata persistence. This eliminates key management overhead and privacy concerns.
 
-2. **Mongita for Embedded NoSQL**: Document database embedded like SQLite but with:
-   - **Flexible schema evolution**: New ethnobotanical metadata fields added without migrations
-   - **BSON binary serialization**: More compact than JSON (15-20% smaller than plain JSON)
-   - **MongoDB-compatible API**: PyMongo interface enables future migration to cloud MongoDB
-   - **Lightweight Docker footprint**: ~180-200MB (vs 300MB+ with SQL ORMs)
-   - **No server overhead**: Single-file directory database like SQLite, but document-oriented
+2. **Mongita for Embedded NoSQL** (🆕 Main Decision):
+   - **Zero-Migration Schema Evolution**: New ethnobotanical fields added to code without database migrations
+   - **BSON Binary Serialization**: 20% more compact than JSON via binary encoding
+   - **MongoDB-Compatible**: PyMongo API enables seamless migration to MongoDB cloud when needed
+   - **Lightweight**: ~180-200MB Docker (40% smaller than SQLite + ORMs)
+   - **Directory-Based**: Single directory `/data/etnopapers/` instead of single `.db` file
+   - **No External Server**: Embedded in Python, perfect for UNRAID deployment
 
-3. **Document-Centric Data Model**: References (scientific articles) are root documents with aggregated nested data:
-   - Species, communities, locations, study data embedded/linked within each reference
-   - Natural JSON structure mirrors hierarchical ethnobotanical research
-   - Enables user-driven schema expansion as new extraction requirements emerge
+3. **Document-Centric Data Model**:
+   - **References as Root**: Scientific articles aggregated with species, communities, locations
+   - **Nested Objects**: All metadata in single document - one query returns everything
+   - **JSON-Native**: BSON natively supports arrays and nested objects (no JSON serialization needed)
+   - **Flexible Growth**: New fields added without touching schema or migrations
 
-4. **Zustand for State Management**: Lightweight, no boilerplate, perfect for storing API keys and editor state.
+4. **Collections Instead of Normalized Tables**:
+   - `referencias`: Core documents (was 12 separate SQL tables)
+   - `especies_plantas`: Taxonomic deduplication (shared across references)
+   - `comunidades_indígenas`: Cultural references (shared across articles)
+   - `localizacoes`: Geographic data (optional, can be embedded)
+   - **Benefits**: Intuitive hierarchy, natural data access, easy schema evolution
 
-5. **Direct API Calls**: Frontend makes direct HTTPS calls to Gemini/ChatGPT/Claude APIs, avoiding backend bottleneck.
+5. **Zustand for State Management**: Lightweight, no boilerplate, perfect for storing API keys and editor state.
 
-6. **Researcher Profile Optional**: Personalization improves extraction quality but isn't required for basic operation.
+6. **Direct API Calls**: Frontend makes direct HTTPS calls to Gemini/ChatGPT/Claude APIs, avoiding backend bottleneck.
 
-7. **Geographic Flexibility**: Hybrid hierarchy (fixed levels: país→estado→município) + free-form territories (for indigenous lands, quilombos, etc.) accommodates diverse geographic realities.
+7. **Researcher Profile Optional**: Personalization improves extraction quality but isn't required for basic operation.
 
-8. **Taxonomic Caching**: 30-day cache of GBIF validation results reduces API calls and offline-friendly.
+8. **Geographic Flexibility**: Hybrid hierarchy (fixed levels: país→estado→município) + free-form territories (for indigenous lands, quilombos, etc.) accommodates diverse geographic realities.
 
-9. **Duplicate Detection Multi-Strategy**: DOI uniqueness + (title+year+author) fallback catches most duplicates without false positives.
+9. **Taxonomic Caching**: 30-day cache of GBIF validation results reduces API calls and offline-friendly.
 
-10. **Aggregated Data in References**: Related data (species, communities, uses) stored as arrays/nested objects in reference documents for single-query access patterns.
+10. **Duplicate Detection Multi-Strategy**: DOI uniqueness (MongoDB unique index) + (title+year+author) fallback catches most duplicates without false positives.
 
 ## AI Provider Integration
 

@@ -1,14 +1,14 @@
 """
-Duplicate detection service for articles
+Duplicate detection service for articles (Mongita-based)
 
 Implements multi-strategy duplicate detection:
 1. Primary: DOI uniqueness
 2. Secondary: Title + Year + First Author
 """
 
-import json
 import logging
 from typing import Optional, Dict, Any
+from bson import ObjectId
 from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
@@ -32,31 +32,21 @@ class DuplicateChecker:
             return None
 
         db = get_db()
-        query = """
-            SELECT id, titulo, doi, ano_publicacao, autores,
-                   status, data_processamento, data_ultima_modificacao
-            FROM ArtigosCientificos
-            WHERE doi = ? AND doi IS NOT NULL
-            LIMIT 1
-        """
+        collection = db.get_collection("referencias")
 
-        results = db.execute_query(query, (doi,))
+        try:
+            doc = collection.find_one({"doi": doi})
 
-        if results:
-            row = results[0]
-            return {
-                "id": row[0],
-                "titulo": row[1],
-                "doi": row[2],
-                "ano_publicacao": row[3],
-                "autores": json.loads(row[4]),
-                "status": row[5],
-                "data_processamento": row[6],
-                "data_ultima_modificacao": row[7],
-                "tipo_duplicata": "doi",
-            }
+            if doc:
+                doc["_id"] = str(doc["_id"])
+                doc["tipo_duplicata"] = "doi"
+                return doc
 
-        return None
+            return None
+
+        except Exception as e:
+            logger.error(f"Error checking by DOI: {e}")
+            return None
 
     @staticmethod
     def _extract_first_author(autores: list) -> Optional[str]:
@@ -84,7 +74,7 @@ class DuplicateChecker:
         """
         Check for duplicate by title + year + first author
 
-        Uses fuzzy matching for title similarity (exact match on year and first author)
+        Uses regex matching for title similarity (case-insensitive)
 
         Args:
             titulo: Article title
@@ -100,63 +90,58 @@ class DuplicateChecker:
         first_author = DuplicateChecker._extract_first_author(autores)
 
         db = get_db()
+        collection = db.get_collection("referencias")
 
-        # Query with title similarity (using LIKE for substring matching)
-        # In production, could use FTS5 (Full Text Search) for better matching
-        query = """
-            SELECT id, titulo, doi, ano_publicacao, autores,
-                   status, data_processamento, data_ultima_modificacao
-            FROM ArtigosCientificos
-            WHERE ano_publicacao = ?
-            AND (
-                LOWER(titulo) = LOWER(?)
-                OR (
-                    LOWER(titulo) LIKE LOWER('%' || ? || '%')
-                    AND LENGTH(titulo) BETWEEN LENGTH(?) - 10 AND LENGTH(?) + 10
-                )
-            )
-            ORDER BY
-                CASE WHEN LOWER(titulo) = LOWER(?) THEN 0 ELSE 1 END,
-                ABS(LENGTH(titulo) - LENGTH(?))
-            LIMIT 1
-        """
-
-        params = (
-            ano_publicacao,
-            titulo,
-            titulo.split()[0] if titulo else "",  # First word for fuzzy match
-            titulo,
-            titulo,
-            titulo,
-            titulo,
-        )
-
-        results = db.execute_query(query, params)
-
-        if results:
-            row = results[0]
-            existing_autores = json.loads(row[4])
-            existing_first_author = DuplicateChecker._extract_first_author(
-                existing_autores
-            )
-
-            # If first author matches or is None, consider it a duplicate
-            if not first_author or not existing_first_author or (
-                first_author.lower() == existing_first_author.lower()
-            ):
-                return {
-                    "id": row[0],
-                    "titulo": row[1],
-                    "doi": row[2],
-                    "ano_publicacao": row[3],
-                    "autores": existing_autores,
-                    "status": row[5],
-                    "data_processamento": row[6],
-                    "data_ultima_modificacao": row[7],
-                    "tipo_duplicata": "metadata",
+        try:
+            # Check for exact title match first
+            doc = collection.find_one(
+                {
+                    "titulo": titulo,
+                    "ano_publicacao": ano_publicacao,
                 }
+            )
 
-        return None
+            if doc:
+                existing_autores = doc.get("autores", [])
+                existing_first_author = DuplicateChecker._extract_first_author(
+                    existing_autores
+                )
+
+                # If first author matches or is None, consider it a duplicate
+                if not first_author or not existing_first_author or (
+                    first_author.lower() == existing_first_author.lower()
+                ):
+                    doc["_id"] = str(doc["_id"])
+                    doc["tipo_duplicata"] = "metadata"
+                    return doc
+
+            # Check for similar titles (partial match with regex)
+            titulo_pattern = {"$regex": titulo.split()[0] if titulo else "", "$options": "i"}
+            doc = collection.find_one(
+                {
+                    "ano_publicacao": ano_publicacao,
+                    "titulo": titulo_pattern,
+                }
+            )
+
+            if doc:
+                existing_autores = doc.get("autores", [])
+                existing_first_author = DuplicateChecker._extract_first_author(
+                    existing_autores
+                )
+
+                if not first_author or not existing_first_author or (
+                    first_author.lower() == existing_first_author.lower()
+                ):
+                    doc["_id"] = str(doc["_id"])
+                    doc["tipo_duplicata"] = "metadata"
+                    return doc
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Error checking by metadata: {e}")
+            return None
 
     @staticmethod
     def check_duplicate(
@@ -212,51 +197,29 @@ class DuplicateChecker:
             List of similar articles
         """
         db = get_db()
+        collection = db.get_collection("referencias")
 
-        # Look for articles within +/- 3 years of publication
-        query = """
-            SELECT id, titulo, doi, ano_publicacao, autores,
-                   status, data_processamento
-            FROM ArtigosCientificos
-            WHERE ano_publicacao BETWEEN ? AND ?
-            AND (
-                LOWER(titulo) LIKE LOWER('%' || ? || '%')
-                OR LOWER(titulo) LIKE LOWER('%' || ? || '%')
-            )
-            ORDER BY
-                CASE WHEN LOWER(titulo) LIKE LOWER('%' || ? || '%') THEN 0 ELSE 1 END,
-                ABS(ano_publicacao - ?)
-            LIMIT ?
-        """
+        try:
+            # Look for articles within +/- 3 years of publication with similar title
+            first_word = titulo.split()[0] if titulo else ""
 
-        first_word = titulo.split()[0] if titulo else ""
-        second_word = titulo.split()[1] if len(titulo.split()) > 1 else ""
-
-        results = db.execute_query(
-            query,
-            (
-                ano_publicacao - 3,
-                ano_publicacao + 3,
-                first_word,
-                second_word,
-                titulo,
-                ano_publicacao,
-                limit,
-            ),
-        )
-
-        similar = []
-        for row in results:
-            similar.append(
+            cursor = collection.find(
                 {
-                    "id": row[0],
-                    "titulo": row[1],
-                    "doi": row[2],
-                    "ano_publicacao": row[3],
-                    "autores": json.loads(row[4]),
-                    "status": row[5],
-                    "data_processamento": row[6],
+                    "ano_publicacao": {
+                        "$gte": ano_publicacao - 3,
+                        "$lte": ano_publicacao + 3,
+                    },
+                    "titulo": {"$regex": first_word, "$options": "i"},
                 }
-            )
+            ).limit(limit)
 
-        return similar
+            similar = []
+            for doc in cursor:
+                doc["_id"] = str(doc["_id"])
+                similar.append(doc)
+
+            return similar
+
+        except Exception as e:
+            logger.error(f"Error getting similar articles: {e}")
+            return []

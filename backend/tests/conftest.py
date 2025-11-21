@@ -12,12 +12,12 @@ from backend.database.connection import DatabaseConnection
 
 @pytest.fixture
 def temp_db():
-    """Create a temporary test database"""
+    """Create a temporary Mongita test database"""
     with tempfile.TemporaryDirectory() as tmpdir:
-        db_path = str(Path(tmpdir) / "test.db")
-        init_database(db_path)
+        db_path = str(Path(tmpdir) / "test_etnopapers")
+        init_database(db_path, "disk")
         # Reset singleton for testing
-        DatabaseConnection._instance = DatabaseConnection(db_path)
+        DatabaseConnection._instance = DatabaseConnection(db_path, "disk")
         yield db_path
         # Cleanup
         DatabaseConnection._instance = None

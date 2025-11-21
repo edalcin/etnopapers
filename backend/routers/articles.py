@@ -86,7 +86,7 @@ async def list_articles(
 
 
 @router.get("/{article_id}", response_model=ArticleResponse)
-async def get_article(article_id: int):
+async def get_article(article_id: str):
     """Get a specific article by ID"""
     try:
         article = ArticleService.get_article_by_id(article_id)
@@ -101,7 +101,7 @@ async def get_article(article_id: int):
 
 
 @router.put("/{article_id}", response_model=ArticleResponse)
-async def update_article(article_id: int, article: ArticleRequest):
+async def update_article(article_id: str, article: ArticleRequest):
     """
     Update an article
 
@@ -136,7 +136,7 @@ async def update_article(article_id: int, article: ArticleRequest):
 
 
 @router.delete("/{article_id}", status_code=204)
-async def delete_article(article_id: int):
+async def delete_article(article_id: str):
     """Delete an article by ID"""
     try:
         # Check if article exists
@@ -202,7 +202,7 @@ async def check_duplicate(request: DuplicateCheckRequest):
 
 
 @router.get("/{article_id}/similar", response_model=list[DuplicateArticleResponse])
-async def get_similar_articles(article_id: int, limit: int = Query(5, ge=1, le=20)):
+async def get_similar_articles(article_id: str, limit: int = Query(5, ge=1, le=20)):
     """
     Get articles similar to the specified article
 

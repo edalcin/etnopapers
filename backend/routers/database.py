@@ -2,7 +2,7 @@
 Database router for FastAPI
 
 Handles database operations:
-- GET /api/database/download - Download SQLite database file
+- GET /api/database/download - Download Mongita database backup
 - GET /api/database/info - Get database statistics
 """
 
@@ -47,87 +47,97 @@ async def get_database_info():
 @router.get("/download")
 async def download_database():
     """
-    Download the complete SQLite database file
+    Download a backup of the Mongita database
 
-    Runs integrity check before returning the file.
-    Returns the database as a downloadable file.
+    Creates a zip archive of the database directory and returns it as downloadable file.
     """
+    import shutil
+    import tempfile
+
     try:
-        db = get_db()
-
-        # Run integrity check
-        integrity = db.get_integrity_check()
-        if integrity and len(integrity) > 0 and integrity[0][0] != "ok":
-            logger.error(f"Database integrity check failed: {integrity}")
-            raise HTTPException(
-                status_code=500,
-                detail="Banco de dados corrompido - execute manutenção",
-            )
-
-        # Generate filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"etnopapers_{timestamp}.db"
-
         db_path = Path(settings.DATABASE_PATH)
 
         if not db_path.exists():
             raise HTTPException(
-                status_code=404, detail="Arquivo de banco de dados não encontrado"
+                status_code=404, detail="Banco de dados Mongita não encontrado"
             )
 
-        logger.info(f"Database download initiated: {filename}")
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"etnopapers_backup_{timestamp}"
 
-        return FileResponse(
-            path=db_path,
-            filename=filename,
-            media_type="application/octet-stream",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}",
-                "Cache-Control": "no-cache",
-            },
-        )
+        # Create temporary zip file
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            zip_path = temp_dir_path / backup_filename
+
+            # Create zip archive of database directory
+            shutil.make_archive(
+                str(zip_path),
+                "zip",
+                db_path.parent,
+                db_path.name
+            )
+
+            zip_file = zip_path.with_suffix(".zip")
+
+            if not zip_file.exists():
+                raise HTTPException(
+                    status_code=500, detail="Falha ao criar backup do banco de dados"
+                )
+
+            logger.info(f"Database backup download initiated: {backup_filename}.zip")
+
+            return FileResponse(
+                path=zip_file,
+                filename=f"{backup_filename}.zip",
+                media_type="application/zip",
+                headers={
+                    "Content-Disposition": f"attachment; filename={backup_filename}.zip",
+                    "Cache-Control": "no-cache",
+                },
+            )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error downloading database: {e}")
+        logger.error(f"Error downloading database backup: {e}")
         raise HTTPException(
-            status_code=500, detail="Erro ao baixar banco de dados"
+            status_code=500, detail="Erro ao baixar backup do banco de dados"
         )
 
 
 @router.post("/backup")
 async def create_backup():
     """
-    Create a backup of the database
+    Create a backup of the Mongita database
 
-    Creates a timestamped copy of the database in the data directory.
+    Creates a timestamped copy of the database directory.
     """
+    import shutil
+
     try:
-        db = get_db()
         db_path = Path(settings.DATABASE_PATH)
 
         if not db_path.exists():
             raise HTTPException(
-                status_code=404, detail="Arquivo de banco de dados não encontrado"
+                status_code=404, detail="Diretório do banco de dados Mongita não encontrado"
             )
 
-        # Create backup
+        # Create backup directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_filename = f"backup_etnopapers_{timestamp}.db"
-        backup_path = db_path.parent / backup_filename
+        backup_dirname = f"backup_etnopapers_{timestamp}"
+        backup_path = db_path.parent / backup_dirname
 
-        # Copy file
-        with open(db_path, "rb") as src:
-            with open(backup_path, "wb") as dst:
-                dst.write(src.read())
+        # Copy entire database directory
+        shutil.copytree(db_path, backup_path)
 
-        logger.info(f"Database backup created: {backup_filename}")
+        logger.info(f"Database backup created: {backup_dirname}")
 
         return {
             "status": "success",
             "message": "Backup criado com sucesso",
-            "filename": backup_filename,
+            "directory": backup_dirname,
             "path": str(backup_path),
             "timestamp": datetime.now().isoformat(),
         }

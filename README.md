@@ -53,7 +53,7 @@ O Etnopapers ajuda pesquisadores a:
 ### Para Desenvolvedores
 - **Frontend**: React com TypeScript
 - **Backend**: Python FastAPI
-- **Banco de Dados**: SQLite (arquivo único, fácil de fazer backup)
+- **Banco de Dados**: Mongita (NoSQL embarcado, MongoDB-compatível, leve e portátil)
 - **Docker**: Instalação simplificada, funciona em qualquer servidor
 - **Sem GPU**: Não precisa de hardware especial
 
@@ -112,7 +112,7 @@ etnopapers/
 │   └── contracts/           # APIs e integrações
 ├── frontend/                # Interface web (React)
 ├── backend/                 # Servidor (Python FastAPI)
-├── data/                    # Banco de dados SQLite
+├── data/                    # Banco de dados Mongita (NoSQL)
 ├── docker-compose.yml       # Configuração Docker
 └── README.md               # Este arquivo
 ```
@@ -121,7 +121,7 @@ etnopapers/
 
 - **[Guia de Instalação Completo](specs/main/quickstart.md)**: Instruções detalhadas, troubleshooting e FAQ
 - **[Especificação Técnica](specs/main/spec.md)**: Requisitos funcionais, histórias de usuário e critérios de sucesso
-- **[Modelo de Dados](specs/main/data-model.md)**: Estrutura do banco SQLite com exemplos de queries
+- **[Modelo de Dados](specs/main/data-model-nosql.md)**: Arquitetura orientada a documentos Mongita com exemplos de queries
 - **[API REST](specs/main/contracts/api-rest.yaml)**: Documentação OpenAPI dos endpoints
 - **[Integração com IA](specs/main/contracts/ai-integration.md)**: Como funciona a extração com Gemini/ChatGPT/Claude
 
