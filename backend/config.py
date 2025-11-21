@@ -18,8 +18,9 @@ class Settings:
     HOST: str = os.getenv("HOST", "0.0.0.0")
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
-    # Database
-    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/etnopapers.db")
+    # Database (Mongita)
+    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/etnopapers")
+    DATABASE_BACKEND: str = os.getenv("DATABASE_BACKEND", "disk")  # disk or memory
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info").upper()
@@ -69,8 +70,9 @@ class Settings:
     @classmethod
     def ensure_database_dir(cls):
         """Ensure database directory exists"""
+        # For Mongita, DATABASE_PATH is a directory, not a file
         db_path = Path(cls.DATABASE_PATH)
-        db_path.parent.mkdir(parents=True, exist_ok=True)
+        db_path.mkdir(parents=True, exist_ok=True)
 
 
 # Initialize settings

@@ -1,4 +1,4 @@
-# Multi-stage build for Etnopapers
+# Multi-stage build for Etnopapers (with Mongita NoSQL)
 
 # Stage 1: Frontend builder
 FROM node:18-alpine AS frontend-builder
@@ -24,13 +24,13 @@ COPY frontend/.prettierrc.json ./
 # Build frontend
 RUN npm run build
 
-# Stage 2: Backend runtime
-FROM python:3.11-alpine
+# Stage 2: Backend runtime with Mongita
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apk add --no-cache sqlite
+# Install system dependencies (minimal for Mongita)
+# No sqlite needed! Mongita is pure Python with no C extensions
 
 # Install Python dependencies
 COPY backend/requirements.txt .
@@ -42,15 +42,21 @@ COPY backend ./backend
 # Copy built frontend from builder
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Create data directory
-RUN mkdir -p /data
+# Create Mongita data directory (stores BSON files)
+RUN mkdir -p /data/etnopapers
 
 # Expose port
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
-# Start backend
+# Environment defaults (can be overridden at runtime)
+ENV DATABASE_PATH=/data/etnopapers
+ENV DATABASE_BACKEND=disk
+ENV PORT=8000
+ENV LOG_LEVEL=info
+
+# Start backend with Uvicorn
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -9,17 +9,29 @@ services:
     ports:
       - "8000:8000"
     environment:
+      # Mongita configuration
+      - DATABASE_PATH=/data/etnopapers
+      - DATABASE_BACKEND=disk
+      # Server configuration
       - PORT=8000
-      - DATABASE_PATH=/data/etnopapers.db
+      - ENVIRONMENT=development
       - LOG_LEVEL=info
+      # Feature configuration
       - TAXONOMY_API_TIMEOUT=5
       - CACHE_TTL_DAYS=30
-      - ENVIRONMENT=development
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
     volumes:
+      # Persistent storage for Mongita BSON files
       - ./data:/data
     networks:
       - etnopapers-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
 networks:
   etnopapers-net:

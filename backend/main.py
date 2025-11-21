@@ -2,7 +2,6 @@
 Etnopapers Backend - Main FastAPI Application
 """
 
-import os
 import logging
 import json
 from pathlib import Path
@@ -21,8 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize Mongita database
 logger.info("Initializing Mongita database...")
-backend = os.getenv("DATABASE_BACKEND", "disk")
-init_database(settings.DATABASE_PATH, backend)
+init_database(settings.DATABASE_PATH, settings.DATABASE_BACKEND)
 db = get_db()
 logger.info("Mongita database initialized successfully")
 
