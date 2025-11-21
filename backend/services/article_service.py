@@ -143,29 +143,36 @@ class ArticleService:
             if ano:
                 query["ano_publicacao"] = ano
 
-            if search:
-                # Search in titulo or autores using regex (case-insensitive)
-                query["$or"] = [
-                    {"titulo": {"$regex": search, "$options": "i"}},
-                    {"autores": {"$regex": search, "$options": "i"}},
-                ]
+            # Note: Mongita 1.2.0 doesn't support $regex
+            # Search will be applied in Python after fetching
 
-            # Get total count
-            total = collection.count_documents(query)
+            # Get all matching documents (without search filter)
+            cursor = collection.find(query).sort("data_processamento", -1)
 
-            # Get paginated results
-            offset = (page - 1) * page_size
-            cursor = (
-                collection.find(query)
-                .sort("data_processamento", -1)
-                .skip(offset)
-                .limit(page_size)
-            )
-
-            items = []
+            all_items = []
             for doc in cursor:
+                # Apply search filter in Python since Mongita doesn't support $regex
+                if search:
+                    search_lower = search.lower()
+                    titulo_match = search_lower in doc.get("titulo", "").lower()
+                    # Check if search matches any author
+                    autores_match = any(
+                        search_lower in (author.get("nome", "") or "").lower() or
+                        search_lower in (author.get("sobrenome", "") or "").lower()
+                        for author in doc.get("autores", [])
+                    )
+                    if not (titulo_match or autores_match):
+                        continue
+
                 doc["_id"] = str(doc["_id"])
-                items.append(doc)
+                all_items.append(doc)
+
+            # Get total count after search filter
+            total = len(all_items)
+
+            # Apply pagination
+            offset = (page - 1) * page_size
+            items = all_items[offset:offset + page_size]
 
             return {
                 "total": total,

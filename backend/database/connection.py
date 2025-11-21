@@ -66,55 +66,50 @@ class DatabaseConnection:
             raise
 
     def _create_collections(self):
-        """Create collections with indexes if they don't exist"""
+        """Initialize collections and indexes (Mongita creates collections on first use)"""
         try:
-            # Get list of existing collections
-            existing_collections = self.db.list_collection_names()
+            # Mongita creates collections automatically on first insert/operation
+            # We just need to create the indexes for performance
 
             # Collection: referencias (main documents)
-            if "referencias" not in existing_collections:
-                self.db.create_collection("referencias")
-                logger.info("Created collection: referencias")
-
-            # Create indexes for referencias
-            self.db["referencias"].create_index("doi", unique=True)
-            self.db["referencias"].create_index("status")
-            self.db["referencias"].create_index("ano_publicacao")
-            self.db["referencias"].create_index("data_processamento")
-            self.db["referencias"].create_index([("especies.especie_id", 1)])
-            self.db["referencias"].create_index(
-                [("comunidades.comunidade_id", 1)]
-            )
-            self.db["referencias"].create_index([("localizacoes.territorio", 1)])
+            try:
+                self.db["referencias"].create_index("doi", unique=True)
+                self.db["referencias"].create_index("status")
+                self.db["referencias"].create_index("ano_publicacao")
+                self.db["referencias"].create_index("data_processamento")
+                self.db["referencias"].create_index([("especies.especie_id", 1)])
+                self.db["referencias"].create_index([("comunidades.comunidade_id", 1)])
+                self.db["referencias"].create_index([("localizacoes.territorio", 1)])
+                logger.info("Indexes created for: referencias")
+            except Exception as e:
+                logger.warning(f"Index creation for referencias: {e}")
 
             # Collection: especies_plantas (taxonomy deduplication)
-            if "especies_plantas" not in existing_collections:
-                self.db.create_collection("especies_plantas")
-                logger.info("Created collection: especies_plantas")
-
-            self.db["especies_plantas"].create_index("nome_cientifico", unique=True)
-            self.db["especies_plantas"].create_index("familia_botanica")
-            self.db["especies_plantas"].create_index("status_validacao")
+            try:
+                self.db["especies_plantas"].create_index("nome_cientifico", unique=True)
+                self.db["especies_plantas"].create_index("familia_botanica")
+                self.db["especies_plantas"].create_index("status_validacao")
+                logger.info("Indexes created for: especies_plantas")
+            except Exception as e:
+                logger.warning(f"Index creation for especies_plantas: {e}")
 
             # Collection: comunidades_indígenas
-            if "comunidades_indígenas" not in existing_collections:
-                self.db.create_collection("comunidades_indígenas")
-                logger.info("Created collection: comunidades_indígenas")
-
-            self.db["comunidades_indígenas"].create_index("nome")
-            self.db["comunidades_indígenas"].create_index("tipo")
+            try:
+                self.db["comunidades_indígenas"].create_index("nome")
+                self.db["comunidades_indígenas"].create_index("tipo")
+                logger.info("Indexes created for: comunidades_indígenas")
+            except Exception as e:
+                logger.warning(f"Index creation for comunidades_indígenas: {e}")
 
             # Collection: localizacoes (optional, for large datasets)
-            if "localizacoes" not in existing_collections:
-                self.db.create_collection("localizacoes")
-                logger.info("Created collection: localizacoes")
+            # No indexes needed for localizacoes at this time
 
             logger.info(
-                f"Collections ready: {', '.join(self.db.list_collection_names())}"
+                "Mongita collections ready (auto-created on first use, indexes initialized)"
             )
 
         except Exception as e:
-            logger.error(f"Error creating collections: {e}")
+            logger.error(f"Error initializing collections: {e}")
             raise
 
     def get_collection(self, collection_name: str):
@@ -159,10 +154,10 @@ class DatabaseConnection:
             collection = self.db[collection_name]
             count = collection.count_documents({})
 
+            # Note: Mongita doesn't implement list_indexes, so we skip that
             return {
                 "collection": collection_name,
                 "document_count": count,
-                "indexes": list(collection.list_indexes()),
             }
 
         except Exception as e:

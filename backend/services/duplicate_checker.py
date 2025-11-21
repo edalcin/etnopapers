@@ -115,14 +115,15 @@ class DuplicateChecker:
                     doc["tipo_duplicata"] = "metadata"
                     return doc
 
-            # Check for similar titles (partial match with regex)
-            titulo_pattern = {"$regex": titulo.split()[0] if titulo else "", "$options": "i"}
-            doc = collection.find_one(
-                {
-                    "ano_publicacao": ano_publicacao,
-                    "titulo": titulo_pattern,
-                }
-            )
+            # Check for similar titles (substring match in Python since Mongita doesn't support $regex)
+            # Just get documents from same year and filter by first word in Python
+            first_word = titulo.split()[0] if titulo else ""
+            if first_word:
+                docs = collection.find({"ano_publicacao": ano_publicacao})
+                for potential_doc in docs:
+                    if first_word.lower() in potential_doc.get("titulo", "").lower():
+                        doc = potential_doc
+                        break
 
             if doc:
                 existing_autores = doc.get("autores", [])
@@ -203,20 +204,24 @@ class DuplicateChecker:
             # Look for articles within +/- 3 years of publication with similar title
             first_word = titulo.split()[0] if titulo else ""
 
+            # Use Mongita's supported operators for year range, filter by title in Python
             cursor = collection.find(
                 {
                     "ano_publicacao": {
                         "$gte": ano_publicacao - 3,
                         "$lte": ano_publicacao + 3,
-                    },
-                    "titulo": {"$regex": first_word, "$options": "i"},
+                    }
                 }
-            ).limit(limit)
+            )
 
             similar = []
             for doc in cursor:
-                doc["_id"] = str(doc["_id"])
-                similar.append(doc)
+                # Filter by title match in Python since Mongita doesn't support $regex
+                if first_word and first_word.lower() in doc.get("titulo", "").lower():
+                    doc["_id"] = str(doc["_id"])
+                    similar.append(doc)
+                    if len(similar) >= limit:
+                        break
 
             return similar
 
