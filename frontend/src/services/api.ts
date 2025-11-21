@@ -1,6 +1,22 @@
 import axios from 'axios'
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api'
+// Determine API base URL based on environment
+const getApiBaseUrl = (): string => {
+  // If explicitly set via environment variable, use it
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL
+  }
+
+  // In development with Vite dev server, use absolute URL
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8000/api'
+  }
+
+  // In production, use relative URL (works with backend serving frontend)
+  return '/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -66,13 +82,13 @@ export const validateAPIKey = async (
 async function validateGeminiKey(apiKey: string): Promise<boolean> {
   try {
     const response = await axios.post(
-      'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent',
+      'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
       {
         contents: [
           {
             parts: [
               {
-                text: 'Test',
+                text: 'Say ok',
               },
             ],
           },
@@ -80,11 +96,13 @@ async function validateGeminiKey(apiKey: string): Promise<boolean> {
       },
       {
         params: { key: apiKey },
-        timeout: 5000,
+        timeout: 10000, // Increased timeout to 10 seconds
       }
     )
-    return response.status === 200
+    // Success if we get a response (even if it's a warning)
+    return !!response.data
   } catch (error) {
+    console.error('Gemini validation error:', error)
     return false
   }
 }
@@ -95,10 +113,11 @@ async function validateOpenAIKey(apiKey: string): Promise<boolean> {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
-      timeout: 5000,
+      timeout: 10000, // Increased timeout to 10 seconds
     })
     return response.status === 200
   } catch (error) {
+    console.error('OpenAI validation error:', error)
     return false
   }
 }
@@ -113,20 +132,21 @@ async function validateClaudeKey(apiKey: string): Promise<boolean> {
         messages: [
           {
             role: 'user',
-            content: 'test',
+            content: 'Say ok',
           },
         ],
       },
       {
         headers: {
-          'anthropic-version': '2023-06-01',
+          'anthropic-version': '2024-01-15',
           'x-api-key': apiKey,
         },
-        timeout: 5000,
+        timeout: 10000, // Increased timeout to 10 seconds
       }
     )
     return response.status === 200
   } catch (error) {
+    console.error('Claude validation error:', error)
     return false
   }
 }
