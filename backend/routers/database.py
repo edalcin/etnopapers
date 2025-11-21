@@ -11,8 +11,8 @@ from pathlib import Path
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from config import settings
-from database.connection import get_db
+from backend.config import settings
+from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
 

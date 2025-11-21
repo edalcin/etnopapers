@@ -11,14 +11,14 @@ Handles plant species endpoints:
 import logging
 import asyncio
 from fastapi import APIRouter, HTTPException
-from models.species import (
+from backend.models.species import (
     SpeciesValidationRequest,
     SpeciesValidationResponse,
     BulkSpeciesValidationRequest,
     BulkSpeciesValidationResponse,
     TaxonomyCacheStats,
 )
-from services.taxonomy_service import TaxonomyService
+from backend.services.taxonomy_service import TaxonomyService
 
 logger = logging.getLogger(__name__)
 

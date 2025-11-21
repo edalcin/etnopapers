@@ -10,9 +10,9 @@ import asyncio
 from typing import Optional, Dict, Any
 from pathlib import Path
 from datetime import datetime, timedelta
-from config import settings
-from clients.gbif_client import GBIFClient
-from clients.tropicos_client import TropicosClient
+from backend.config import settings
+from backend.clients.gbif_client import GBIFClient
+from backend.clients.tropicos_client import TropicosClient
 
 logger = logging.getLogger(__name__)
 

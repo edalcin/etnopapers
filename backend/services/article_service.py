@@ -6,7 +6,7 @@ import json
 import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from database.connection import get_db
+from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
 

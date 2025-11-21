@@ -9,7 +9,7 @@ import logging
 import httpx
 import asyncio
 from typing import Optional, Dict, Any
-from config import settings
+from backend.config import settings
 
 logger = logging.getLogger(__name__)
 

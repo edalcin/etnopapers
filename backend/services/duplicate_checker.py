@@ -9,7 +9,7 @@ Implements multi-strategy duplicate detection:
 import json
 import logging
 from typing import Optional, Dict, Any
-from database.connection import get_db
+from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
 

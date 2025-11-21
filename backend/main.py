@@ -8,10 +8,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from config import settings
-from database.connection import get_db
-from database.init_db import init_database
-from routers import articles_router, species_router, database_router
+from backend.config import settings
+from backend.database.connection import get_db
+from backend.database.init_db import init_database
+from backend.routers import articles_router, species_router, database_router
 
 # Configure logging
 logger = logging.getLogger(__name__)
