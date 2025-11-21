@@ -8,6 +8,20 @@ from .article import (
     DadosEstudoResponse,
     AuthorInfo,
 )
+from .duplicate import (
+    DuplicateCheckRequest,
+    DuplicateArticleResponse,
+    DuplicateCheckResponse,
+    SimilarArticlesRequest,
+)
+from .species import (
+    SpeciesValidationRequest,
+    SpeciesResponse,
+    SpeciesValidationResponse,
+    BulkSpeciesValidationRequest,
+    BulkSpeciesValidationResponse,
+    TaxonomyCacheStats,
+)
 
 __all__ = [
     "ArticleRequest",
@@ -16,4 +30,14 @@ __all__ = [
     "DadosEstudoRequest",
     "DadosEstudoResponse",
     "AuthorInfo",
+    "DuplicateCheckRequest",
+    "DuplicateArticleResponse",
+    "DuplicateCheckResponse",
+    "SimilarArticlesRequest",
+    "SpeciesValidationRequest",
+    "SpeciesResponse",
+    "SpeciesValidationResponse",
+    "BulkSpeciesValidationRequest",
+    "BulkSpeciesValidationResponse",
+    "TaxonomyCacheStats",
 ]

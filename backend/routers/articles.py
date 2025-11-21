@@ -7,13 +7,23 @@ Handles all article-related endpoints:
 - GET /api/articles/{id} - Get specific article
 - PUT /api/articles/{id} - Update article
 - DELETE /api/articles/{id} - Delete article
+- POST /api/articles/check-duplicate - Check for duplicates
+- GET /api/articles/{id}/similar - Get similar articles
 """
 
 import logging
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
-from models import ArticleRequest, ArticleResponse, ArticleListResponse
-from services import ArticleService
+from models import (
+    ArticleRequest,
+    ArticleResponse,
+    ArticleListResponse,
+    DuplicateCheckRequest,
+    DuplicateCheckResponse,
+    DuplicateArticleResponse,
+    SimilarArticlesRequest,
+)
+from services import ArticleService, DuplicateChecker
 
 logger = logging.getLogger(__name__)
 
@@ -141,3 +151,81 @@ async def delete_article(article_id: int):
     except Exception as e:
         logger.error(f"Error deleting article: {e}")
         raise HTTPException(status_code=500, detail="Error deleting article")
+
+
+@router.post("/check-duplicate", response_model=DuplicateCheckResponse)
+async def check_duplicate(request: DuplicateCheckRequest):
+    """
+    Check if an article is a duplicate of an existing one
+
+    Uses multi-strategy detection:
+    1. Primary: DOI uniqueness
+    2. Secondary: Title + Year + First Author
+
+    Returns:
+    - is_duplicate: True if duplicate found
+    - duplicate: Details of the duplicate article if found
+    - similar_articles: List of potentially similar articles for review
+    """
+    try:
+        duplicate = DuplicateChecker.check_duplicate(
+            titulo=request.titulo,
+            ano_publicacao=request.ano_publicacao,
+            autores=[a.dict() for a in request.autores],
+            doi=request.doi,
+        )
+
+        if duplicate:
+            similar = DuplicateChecker.get_similar_articles(
+                titulo=request.titulo,
+                ano_publicacao=request.ano_publicacao,
+                limit=3,
+            )
+
+            return {
+                "is_duplicate": True,
+                "duplicate": duplicate,
+                "message": f"Artigo duplicado detectado: {duplicate['titulo']} ({duplicate['ano_publicacao']})",
+                "similar_articles": similar,
+            }
+
+        return {
+            "is_duplicate": False,
+            "duplicate": None,
+            "message": "Nenhum artigo duplicado detectado",
+            "similar_articles": None,
+        }
+
+    except Exception as e:
+        logger.error(f"Error checking duplicate: {e}")
+        raise HTTPException(status_code=500, detail="Error checking duplicate")
+
+
+@router.get("/{article_id}/similar", response_model=list[DuplicateArticleResponse])
+async def get_similar_articles(article_id: int, limit: int = Query(5, ge=1, le=20)):
+    """
+    Get articles similar to the specified article
+
+    - **article_id**: ID of the article to find similar to
+    - **limit**: Maximum number of similar articles (1-20), default: 5
+
+    Returns list of similar articles ordered by relevance
+    """
+    try:
+        article = ArticleService.get_article_by_id(article_id)
+        if not article:
+            raise HTTPException(status_code=404, detail="Article not found")
+
+        similar = DuplicateChecker.get_similar_articles(
+            titulo=article["titulo"],
+            ano_publicacao=article["ano_publicacao"],
+            limit=limit,
+        )
+
+        return similar
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting similar articles: {e}")
+        raise HTTPException(status_code=500, detail="Error getting similar articles")
