@@ -18,7 +18,8 @@
       "Bash(gh api:*)",
       "Bash(python -m pytest:*)",
       "Bash(pip install:*)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(ls -la \"H:\\git\\etnopapers\\frontend\\src\\pages\"\" 2>/dev/null || echo \"Directory doesn 't exist \")"
     ],
     "deny": [],
     "ask": []

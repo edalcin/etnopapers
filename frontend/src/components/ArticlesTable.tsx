@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useArticlesTable } from '@hooks/useArticlesTable'
 import { useArticles, useSetArticles } from '@store/useStore'
 import { articlesAPI } from '@services/api'
+import { exportArticlesToCSV, exportFilteredArticles } from '@utils/csvExport'
+import AdvancedFilter from './AdvancedFilter'
 import type { Article } from '@types'
 import './ArticlesTable.css'
 
@@ -10,8 +12,9 @@ export default function ArticlesTable() {
   const setArticles = useSetArticles()
   const [loading, setLoading] = useState(!loaded)
   const [error, setError] = useState<string | null>(null)
+  const [displayArticles, setDisplayArticles] = useState<Article[]>([])
 
-  const { table, globalFilter, setGlobalFilter } = useArticlesTable(articles)
+  const { table, globalFilter, setGlobalFilter } = useArticlesTable(displayArticles.length > 0 ? displayArticles : articles)
 
   useEffect(() => {
     if (!loaded) {
@@ -68,18 +71,70 @@ export default function ArticlesTable() {
     )
   }
 
+  const handleExportAll = () => {
+    exportArticlesToCSV(articles)
+  }
+
+  const handleExportFiltered = () => {
+    exportFilteredArticles(articles, { searchTerm: globalFilter || undefined })
+  }
+
+  const handleAdvancedFilter = (filtered: Article[]) => {
+    setDisplayArticles(filtered)
+  }
+
+  const handleClearAdvancedFilter = () => {
+    setDisplayArticles([])
+  }
+
+  const currentArticles = displayArticles.length > 0 ? displayArticles : articles
+  const displayCount = currentArticles.length
+
   return (
     <div className="articles-table">
+      <div className="filter-container">
+        <AdvancedFilter
+          articles={articles}
+          onFilter={handleAdvancedFilter}
+          onClear={handleClearAdvancedFilter}
+        />
+      </div>
+
       <div className="table-header">
-        <h3>Histórico de Artigos ({articles.length})</h3>
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="🔍 Buscar por título ou autor..."
-            value={globalFilter}
-            onChange={e => setGlobalFilter(e.target.value)}
-            className="search-input"
-          />
+        <h3>
+          Histórico de Artigos ({displayCount})
+          {displayCount !== articles.length && (
+            <span className="filter-indicator"> - Filtrado de {articles.length}</span>
+          )}
+        </h3>
+        <div className="table-controls">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="🔍 Buscar por título ou autor..."
+              value={globalFilter}
+              onChange={e => setGlobalFilter(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <div className="export-buttons">
+            <button
+              onClick={handleExportAll}
+              className="btn-export"
+              title="Exportar todos os artigos"
+            >
+              📥 Exportar Tudo
+            </button>
+            {globalFilter && (
+              <button
+                onClick={handleExportFiltered}
+                className="btn-export btn-export-filtered"
+                title="Exportar artigos filtrados"
+              >
+                📤 Exportar Filtrados
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -131,7 +186,10 @@ export default function ArticlesTable() {
       <div className="table-footer">
         <div className="pagination-info">
           <span>
-            Mostrando {table.getRowModel().rows.length} de {articles.length} artigos
+            Mostrando {table.getRowModel().rows.length} de {displayCount} artigos
+            {displayCount !== articles.length && (
+              <span className="filter-note"> (filtrado de {articles.length})</span>
+            )}
           </span>
         </div>
 

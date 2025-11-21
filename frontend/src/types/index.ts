@@ -59,6 +59,14 @@ export interface DraftState {
   savedAt: string
 }
 
+export interface ResearcherProfile {
+  nome: string
+  instituicao: string
+  foco_pesquisa: string
+  regioes_interesse?: string[]
+  comunidades_interesse?: string[]
+}
+
 export interface AppState {
   // API Key state
   apiKey: APIKeyState
