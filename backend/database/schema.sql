@@ -199,10 +199,10 @@ END;
 -- Trigger: Mark as manually edited
 CREATE TRIGGER IF NOT EXISTS marcar_edicao_manual
 AFTER UPDATE ON ArtigosCientificos
+FOR EACH ROW
 WHEN OLD.titulo != NEW.titulo
    OR OLD.autores != NEW.autores
    OR OLD.resumo != NEW.resumo
-FOR EACH ROW
 BEGIN
     UPDATE ArtigosCientificos
     SET editado_manualmente = 1
