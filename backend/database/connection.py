@@ -75,12 +75,12 @@ class DatabaseConnection:
 
             # Single collection: referencias (simplified denormalized model)
             try:
-                # Unique index for DOI
-                self.db["referencias"].create_index("doi", unique=True)
-                # Indexes for filtering
+                # Indexes for filtering and searching
+                # Note: Mongita doesn't support unique=True in create_index,
+                # but DOI duplicates are prevented at application level
+                self.db["referencias"].create_index("doi")
                 self.db["referencias"].create_index("ano")
                 self.db["referencias"].create_index("status")
-                # Index for text search on title
                 self.db["referencias"].create_index("titulo")
                 logger.info("Indexes created for: referencias (doi, ano, status, titulo)")
             except Exception as e:
