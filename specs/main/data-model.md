@@ -4,13 +4,13 @@
 **Branch**: main
 **Criado**: 2025-11-20
 **Status**: Em Desenvolvimento
-**Estrutura**: Mongita NoSQL (Denormalizado - Uma Coleção)
+**Estrutura**: MongoDB NoSQL (Denormalizado - Uma Coleção)
 
 ---
 
 ## 📋 Visão Geral
 
-Este documento define o schema do banco de dados **Mongita** para armazenamento de metadados de artigos científicos sobre etnobotânica. O modelo utiliza uma abordagem **denormalizada** com uma única coleção (`referencias`), onde todos os dados de uma referência estão embarcados em um único documento.
+Este documento define o schema do banco de dados **MongoDB** para armazenamento de metadados de artigos científicos sobre etnobotânica. O modelo utiliza uma abordagem **denormalizada** com uma única coleção (`referencias`), onde todos os dados de uma referência estão embarcados em um único documento.
 
 ### Por que denormalizado?
 
@@ -71,7 +71,7 @@ Este documento define o schema do banco de dados **Mongita** para armazenamento 
 
 | Campo | Tipo | Obrigatório | Descrição |
 |-------|------|-------------|-----------|
-| `_id` | ObjectId | ✅ | ID único gerado automaticamente pelo Mongita |
+| `_id` | ObjectId | ✅ | ID único gerado automaticamente pelo MongoDB |
 | `ano` | Integer | ✅ | Ano de publicação (1900-2100) |
 | `titulo` | String | ✅ | Título do artigo (máx 500 caracteres) |
 | `publicacao` | String | ❌ | Venue de publicação (journal, conference) |
@@ -208,7 +208,7 @@ print(f"Documentos deletados: {result.deleted_count}")
 
 ## 📈 Estimativas de Tamanho
 
-**Formato**: Mongita usa BSON (binary encoding), mais compacto que JSON
+**Formato**: MongoDB usa BSON (binary encoding), mais compacto que JSON
 
 | Quantidade | Tamanho Estimado | Descrição |
 |------------|------------------|-----------|
@@ -318,7 +318,7 @@ print(f"Página {page}/{(total + page_size - 1) // page_size}: {len(refs)} itens
 
 ## 📝 Notas Importantes
 
-1. **Sem Migrações**: Mongita é schema-less. Novos campos podem ser adicionados sem migração de dados
+1. **Sem Migrações**: MongoDB é schema-less. Novos campos podem ser adicionados sem migração de dados
 2. **Sem Normalização**: Dados sobre espécies (nome científico, família botânica) não são armazenados separadamente. Se 100 artigos mencionam a mesma espécie, o nome aparece 100 vezes
 3. **Simplicidade**: Trade-off entre normalização e simplicidade - escolhemos simplicidade e flexibilidade
 4. **MongoDB-Compatível**: Este schema é 100% compatível com MongoDB, permitindo migração futura para cloud

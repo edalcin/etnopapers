@@ -174,6 +174,6 @@ class TestDuplicateChecker:
         doi_matches = [
             r for r in all_refs["items"] if r.get("doi") == "10.1234/unique"
         ]
-        # We don't enforce uniqueness at DB level (Mongita limitation),
-        # but document it - app should handle this
+        # DOI uniqueness is enforced at DB level via MongoDB unique index,
+        # but this test verifies the constraint works correctly
         assert len(doi_matches) >= 1

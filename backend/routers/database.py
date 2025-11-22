@@ -2,11 +2,14 @@
 Database router for FastAPI
 
 Handles database operations:
-- GET /api/database/download - Download Mongita database backup
 - GET /api/database/info - Get database statistics
+- GET /api/database/download - Download MongoDB database backup (JSON export)
+- POST /api/database/backup - Create MongoDB backup
 """
 
+import json
 import logging
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -14,7 +17,6 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 
-from backend.config import settings
 from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,7 @@ router = APIRouter(prefix="/api/database", tags=["database"])
 
 @router.get("/info")
 async def get_database_info():
-    """Get database statistics and info"""
+    """Get MongoDB database statistics and info"""
     try:
         db = get_db()
         info = db.get_database_info()
@@ -32,71 +34,74 @@ async def get_database_info():
         return {
             "status": "ok",
             "database": {
-                "path": info["db_path"],
+                "type": "MongoDB",
                 "size_bytes": info["size_bytes"],
                 "size_mb": round(info["size_mb"], 2),
-                "tables": info["tables"],
-                "table_info": info["table_info"],
+                "collections": info["collections"],
+                "collection_info": info["collection_info"],
             },
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error getting database info: {e}")
         raise HTTPException(
-            status_code=500, detail="Erro ao obter informações do banco"
+            status_code=500, detail="Erro ao obter informações do banco de dados"
         )
 
 
 @router.get("/download")
 async def download_database():
     """
-    Download a backup of the Mongita database
+    Download a backup of the MongoDB database as JSON export
 
-    Creates a zip archive of the database directory and returns it as downloadable file.
+    Exports all collections as a single JSON file.
     """
     import shutil
-    import tempfile
 
     try:
-        db_path = Path(settings.DATABASE_PATH)
-
-        if not db_path.exists():
-            raise HTTPException(
-                status_code=404, detail="Banco de dados Mongita não encontrado"
-            )
+        db = get_db()
 
         # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_filename = f"etnopapers_backup_{timestamp}"
 
-        # Create temporary zip file
+        # Create temporary directory for backup
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_dir_path = Path(temp_dir)
-            zip_path = temp_dir_path / backup_filename
+            json_file = temp_dir_path / f"{backup_filename}.json"
 
-            # Create zip archive of database directory
-            shutil.make_archive(
-                str(zip_path),
-                "zip",
-                db_path.parent,
-                db_path.name
-            )
+            # Export all collections to JSON
+            backup_data = {}
+            collections = db.db.list_collection_names()
 
-            zip_file = zip_path.with_suffix(".zip")
+            for collection_name in collections:
+                collection = db.db[collection_name]
+                docs = list(collection.find())
 
-            if not zip_file.exists():
+                # Convert ObjectId to string for JSON serialization
+                for doc in docs:
+                    if "_id" in doc:
+                        doc["_id"] = str(doc["_id"])
+
+                backup_data[collection_name] = docs
+
+            # Write to JSON file
+            with open(json_file, "w", encoding="utf-8") as f:
+                json.dump(backup_data, f, indent=2, ensure_ascii=False, default=str)
+
+            if not json_file.exists():
                 raise HTTPException(
                     status_code=500, detail="Falha ao criar backup do banco de dados"
                 )
 
-            logger.info(f"Database backup download initiated: {backup_filename}.zip")
+            logger.info(f"Database backup export created: {backup_filename}.json")
 
             return FileResponse(
-                path=zip_file,
-                filename=f"{backup_filename}.zip",
-                media_type="application/zip",
+                path=json_file,
+                filename=f"{backup_filename}.json",
+                media_type="application/json",
                 headers={
-                    "Content-Disposition": f"attachment; filename={backup_filename}.zip",
+                    "Content-Disposition": f"attachment; filename={backup_filename}.json",
                     "Cache-Control": "no-cache",
                 },
             )
@@ -106,47 +111,51 @@ async def download_database():
     except Exception as e:
         logger.error(f"Error downloading database backup: {e}")
         raise HTTPException(
-            status_code=500, detail="Erro ao baixar backup do banco de dados"
+            status_code=500, detail="Erro ao exportar banco de dados"
         )
 
 
 @router.post("/backup")
 async def create_backup():
     """
-    Create a backup of the Mongita database
+    Create a backup of the MongoDB database
 
-    Creates a timestamped copy of the database directory.
+    Exports all collections as JSON format (same as /download endpoint).
+    Returns the exported data directly.
     """
-    import shutil
-
     try:
-        db_path = Path(settings.DATABASE_PATH)
-
-        if not db_path.exists():
-            raise HTTPException(
-                status_code=404, detail="Diretório do banco de dados Mongita não encontrado"
-            )
-
-        # Create backup directory
+        db = get_db()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_dirname = f"backup_etnopapers_{timestamp}"
-        backup_path = db_path.parent / backup_dirname
 
-        # Copy entire database directory
-        shutil.copytree(db_path, backup_path)
+        # Export all collections to JSON
+        backup_data = {}
+        collections = db.db.list_collection_names()
 
-        logger.info(f"Database backup created: {backup_dirname}")
+        for collection_name in collections:
+            collection = db.db[collection_name]
+            docs = list(collection.find())
+
+            # Convert ObjectId to string for JSON serialization
+            for doc in docs:
+                if "_id" in doc:
+                    doc["_id"] = str(doc["_id"])
+
+            backup_data[collection_name] = docs
+
+        logger.info(f"Database backup created at {timestamp}")
 
         return {
             "status": "success",
             "message": "Backup criado com sucesso",
-            "directory": backup_dirname,
-            "path": str(backup_path),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": timestamp,
+            "collections": list(backup_data.keys()),
+            "total_documents": sum(len(docs) for docs in backup_data.values()),
+            "data": backup_data,
         }
 
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error creating backup: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao criar backup")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao criar backup do banco de dados"
+        )

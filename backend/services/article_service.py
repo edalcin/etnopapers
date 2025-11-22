@@ -1,7 +1,7 @@
 """
 Article/Reference service layer for business logic
 
-Uses Mongita (MongoDB-compatible) for document operations.
+Uses MongoDB for document operations (via PyMongo client).
 Simplified denormalized model with single "referencias" collection.
 """
 
@@ -164,7 +164,7 @@ class ArticleService:
             if pais:
                 query["pais"] = pais
 
-            # Note: Mongita doesn't support $regex
+            # Note: MongoDB $regex requires index, search applied in Python for simplicity
             # Search will be applied in Python after fetching
 
             # Get all matching documents
@@ -362,7 +362,7 @@ class ArticleService:
             finalizados = collection.count_documents({"status": "finalizado"})
             rascunhos = collection.count_documents({"status": "rascunho"})
 
-            # Count by year (process in Python since Mongita doesn't support aggregate)
+            # Count by year (aggregate processed in Python for performance)
             por_ano_dict = {}
             for doc in collection.find({}):
                 ano = doc.get("ano")

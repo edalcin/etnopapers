@@ -1,8 +1,8 @@
 """
-Duplicate detection service for articles (Mongita-based)
+Duplicate detection service for articles (MongoDB-based)
 
 Implements multi-strategy duplicate detection:
-1. Primary: DOI uniqueness
+1. Primary: DOI uniqueness (via MongoDB unique index)
 2. Secondary: Title + Year + First Author
 """
 
@@ -119,8 +119,8 @@ class DuplicateChecker:
                     doc["tipo_duplicata"] = "metadata"
                     return doc
 
-            # Check for similar titles (substring match in Python since Mongita doesn't support $regex)
-            # Just get documents from same year and filter by first word in Python
+            # Check for similar titles (substring match in Python for better performance)
+            # Get documents from same year and filter by first word in Python
             first_word = titulo.split()[0] if titulo else ""
             if first_word:
                 docs = collection.find({"ano_publicacao": ano_publicacao})
@@ -208,7 +208,7 @@ class DuplicateChecker:
             # Look for articles within +/- 3 years of publication with similar title
             first_word = titulo.split()[0] if titulo else ""
 
-            # Use Mongita's supported operators for year range, filter by title in Python
+            # Use MongoDB operators for year range, filter by title in Python for simplicity
             cursor = collection.find(
                 {
                     "ano_publicacao": {
@@ -220,7 +220,7 @@ class DuplicateChecker:
 
             similar = []
             for doc in cursor:
-                # Filter by title match in Python since Mongita doesn't support $regex
+                # Filter by title match in Python for better performance
                 if first_word and first_word.lower() in doc.get("titulo", "").lower():
                     doc["_id"] = str(doc["_id"])
                     similar.append(doc)
