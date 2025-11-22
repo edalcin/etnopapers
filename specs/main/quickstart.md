@@ -81,7 +81,7 @@ Port (WebUI): 8007 → 8000
 Path (Database): /mnt/user/appdata/etnopapers → /data
 Environment Variables:
   DATABASE_BACKEND=disk
-  DATABASE_PATH=/data/etnopapers
+  DATABASE_PATH=/data  # Apontapara volume montado
 ```
 
 6. Clique em **Apply**
