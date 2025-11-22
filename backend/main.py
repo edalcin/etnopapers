@@ -12,8 +12,6 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.config import settings
-from backend.database.connection import get_db
-from backend.database.init_db import init_database
 from backend.routers import articles_router
 from backend.routers import database_router
 from backend.routers import species_router
@@ -24,21 +22,33 @@ logger = logging.getLogger(__name__)
 # Log startup configuration for debugging
 settings.log_startup_config()
 
-# Initialize MongoDB database
-logger.info("Initializing MongoDB database...")
-if not settings.MONGO_URI:
-    logger.error("MONGO_URI environment variable not set - application cannot start")
-    logger.error("Please set MONGO_URI environment variable with your MongoDB connection string")
-    raise ValueError("MONGO_URI environment variable is required")
+# Database connection (lazy initialization)
+db = None
 
-try:
-    init_database(settings.MONGO_URI)
-    db = get_db()
-    logger.info("MongoDB database initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize database: {e}")
-    logger.error("Check your MONGO_URI environment variable and MongoDB server status")
-    raise
+def init_db_connection():
+    """Initialize database connection (lazy - only when needed)"""
+    global db
+    if db is not None:
+        return db
+
+    logger.info("Initializing MongoDB database...")
+    if not settings.MONGO_URI:
+        logger.error("MONGO_URI environment variable not set - application cannot start")
+        logger.error("Please set MONGO_URI environment variable with your MongoDB connection string")
+        raise ValueError("MONGO_URI environment variable is required")
+
+    try:
+        from backend.database.connection import get_db
+        from backend.database.init_db import init_database
+
+        init_database(settings.MONGO_URI)
+        db = get_db()
+        logger.info("MongoDB database initialized successfully")
+        return db
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        logger.error("Check your MONGO_URI environment variable and MongoDB server status")
+        raise
 
 # Create FastAPI app
 app = FastAPI(
@@ -77,6 +87,17 @@ async def startup_event():
     logger.info(f"Etnopapers API starting - Environment: {settings.ENVIRONMENT}")
     logger.info(f"Database: MongoDB")
 
+    # Initialize database connection if MONGO_URI is configured
+    if settings.MONGO_URI:
+        try:
+            init_db_connection()
+            logger.info("Database connection initialized successfully on startup")
+        except Exception as e:
+            logger.error(f"Failed to initialize database on startup: {e}")
+            logger.warning("Database operations will fail until connection is available")
+    else:
+        logger.warning("MONGO_URI not configured - database operations will fail")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -89,7 +110,8 @@ async def health_check():
     """Health check endpoint"""
     try:
         # Test database connection
-        info = db.get_database_info()
+        db_conn = init_db_connection()
+        info = db_conn.get_database_info()
         return {
             "status": "healthy",
             "version": "0.1.0",
