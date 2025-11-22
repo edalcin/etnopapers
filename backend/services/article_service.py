@@ -353,7 +353,7 @@ class ArticleService:
 
     @staticmethod
     def get_statistics() -> Dict[str, Any]:
-        """Get statistics about references"""
+        """Get statistics about references (processed in Python, not MongoDB)"""
         db = get_db()
         collection = db.get_collection("referencias")
 
@@ -362,36 +362,28 @@ class ArticleService:
             finalizados = collection.count_documents({"status": "finalizado"})
             rascunhos = collection.count_documents({"status": "rascunho"})
 
-            # Count by year (aggregation pipeline)
-            por_ano = list(
-                collection.aggregate(
-                    [
-                        {
-                            "$group": {
-                                "_id": "$ano",
-                                "count": {"$sum": 1},
-                            }
-                        },
-                        {"$sort": {"_id": -1}},
-                    ]
-                )
-            )
+            # Count by year (process in Python since Mongita doesn't support aggregate)
+            por_ano_dict = {}
+            for doc in collection.find({}, {"ano": 1}):
+                ano = doc.get("ano")
+                if ano:
+                    por_ano_dict[ano] = por_ano_dict.get(ano, 0) + 1
 
-            # Count by country
-            por_pais = list(
-                collection.aggregate(
-                    [
-                        {
-                            "$group": {
-                                "_id": "$pais",
-                                "count": {"$sum": 1},
-                            }
-                        },
-                        {"$sort": {"count": -1}},
-                        {"$limit": 10},
-                    ]
-                )
-            )
+            # Sort by year descending
+            por_ano = [{"_id": ano, "count": count} for ano, count in sorted(por_ano_dict.items(), reverse=True)]
+
+            # Count by country (process in Python, limit to top 10)
+            por_pais_dict = {}
+            for doc in collection.find({}, {"pais": 1}):
+                pais = doc.get("pais")
+                if pais:
+                    por_pais_dict[pais] = por_pais_dict.get(pais, 0) + 1
+
+            # Sort by count descending, limit to 10
+            por_pais = [
+                {"_id": pais, "count": count}
+                for pais, count in sorted(por_pais_dict.items(), key=lambda x: x[1], reverse=True)[:10]
+            ]
 
             return {
                 "total_referencias": total,
