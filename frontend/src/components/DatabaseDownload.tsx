@@ -3,10 +3,9 @@ import apiClient from '@services/api'
 import './DatabaseDownload.css'
 
 interface DatabaseInfo {
-  path: string
   size_mb: number
-  tables: number
-  table_info: Record<string, number>
+  collections: number
+  collection_info?: Record<string, number>
 }
 
 export default function DatabaseDownload() {
@@ -23,7 +22,7 @@ export default function DatabaseDownload() {
   const loadDatabaseInfo = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get('/database/info')
+      const response = await apiClient.get('/health')
       setInfo(response.data.database)
       setError(null)
     } catch (err) {
@@ -48,7 +47,7 @@ export default function DatabaseDownload() {
       link.href = url
       link.setAttribute(
         'download',
-        `etnopapers_${new Date().toISOString().split('T')[0]}.db`
+        `etnopapers_${new Date().toISOString().split('T')[0]}.zip`
       )
       document.body.appendChild(link)
       link.click()
@@ -77,8 +76,8 @@ export default function DatabaseDownload() {
     <div className="database-download">
       <div className="download-card">
         <div className="card-header">
-          <h3>💾 Banco de Dados</h3>
-          <p>Faça download completo do seu banco de dados SQLite</p>
+          <h3>💾 Banco de Dados MongoDB</h3>
+          <p>Faça download do dump completo de suas coleções MongoDB em arquivo .zip</p>
         </div>
 
         {error && <div className="error-message">{error}</div>}
@@ -95,28 +94,30 @@ export default function DatabaseDownload() {
                 <span className="info-value">{info.size_mb.toFixed(2)} MB</span>
               </div>
               <div className="info-item">
-                <span className="info-label">Tabelas</span>
-                <span className="info-value">{info.tables}</span>
+                <span className="info-label">Coleções</span>
+                <span className="info-value">{info.collections}</span>
               </div>
             </div>
 
-            <div className="tables-info">
-              <h4>Registros por Tabela</h4>
-              <div className="table-stats">
-                {Object.entries(info.table_info).map(([table, count]) => (
-                  <div key={table} className="stat-row">
-                    <span className="table-name">{table}</span>
-                    <span className="record-count">{count} registros</span>
-                  </div>
-                ))}
+            {info.collection_info && Object.keys(info.collection_info).length > 0 && (
+              <div className="tables-info">
+                <h4>Documentos por Coleção</h4>
+                <div className="table-stats">
+                  {Object.entries(info.collection_info).map(([collection, count]) => (
+                    <div key={collection} className="stat-row">
+                      <span className="table-name">{collection}</span>
+                      <span className="record-count">{count} documentos</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="features">
-              <p>✅ Banco de dados completo em um arquivo único</p>
-              <p>✅ Formato SQLite - portável e aberto</p>
-              <p>✅ Pode ser aberto com ferramentas SQLite padrão</p>
-              <p>✅ Integrado com integridade de dados verificada</p>
+              <p>✅ Dump completo de todas as coleções MongoDB</p>
+              <p>✅ Arquivo .zip comprimido e portável</p>
+              <p>✅ Pode ser restaurado em qualquer instância MongoDB</p>
+              <p>✅ Integridade de dados verificada</p>
             </div>
 
             <div className="action-buttons">
@@ -141,22 +142,27 @@ export default function DatabaseDownload() {
         <div className="help-section">
           <h4>Como usar o backup?</h4>
           <p>
-            Você pode abrir o arquivo .db com qualquer ferramenta SQLite, como:
+            O arquivo .zip contém um dump das coleções MongoDB. Você pode restaurá-lo com:
           </p>
           <ul>
             <li>
-              <strong>SQLite Browser</strong> - Interface gráfica gratuita
+              <strong>mongorestore</strong> - Ferramenta CLI oficial do MongoDB
+              <br />
+              <code>mongorestore --archive=dump.zip --gzip</code>
             </li>
             <li>
-              <strong>SQLite CLI</strong> - <code>sqlite3 etnopapers.db</code>
+              <strong>MongoDB Compass</strong> - Interface gráfica oficial
             </li>
             <li>
-              <strong>Python</strong> - <code>import sqlite3</code>
+              <strong>Python</strong> - <code>pymongo</code> para processamento customizado
             </li>
             <li>
-              <strong>DBeaver</strong> - IDE de banco de dados profissional
+              <strong>Node.js</strong> - <code>mongodb</code> driver para processamento
             </li>
           </ul>
+          <p style={{ marginTop: '12px', fontSize: '12px', color: '#666' }}>
+            💡 Dica: Extraia o arquivo .zip e use <code>mongorestore</code> para restaurar em seu servidor MongoDB.
+          </p>
         </div>
       </div>
     </div>
