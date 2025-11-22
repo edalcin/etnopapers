@@ -24,15 +24,18 @@ def init_database(mongo_uri: str = None) -> bool:
 
     Args:
         mongo_uri: MongoDB connection URI. If None, uses MONGO_URI environment variable
-                  (e.g., mongodb://localhost:27017/etnopapers or mongodb+srv://user:pass@cluster.mongodb.net/etnopapers)
+                  (e.g., mongodb+srv://user:pass@cluster.mongodb.net/etnopapers)
 
     Returns:
-        True if successful
+        True if successful. Returns False if MONGO_URI is not configured.
     """
     try:
-        # Use provided URI or get from environment
+        # Use provided URI or get from environment (no local connections allowed)
         if mongo_uri is None:
-            mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/etnopapers")
+            mongo_uri = os.getenv("MONGO_URI")
+            if not mongo_uri:
+                logger.error("MONGO_URI environment variable not set - cannot initialize database")
+                return False
 
         # Initialize database connection
         db = get_db()

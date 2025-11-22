@@ -155,6 +155,11 @@ class DatabaseConnection:
 
 # Singleton instance
 def get_db() -> DatabaseConnection:
-    """Get database connection instance"""
-    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/etnopapers")
+    """Get database connection instance
+
+    MONGO_URI environment variable MUST be set. No local connections allowed.
+    """
+    mongo_uri = os.getenv("MONGO_URI", "")
+    if not mongo_uri:
+        raise ValueError("MONGO_URI environment variable is required but not set")
     return DatabaseConnection.get_instance(mongo_uri)

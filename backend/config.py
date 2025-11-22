@@ -18,13 +18,12 @@ class Settings:
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
     # Database (MongoDB)
-    # Connection URI - use MONGO_URI environment variable
-    # Examples:
-    #   - mongodb://localhost:27017/etnopapers (local MongoDB)
+    # Connection URI MUST be provided via MONGO_URI environment variable
+    # No local connections allowed. Examples:
     #   - mongodb+srv://user:pass@cluster.mongodb.net/etnopapers (MongoDB Atlas)
-    MONGO_URI: str = os.getenv(
-        "MONGO_URI", "mongodb://localhost:27017/etnopapers"
-    )
+    #   - mongodb+srv://user:pass@mongodb-server/etnopapers (Self-hosted with SRV)
+    # IMPORTANT: MONGO_URI environment variable is required
+    MONGO_URI: str = os.getenv("MONGO_URI", "")
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info").upper()

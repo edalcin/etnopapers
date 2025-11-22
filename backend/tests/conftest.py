@@ -2,6 +2,7 @@
 Pytest configuration and fixtures
 """
 
+import os
 import pytest
 
 from backend.database.connection import DatabaseConnection
@@ -10,9 +11,16 @@ from backend.database.init_db import init_database
 
 @pytest.fixture
 def temp_db():
-    """Create a temporary MongoDB test database"""
-    # Use test database for testing
-    test_mongo_uri = "mongodb://localhost:27017/etnopapers_test"
+    """Create a temporary MongoDB test database
+
+    Uses MONGO_URI environment variable (no local connections allowed).
+    Tests require an explicit MongoDB connection from environment.
+    """
+    # Get MongoDB URI from environment variable
+    test_mongo_uri = os.getenv("MONGO_URI")
+    if not test_mongo_uri:
+        pytest.skip("MONGO_URI environment variable not set - skipping database tests")
+
     init_database(test_mongo_uri)
     # Reset singleton for testing
     DatabaseConnection._instance = DatabaseConnection(test_mongo_uri)
