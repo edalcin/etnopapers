@@ -13,7 +13,7 @@ Este guia fornece instruções passo-a-passo para configurar e executar o Etnopa
 - ✅ Docker padrão (sem necessidade de GPU)
 - ✅ APIs externas de IA (Gemini, ChatGPT, Claude)
 - ✅ Chaves de API fornecidas pelo usuário
-- ✅ Banco de dados Mongita (NoSQL, document-oriented, MongoDB-compatible)
+- ✅ Banco de dados MongoDB (NoSQL, document-oriented, MongoDB-compatible)
 - ✅ Interface web responsiva
 - ✅ Docker leve: ~180-200MB (40% mais leve que SQL+ORM)
 
@@ -80,8 +80,8 @@ Container Name: etnopapers
 Port (WebUI): 8007 → 8000
 Path (Database): /mnt/user/appdata/etnopapers → /data
 Environment Variables:
-  DATABASE_BACKEND=disk
-  DATABASE_PATH=/data  # Apontapara volume montado
+  # MongoDB connection configuration
+  MONGO_URI=mongodb://localhost:27017  # Apontapara volume montado
 ```
 
 6. Clique em **Apply**
@@ -123,9 +123,9 @@ mkdir -p data
 Crie arquivo `.env` na raiz do projeto:
 
 ```env
-# Banco de Dados (Mongita - NoSQL)
-DATABASE_BACKEND=disk                # disk (persistente) | memory (teste)
-DATABASE_PATH=/data/etnopapers       # Diretório onde Mongita armazena documentos BSON
+# Banco de Dados (MongoDB - NoSQL)
+# MongoDB connection configuration                # disk (persistente) | memory (teste)
+MONGO_URI=mongodb://localhost:27017/etnopapers       # Diretório onde MongoDB armazena documentos BSON
 
 # Porta da aplicação
 PORT=8000
@@ -140,9 +140,9 @@ TAXONOMY_API_TIMEOUT=5
 CACHE_TTL_DAYS=30
 ```
 
-**Notas sobre Mongita**:
-- `DATABASE_PATH` é um **diretório**, não um arquivo (Mongita cria arquivos binários BSON internamente)
-- Mongita auto-cria a estrutura na primeira execução
+**Notas sobre MongoDB**:
+- `DATABASE_PATH` é um **diretório**, não um arquivo (MongoDB cria arquivos binários BSON internamente)
+- MongoDB auto-cria a estrutura na primeira execução
 - Dados são armazenados em formato BSON (20% mais compacto que JSON)
 
 ### Passo 4: Executar com Docker Compose
@@ -161,8 +161,8 @@ services:
     volumes:
       - ./data:/data
     environment:
-      - DATABASE_BACKEND=disk
-      - DATABASE_PATH=/data/etnopapers
+      - # MongoDB connection configuration
+      - MONGO_URI=mongodb://localhost:27017/etnopapers
       - PORT=8000
       - LOG_LEVEL=info
       - TAXONOMY_API_TIMEOUT=5
@@ -217,8 +217,8 @@ docker run -d \
   --name etnopapers \
   -p 8000:8000 \
   -v $(pwd)/data:/data \
-  -e DATABASE_BACKEND=disk \
-  -e DATABASE_PATH=/data/etnopapers \
+  -e # MongoDB connection configuration \
+  -e MONGO_URI=mongodb://localhost:27017/etnopapers \
   -e PORT=8000 \
   -e LOG_LEVEL=info \
   --restart unless-stopped \
@@ -693,11 +693,11 @@ docker-compose restart
 
 ## Backup e Manutenção
 
-### Backup do Banco de Dados (Mongita)
+### Backup do Banco de Dados (MongoDB)
 
 **Localização**: `./data/etnopapers/` (diretório com arquivos BSON)
 
-⚠️ **IMPORTANTE**: Com Mongita, o banco é um **diretório**, não um único arquivo!
+⚠️ **IMPORTANTE**: Com MongoDB, o banco é um **diretório**, não um único arquivo!
 
 **Backup Manual**:
 
@@ -725,14 +725,14 @@ tar -czf $BACKUP_DIR/etnopapers_$(date +%Y%m%d_%H%M%S).tar.gz $ETNO_DIR/
 # Manter apenas últimos 30 backups
 ls -t $BACKUP_DIR/etnopapers_*.tar.gz | tail -n +31 | xargs rm -f
 
-echo "Backup Mongita concluído em $(date)" >> $BACKUP_DIR/backup.log
+echo "Backup MongoDB concluído em $(date)" >> $BACKUP_DIR/backup.log
 ```
 
 2. Agendar no UNRAID User Scripts plugin:
    - Frequência: Diária
    - Horário: 03:00
 
-### Restaurar Backup (Mongita)
+### Restaurar Backup (MongoDB)
 
 ```bash
 # Parar container
@@ -749,7 +749,7 @@ tar -xzf ./backups/etnopapers_20251120.tar.gz -C ./
 # Reiniciar container
 docker-compose up -d
 
-# Verificar que Mongita inicializou corretamente
+# Verificar que MongoDB inicializou corretamente
 docker-compose logs | grep "Database initialized"
 ```
 
@@ -768,13 +768,13 @@ docker-compose logs | grep "Database initialized"
 **Via Python** (acesso ao servidor):
 
 ```python
-# Script para exportar dados de Mongita para CSV
-from mongita import MongitaClientDisk
+# Script para exportar dados de MongoDB para CSV
+from mongodb import MongoDBClientDisk
 import csv
 import json
 
 # Conectar ao banco
-client = MongitaClientDisk(database_dir='./data/etnopapers')
+client = MongoDBClientDisk(database_dir='./data/etnopapers')
 db = client['etnopapers']
 
 # Exportar referências para CSV
@@ -825,7 +825,7 @@ print("Referências exportadas para referencias_export.json")
    netstat -tuln | grep 8000
    ```
 
-### Problema: Diretório de dados não foi criado (Mongita)
+### Problema: Diretório de dados não foi criado (MongoDB)
 
 **Sintomas**: Container inicia mas gera erro `permission denied` ou dados não persistem
 
@@ -861,7 +861,7 @@ print("Referências exportadas para referencias_export.json")
    docker start etnopapers
    ```
 
-**Mongita auto-criará** arquivos de banco no diretório na primeira inicialização.
+**MongoDB auto-criará** arquivos de banco no diretório na primeira inicialização.
 
 ### Problema: API key inválida
 
@@ -947,7 +947,7 @@ curl https://api.anthropic.com/v1/messages \
 3. Corrigir nome científico manualmente
 4. Aceitar status "não validado" temporariamente
 
-### Problema: Banco de dados corrompido ou não responsivo (Mongita)
+### Problema: Banco de dados corrompido ou não responsivo (MongoDB)
 
 **Sintomas**: Erros ao salvar referências, interface não carrega, dados perdidos
 
@@ -981,7 +981,7 @@ curl https://api.anthropic.com/v1/messages \
    ```bash
    docker-compose down
    rm -rf ./data/etnopapers/*  # Apaga todos os arquivos BSON
-   docker-compose up -d        # Mongita recriará estrutura vazia
+   docker-compose up -d        # MongoDB recriará estrutura vazia
    ```
 
 **Prevenção**: Faça backups regularmente (veja seção "Backup Automático")
@@ -992,7 +992,7 @@ curl https://api.anthropic.com/v1/messages \
 
 ### O PDF original fica armazenado no servidor?
 
-**Não.** Apenas metadados são armazenados no banco Mongita (NoSQL). O PDF é processado no navegador, enviado para API de IA, e descartado após extração. O servidor nunca recebe o PDF original.
+**Não.** Apenas metadados são armazenados no banco MongoDB (NoSQL). O PDF é processado no navegador, enviado para API de IA, e descartado após extração. O servidor nunca recebe o PDF original.
 
 ### Minha chave de API é enviada para o servidor?
 

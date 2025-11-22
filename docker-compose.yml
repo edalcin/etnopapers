@@ -1,17 +1,38 @@
 version: '3.8'
 
 services:
+  mongo:
+    image: mongo:7.0
+    container_name: etnopapers-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: etnopapers
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - etnopapers-net
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   etnopapers:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: etnopapers
+    depends_on:
+      mongo:
+        condition: service_healthy
     ports:
       - "8000:8000"
     environment:
-      # Mongita configuration
-      - DATABASE_PATH=/data/etnopapers
-      - DATABASE_BACKEND=disk
+      # MongoDB configuration
+      - MONGO_URI=mongodb://mongo:27017/etnopapers
       # Server configuration
       - PORT=8000
       - ENVIRONMENT=development
@@ -20,9 +41,6 @@ services:
       - TAXONOMY_API_TIMEOUT=5
       - CACHE_TTL_DAYS=30
       - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
-    volumes:
-      # Persistent storage for Mongita BSON files
-      - ./data:/data
     networks:
       - etnopapers-net
     restart: unless-stopped
@@ -32,6 +50,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
+
+volumes:
+  mongodb_data:
 
 networks:
   etnopapers-net:

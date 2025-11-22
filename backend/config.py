@@ -4,7 +4,6 @@ Configuration management for Etnopapers backend
 
 import logging
 import os
-from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -18,10 +17,14 @@ class Settings:
     HOST: str = os.getenv("HOST", "0.0.0.0")
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
-    # Database (Mongita)
-    # Use /data in Docker (production), fall back to relative path for tests
-    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/etnopapers")
-    DATABASE_BACKEND: str = os.getenv("DATABASE_BACKEND", "disk")  # disk or memory
+    # Database (MongoDB)
+    # Connection URI - use MONGO_URI environment variable
+    # Examples:
+    #   - mongodb://localhost:27017/etnopapers (local MongoDB)
+    #   - mongodb+srv://user:pass@cluster.mongodb.net/etnopapers (MongoDB Atlas)
+    MONGO_URI: str = os.getenv(
+        "MONGO_URI", "mongodb://localhost:27017/etnopapers"
+    )
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info").upper()
@@ -68,17 +71,8 @@ class Settings:
         """Check if running in production"""
         return cls.ENVIRONMENT == "production"
 
-    @classmethod
-    def ensure_database_dir(cls):
-        """Ensure database directory exists"""
-        # For Mongita, DATABASE_PATH is a directory, not a file
-        db_path = Path(cls.DATABASE_PATH)
-        db_path.mkdir(parents=True, exist_ok=True)
-
-
 # Initialize settings
 settings = Settings()
-settings.ensure_database_dir()
 
 
 # Configure logging
@@ -90,7 +84,7 @@ def setup_logging():
     )
     logger.info(f"Logging configured at {settings.LOG_LEVEL} level")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info(f"Database: {settings.DATABASE_PATH}")
+    logger.info(f"Database: MongoDB (via MONGO_URI)")
 
 
 # Setup on module load

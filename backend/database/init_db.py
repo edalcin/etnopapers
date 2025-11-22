@@ -1,8 +1,9 @@
 """
-Database initialization for Mongita
+Database initialization for MongoDB
 
-Mongita is schema-less, so initialization just creates collections and indexes.
+MongoDB is schema-less, so initialization just creates collections and indexes.
 No SQL schema files needed!
+Connection URI is configured via MONGO_URI environment variable.
 """
 
 import logging
@@ -17,18 +18,22 @@ from backend.database.connection import get_db
 logger = logging.getLogger(__name__)
 
 
-def init_database(db_path: str = "data/etnopapers", backend: str = "disk") -> bool:
+def init_database(mongo_uri: str = None) -> bool:
     """
-    Initialize Mongita database with collections and indexes
+    Initialize MongoDB database with collections and indexes
 
     Args:
-        db_path: Path to database directory
-        backend: "disk" (persistent) or "memory" (test)
+        mongo_uri: MongoDB connection URI. If None, uses MONGO_URI environment variable
+                  (e.g., mongodb://localhost:27017/etnopapers or mongodb+srv://user:pass@cluster.mongodb.net/etnopapers)
 
     Returns:
         True if successful
     """
     try:
+        # Use provided URI or get from environment
+        if mongo_uri is None:
+            mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/etnopapers")
+
         # Initialize database connection
         db = get_db()
 
@@ -36,14 +41,11 @@ def init_database(db_path: str = "data/etnopapers", backend: str = "disk") -> bo
         collections = db.db.list_collection_names()
         expected_collections = [
             "referencias",
-            "especies_plantas",
-            "comunidades_indígenas",
-            "localizacoes",
         ]
 
-        logger.info(f"Database initialized: {db_path}")
-        logger.info(f"Backend: {backend}")
-        logger.info(f"Collections: {len(collections)} created")
+        logger.info(f"MongoDB database initialized")
+        logger.info(f"URI: {mongo_uri.split('@')[0]}***@{mongo_uri.split('@')[1] if '@' in mongo_uri else mongo_uri}")
+        logger.info(f"Collections: {len(collections)} total")
         logger.info(f"Collections: {', '.join(collections)}")
 
         for collection_name in expected_collections:
@@ -53,7 +55,7 @@ def init_database(db_path: str = "data/etnopapers", backend: str = "disk") -> bo
                     f"  - {collection_name}: {stats['document_count']} documents"
                 )
 
-        logger.info("✓ Mongita database ready for use (schema-less)")
+        logger.info("✓ MongoDB database ready for use (schema-less)")
         return True
 
     except Exception as e:

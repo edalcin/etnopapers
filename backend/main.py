@@ -21,11 +21,11 @@ from backend.routers import species_router
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Initialize Mongita database
-logger.info("Initializing Mongita database...")
-init_database(settings.DATABASE_PATH, settings.DATABASE_BACKEND)
+# Initialize MongoDB database
+logger.info("Initializing MongoDB database...")
+init_database(settings.MONGO_URI)
 db = get_db()
-logger.info("Mongita database initialized successfully")
+logger.info("MongoDB database initialized successfully")
 
 # Create FastAPI app
 app = FastAPI(
@@ -62,7 +62,7 @@ if frontend_dist.exists():
 async def startup_event():
     """Initialize on startup"""
     logger.info(f"Etnopapers API starting - Environment: {settings.ENVIRONMENT}")
-    logger.info(f"Database: {settings.DATABASE_PATH}")
+    logger.info(f"Database: MongoDB")
 
 
 @app.on_event("shutdown")
@@ -83,7 +83,7 @@ async def health_check():
             "environment": settings.ENVIRONMENT,
             "database": {
                 "size_mb": info["size_mb"],
-                "tables": info["tables"],
+                "collections": info["collections"],
             },
         }
     except Exception as e:

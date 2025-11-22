@@ -1,4 +1,4 @@
-# Multi-stage build for Etnopapers (with Mongita NoSQL)
+# Multi-stage build for Etnopapers (with MongoDB)
 
 # Stage 1: Frontend builder
 FROM node:18-alpine AS frontend-builder
@@ -24,13 +24,12 @@ COPY frontend/.prettierrc.json ./
 # Build frontend
 RUN npm run build
 
-# Stage 2: Backend runtime with Mongita
+# Stage 2: Backend runtime
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies (minimal for Mongita)
-# No sqlite needed! Mongita is pure Python with no C extensions
+# Install system dependencies (minimal for MongoDB)
 
 # Install Python dependencies
 COPY backend/requirements.txt .
@@ -50,11 +49,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
 # Environment defaults (can be overridden at runtime)
-# Map directly to /data (volume mount point) instead of subdirectory
-ENV DATABASE_PATH=/data
-ENV DATABASE_BACKEND=disk
+ENV MONGO_URI=mongodb://mongo:27017/etnopapers
 ENV PORT=8000
 ENV LOG_LEVEL=info
+ENV ENVIRONMENT=production
 
 # Start backend with Uvicorn
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

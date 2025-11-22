@@ -26,7 +26,7 @@ Este documento define o schema do banco de dados **MongoDB** para armazenamento 
 
 ```json
 {
-  "_id": "507f1f77bcf86cd799439011",
+  "_id": "550e8400-e29b-41d4-a716-446655440000",
   "ano": 2010,
   "titulo": "Uso e conhecimento tradicional de plantas medicinais no Sertão do Ribeirão, Florianópolis, SC, Brasil",
   "publicacao": "Acta bot. bras. 24(2): 395-406",
@@ -34,8 +34,7 @@ Este documento define o schema do banco de dados **MongoDB** para armazenamento 
     "Giraldi, M.",
     "Hanazaki, N."
   ],
-  "resumo": "O objetivo desta pesquisa foi realizar um estudo etnobotânico sobre o uso e o conhecimento tradicional de plantas medicinais no Sertão do Ribeirão, uma comunidade de origem açoriana, inserida no domínio da Mata Atlântica...",
-  "doi": "10.1590/S0102-33062011000200011",
+  "resumo": "O objetivo desta pesquisa foi realizar um estudo etnobotânico sobre o uso e o conhecimento tradicional de plantas medicinais no Sertão do Ribeirão, uma comunidade de origem açoriana, inserida no domínio da Mata Atlântica. Foram realizadas 13 entrevistas com moradores do Sertão do Ribeirão, sendo identificadas 114 espécies de plantas medicinais, distribuídas em 48 famílias botânicas.",
   "especies": [
     {
       "vernacular": "maçanilha",
@@ -44,20 +43,15 @@ Este documento define o schema do banco de dados **MongoDB** para armazenamento 
     {
       "vernacular": "hortelã-branca",
       "nomeCientifico": "Mentha sp1."
-    },
-    {
-      "vernacular": "gengibre",
-      "nomeCientifico": "Zingiber officinale"
     }
   ],
-  "tipo_de_uso": "medicinal",
+  "tipoUso": "medicinal",
   "metodologia": "entrevistas",
   "pais": "Brasil",
   "estado": "SC",
   "municipio": "Florianópolis",
   "local": "Sertão do Ribeirão",
-  "bioma": "Mata Atlântica",
-  "status": "rascunho"
+  "bioma": "Mata Atlântica"
 }
 ```
 
@@ -71,24 +65,22 @@ Este documento define o schema do banco de dados **MongoDB** para armazenamento 
 
 | Campo | Tipo | Obrigatório | Descrição |
 |-------|------|-------------|-----------|
-| `_id` | ObjectId | ✅ | ID único gerado automaticamente pelo MongoDB |
+| `_id` | String (UUID) | ✅ | ID único em formato UUID (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) |
 | `ano` | Integer | ✅ | Ano de publicação (1900-2100) |
 | `titulo` | String | ✅ | Título do artigo (máx 500 caracteres) |
 | `publicacao` | String | ❌ | Venue de publicação (journal, conference) |
 | `autores` | Array[String] | ✅ | Lista de nomes dos autores |
 | `resumo` | String | ❌ | Abstract ou resumo do artigo |
-| `doi` | String | ❌ | Digital Object Identifier (índice único) |
 | `especies` | Array[Object] | ✅ | Espécies de plantas mencionadas |
 | `especies[].vernacular` | String | ✅ | Nome vernacular/comum |
 | `especies[].nomeCientifico` | String | ✅ | Nome científico da planta |
-| `tipo_de_uso` | String | ❌ | Tipo de uso (medicinal, alimentar, ritual, etc.) |
+| `tipoUso` | String | ❌ | Tipo de uso (medicinal, alimentar, ritual, etc.) |
 | `metodologia` | String | ❌ | Metodologia de pesquisa (entrevistas, observação, etc.) |
 | `pais` | String | ❌ | País onde estudo foi realizado |
 | `estado` | String | ❌ | Estado ou província |
 | `municipio` | String | ❌ | Município/cidade |
 | `local` | String | ❌ | Localidade específica (comunidade, território) |
 | `bioma` | String | ❌ | Bioma onde estudo foi realizado (Mata Atlântica, Cerrado, etc.) |
-| `status` | String | ✅ | Status do documento ('rascunho' ou 'finalizado') |
 
 ---
 
@@ -97,13 +89,10 @@ Este documento define o schema do banco de dados **MongoDB** para armazenamento 
 Para performance de queries comuns, os seguintes índices são criados automaticamente:
 
 ```python
-# Índice único para prevenir duplicatas
-db["referencias"].create_index("doi", unique=True)
-
-# Índices para filtragem
+# Índices para filtragem e performance
 db["referencias"].create_index("ano")        # Filtrar por ano
-db["referencias"].create_index("status")     # Filtrar por status
 db["referencias"].create_index("titulo")     # Busca por título
+db["referencias"].create_index("pais")       # Filtrar por país
 ```
 
 ---
@@ -113,13 +102,13 @@ db["referencias"].create_index("titulo")     # Busca por título
 ### 1. Obter uma referência por ID
 
 ```python
-doc = db["referencias"].find_one({"_id": ObjectId("507f1f77bcf86cd799439011")})
+doc = db["referencias"].find_one({"_id": "550e8400-e29b-41d4-a716-446655440000"})
 ```
 
 **Resposta**:
 ```json
 {
-  "_id": "507f1f77bcf86cd799439011",
+  "_id": "550e8400-e29b-41d4-a716-446655440000",
   "ano": 2010,
   "titulo": "Uso e conhecimento tradicional...",
   ...
@@ -132,11 +121,11 @@ doc = db["referencias"].find_one({"_id": ObjectId("507f1f77bcf86cd799439011")})
 refs_2010 = list(db["referencias"].find({"ano": 2010}).sort("titulo", 1))
 ```
 
-### 3. Buscar referências com status "finalizado"
+### 3. Listar todas as referências
 
 ```python
-finalizados = list(db["referencias"].find({"status": "finalizado"}))
-print(f"Total finalizado: {len(finalizados)}")
+todos = list(db["referencias"].find({}).sort("ano", -1))
+print(f"Total de referências: {len(todos)}")
 ```
 
 ### 4. Encontrar referências com uma espécie específica
@@ -169,13 +158,12 @@ por_pais = list(
 ### 6. Filtrar por múltiplos critérios
 
 ```python
-# Referências brasileiras sobre plantas medicinais finalizadas em 2020
+# Referências brasileiras sobre plantas medicinais em 2020
 refs = list(
     db["referencias"].find({
         "pais": "Brasil",
-        "tipo_de_uso": "medicinal",
-        "ano": 2020,
-        "status": "finalizado"
+        "tipoUso": "medicinal",
+        "ano": 2020
     })
 )
 ```
@@ -183,14 +171,12 @@ refs = list(
 ### 7. Atualizar uma referência
 
 ```python
-from datetime import datetime
-
 result = db["referencias"].update_one(
-    {"_id": ObjectId("507f1f77bcf86cd799439011")},
+    {"_id": "550e8400-e29b-41d4-a716-446655440000"},
     {
         "$set": {
-            "status": "finalizado",
-            "bioma": "Cerrado"
+            "bioma": "Cerrado",
+            "tipoUso": "medicinal"
         }
     }
 )
@@ -200,7 +186,7 @@ print(f"Documentos atualizados: {result.modified_count}")
 ### 8. Deletar uma referência
 
 ```python
-result = db["referencias"].delete_one({"_id": ObjectId("507f1f77bcf86cd799439011")})
+result = db["referencias"].delete_one({"_id": "550e8400-e29b-41d4-a716-446655440000"})
 print(f"Documentos deletados: {result.deleted_count}")
 ```
 
@@ -223,24 +209,9 @@ print(f"Documentos deletados: {result.deleted_count}")
 
 ## 🔄 Detecção de Duplicatas
 
-### Estratégia 1: Por DOI (Primária)
+### Estratégia: Por Título + Ano + Primeiro Autor
 
-Se duas referências têm o mesmo DOI, são duplicatas:
-
-```python
-# DOI é índice único - tentativa de inserir duplicata falha
-try:
-    db["referencias"].insert_one({
-        "doi": "10.1590/S0102-33062011000200011",  # Já existe
-        ...
-    })
-except:
-    print("Erro: DOI já existe")
-```
-
-### Estratégia 2: Por Título + Ano + Primeiro Autor
-
-Se DOI não está disponível, detectar por combinação:
+Detectar duplicatas por combinação de título, ano e primeiro autor:
 
 ```python
 existing = db["referencias"].find_one({
@@ -253,6 +224,8 @@ if existing:
     print(f"Duplicata encontrada: {existing['_id']}")
 ```
 
+**Nota**: A detecção é feita no backend antes da inserção, evitando documentos duplicados.
+
 ---
 
 ## 🛠️ Operações Comuns na Aplicação
@@ -260,25 +233,26 @@ if existing:
 ### Criar Nova Referência (do PDF extraído)
 
 ```python
+import uuid
+
 new_ref = {
+    "_id": str(uuid.uuid4()),  # Gera UUID único
     "ano": 2010,
     "titulo": "...",
     "publicacao": "...",
     "autores": ["...", "..."],
     "resumo": "...",
-    "doi": "...",
     "especies": [
         {"vernacular": "maçanilha", "nomeCientifico": "Chamomilla recutita"},
         ...
     ],
-    "tipo_de_uso": "medicinal",
+    "tipoUso": "medicinal",
     "metodologia": "entrevistas",
     "pais": "Brasil",
     "estado": "SC",
     "municipio": "Florianópolis",
     "local": "Sertão do Ribeirão",
-    "bioma": "Mata Atlântica",
-    "status": "rascunho"
+    "bioma": "Mata Atlântica"
 }
 
 result = db["referencias"].insert_one(new_ref)
@@ -288,10 +262,10 @@ print(f"Criado com ID: {result.inserted_id}")
 ### Editar Referência Existente
 
 ```python
-# Usuário corrigiu o status
+# Usuário corrigiu o tipo de uso
 db["referencias"].update_one(
-    {"_id": ObjectId("507f1f77bcf86cd799439011")},
-    {"$set": {"status": "finalizado"}}
+    {"_id": "550e8400-e29b-41d4-a716-446655440000"},
+    {"$set": {"tipoUso": "alimentar"}}
 )
 ```
 
@@ -318,10 +292,11 @@ print(f"Página {page}/{(total + page_size - 1) // page_size}: {len(refs)} itens
 
 ## 📝 Notas Importantes
 
-1. **Sem Migrações**: MongoDB é schema-less. Novos campos podem ser adicionados sem migração de dados
-2. **Sem Normalização**: Dados sobre espécies (nome científico, família botânica) não são armazenados separadamente. Se 100 artigos mencionam a mesma espécie, o nome aparece 100 vezes
-3. **Simplicidade**: Trade-off entre normalização e simplicidade - escolhemos simplicidade e flexibilidade
-4. **MongoDB-Compatível**: Este schema é 100% compatível com MongoDB, permitindo migração futura para cloud
+1. **IDs em UUID**: Cada documento recebe um UUID único em formato string (sem dependência de ObjectId do MongoDB)
+2. **Uma coleção única**: Todos os dados em `referencias`, denormalizado para máxima simplicidade
+3. **Sem Migrações**: MongoDB é schema-less. Novos campos podem ser adicionados sem migração de dados
+4. **Sem Normalização**: Dados sobre espécies não são armazenados separadamente para simplicidade
+5. **CamelCase**: Campo `tipoUso` usa notação camelCase para consistência com APIs REST modernas
 
 ---
 

@@ -1,84 +1,87 @@
 """
-Mongita database connection management for Etnopapers
+MongoDB database connection management for Etnopapers
 
-Mongita is an embedded MongoDB-compatible document database.
 This module provides connection and query management using PyMongo API.
+Connection URI is configured via MONGO_URI environment variable.
 """
 
 import logging
 import os
-from pathlib import Path
 from typing import Optional
 
-from bson import ObjectId
-from mongita import MongitaClientDisk
-from mongita import MongitaClientMemory
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 logger = logging.getLogger(__name__)
 
 
 class DatabaseConnection:
-    """Manages Mongita database connection and collections"""
+    """Manages MongoDB database connection and collections"""
 
     _instance: Optional["DatabaseConnection"] = None
-    _db_path: str = "data/etnopapers"
+    _mongo_uri: str = ""
 
-    def __init__(self, db_path: str = "data/etnopapers", backend: str = "disk"):
+    def __init__(self, mongo_uri: str):
         """
-        Initialize Mongita database connection
+        Initialize MongoDB database connection
 
         Args:
-            db_path: Directory path for Mongita files
-            backend: "disk" (persistent) or "memory" (test)
+            mongo_uri: MongoDB connection URI (e.g., mongodb://localhost:27017/etnopapers
+                      or mongodb+srv://user:pass@cluster.mongodb.net/etnopapers)
         """
-        self._db_path = db_path
-        self._backend = backend
+        self._mongo_uri = mongo_uri
         self._initialize_db()
 
     @classmethod
-    def get_instance(
-        cls, db_path: str = "data/etnopapers", backend: str = "disk"
-    ) -> "DatabaseConnection":
+    def get_instance(cls, mongo_uri: str) -> "DatabaseConnection":
         """Get singleton instance of DatabaseConnection"""
         if cls._instance is None:
-            cls._instance = cls(db_path, backend)
+            cls._instance = cls(mongo_uri)
         return cls._instance
 
     def _initialize_db(self):
-        """Initialize Mongita client and create database"""
+        """Initialize MongoDB client and create database"""
         try:
-            # Create directory if using disk backend
-            if self._backend == "disk":
-                db_dir = Path(self._db_path)
-                db_dir.mkdir(parents=True, exist_ok=True)
-                self.client = MongitaClientDisk(database_dir=self._db_path)
-            else:
-                self.client = MongitaClientMemory()
+            # Connect to MongoDB
+            self.client = MongoClient(self._mongo_uri, serverSelectionTimeoutMS=5000)
 
-            # Get database
-            self.db = self.client["etnopapers"]
+            # Verify connection
+            self.client.admin.command("ping")
+
+            # Get database (extracted from URI or defaults to 'etnopapers')
+            # If URI is mongodb://localhost:27017/etnopapers, database name is 'etnopapers'
+            # If URI doesn't specify database, we use 'etnopapers' as default
+            db_name = "etnopapers"
+            if "/" in self._mongo_uri.split("mongodb+srv://")[-1].split("mongodb://")[-1]:
+                # Extract database name from URI if present
+                parts = self._mongo_uri.split("/")
+                if len(parts) > 1 and parts[-1] and not "?" in parts[-1].split("@")[-1]:
+                    db_name = parts[-1].split("?")[0]
+
+            self.db = self.client[db_name]
 
             # Initialize collections and indexes
             self._create_collections()
 
-            logger.info(f"Mongita database initialized: {self._db_path}")
+            logger.info(f"MongoDB database initialized: {db_name}")
 
+        except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+            logger.error(f"Failed to connect to MongoDB: {e}")
+            raise
         except Exception as e:
-            logger.error(f"Failed to initialize Mongita database: {e}")
+            logger.error(f"Failed to initialize MongoDB database: {e}")
             raise
 
     def _create_collections(self):
-        """Initialize collections and indexes (Mongita creates collections on first use)"""
+        """Initialize collections and indexes"""
         try:
-            # Mongita creates collections automatically on first insert/operation
+            # MongoDB creates collections automatically on first insert/operation
             # We just need to create the indexes for performance
 
             # Single collection: referencias (simplified denormalized model)
             try:
-                # Indexes for filtering and searching
-                # Note: Mongita doesn't support unique=True in create_index,
-                # but DOI duplicates are prevented at application level
-                self.db["referencias"].create_index("doi")
+                # Create indexes for filtering and searching
+                self.db["referencias"].create_index("doi", unique=True, sparse=True)
                 self.db["referencias"].create_index("ano")
                 self.db["referencias"].create_index("status")
                 self.db["referencias"].create_index("titulo")
@@ -87,7 +90,7 @@ class DatabaseConnection:
                 logger.warning(f"Index creation for referencias: {e}")
 
             logger.info(
-                "Mongita database ready (single 'referencias' collection, indexes initialized)"
+                "MongoDB database ready (single 'referencias' collection, indexes initialized)"
             )
 
         except Exception as e:
@@ -108,18 +111,11 @@ class DatabaseConnection:
                 count = self.db[collection_name].count_documents({})
                 collection_info[collection_name] = count
 
-            # Calculate directory size if disk-based
-            size_bytes = 0
-            if self._backend == "disk":
-                db_path = Path(self._db_path)
-                if db_path.exists():
-                    for file_path in db_path.rglob("*"):
-                        if file_path.is_file():
-                            size_bytes += file_path.stat().st_size
+            # Get database statistics from MongoDB server
+            db_stats = self.db.command("dbStats")
+            size_bytes = db_stats.get("dataSize", 0)
 
             return {
-                "db_path": self._db_path,
-                "backend": self._backend,
                 "size_bytes": size_bytes,
                 "size_mb": size_bytes / (1024 * 1024),
                 "collections": len(collections),
@@ -136,11 +132,21 @@ class DatabaseConnection:
             collection = self.db[collection_name]
             count = collection.count_documents({})
 
-            # Note: Mongita doesn't implement list_indexes, so we skip that
-            return {
-                "collection": collection_name,
-                "document_count": count,
-            }
+            # Get collection statistics from MongoDB
+            try:
+                col_stats = self.db.command("collStats", collection_name)
+                return {
+                    "collection": collection_name,
+                    "document_count": count,
+                    "avg_obj_size": col_stats.get("avgObjSize", 0),
+                    "storage_size": col_stats.get("storageSize", 0),
+                }
+            except Exception:
+                # Fallback if collStats not available
+                return {
+                    "collection": collection_name,
+                    "document_count": count,
+                }
 
         except Exception as e:
             logger.error(f"Collection stats error: {e}")
@@ -150,6 +156,5 @@ class DatabaseConnection:
 # Singleton instance
 def get_db() -> DatabaseConnection:
     """Get database connection instance"""
-    backend = os.getenv("DATABASE_BACKEND", "disk")
-    db_path = os.getenv("DATABASE_PATH", "data/etnopapers")
-    return DatabaseConnection.get_instance(db_path, backend)
+    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/etnopapers")
+    return DatabaseConnection.get_instance(mongo_uri)

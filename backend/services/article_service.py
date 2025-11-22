@@ -3,15 +3,15 @@ Article/Reference service layer for business logic
 
 Uses MongoDB for document operations (via PyMongo client).
 Simplified denormalized model with single "referencias" collection.
+Uses UUID string IDs and camelCase field names.
 """
 
 import logging
+import uuid
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-
-from bson import ObjectId
 
 from backend.database.connection import get_db
 
@@ -28,16 +28,14 @@ class ArticleService:
         autores: List[str],
         publicacao: Optional[str] = None,
         resumo: Optional[str] = None,
-        doi: Optional[str] = None,
         especies: Optional[List[Dict]] = None,
-        tipo_de_uso: Optional[str] = None,
+        tipoUso: Optional[str] = None,
         metodologia: Optional[str] = None,
         pais: Optional[str] = None,
         estado: Optional[str] = None,
         municipio: Optional[str] = None,
         local: Optional[str] = None,
         bioma: Optional[str] = None,
-        status: str = "rascunho",
     ) -> Dict[str, Any]:
         """
         Create a new reference/article
@@ -48,16 +46,14 @@ class ArticleService:
             autores: List of author names
             publicacao: Publication venue
             resumo: Abstract/summary
-            doi: Digital Object Identifier
             especies: List of species dicts with vernacular and nomeCientifico
-            tipo_de_uso: Type of use
+            tipoUso: Type of use
             metodologia: Research methodology
             pais: Country
             estado: State
             municipio: Municipality
             local: Specific location
             bioma: Biome
-            status: Document status (rascunho or finalizado)
 
         Returns:
             Created document data with ID
@@ -65,27 +61,26 @@ class ArticleService:
         db = get_db()
 
         try:
+            # Generate UUID for document
+            doc_id = str(uuid.uuid4())
+
             # Build document
             doc = {
+                "_id": doc_id,
                 "ano": ano,
                 "titulo": titulo,
                 "autores": autores,
                 "publicacao": publicacao,
                 "resumo": resumo,
                 "especies": especies or [],
-                "tipo_de_uso": tipo_de_uso,
+                "tipoUso": tipoUso,
                 "metodologia": metodologia,
                 "pais": pais,
                 "estado": estado,
                 "municipio": municipio,
                 "local": local,
                 "bioma": bioma,
-                "status": status,
             }
-
-            # Add DOI only if provided (to maintain unique index)
-            if doi:
-                doc["doi"] = doi
 
             # Insert into collection
             collection = db.get_collection("referencias")
@@ -101,24 +96,16 @@ class ArticleService:
 
     @staticmethod
     def get_article_by_id(article_id: str) -> Optional[Dict[str, Any]]:
-        """Get article/reference by ID"""
+        """Get article/reference by ID (UUID string)"""
         db = get_db()
 
         try:
-            # Convert string ID to ObjectId
-            try:
-                obj_id = ObjectId(article_id)
-            except Exception:
-                return None
-
             collection = db.get_collection("referencias")
-            doc = collection.find_one({"_id": obj_id})
+            doc = collection.find_one({"_id": article_id})
 
             if not doc:
                 return None
 
-            # Convert ObjectId to string for JSON serialization
-            doc["_id"] = str(doc["_id"])
             return doc
 
         except Exception as e:
@@ -129,7 +116,6 @@ class ArticleService:
     def list_articles(
         page: int = 1,
         page_size: int = 50,
-        status: Optional[str] = None,
         search: Optional[str] = None,
         ano: Optional[int] = None,
         pais: Optional[str] = None,
@@ -140,7 +126,6 @@ class ArticleService:
         Args:
             page: Page number (1-based)
             page_size: Items per page
-            status: Filter by status (rascunho or finalizado)
             search: Search text in title or authors
             ano: Filter by year
             pais: Filter by country
@@ -154,9 +139,6 @@ class ArticleService:
         try:
             # Build query filter
             query = {}
-
-            if status:
-                query["status"] = status
 
             if ano:
                 query["ano"] = ano
@@ -220,12 +202,6 @@ class ArticleService:
         db = get_db()
 
         try:
-            # Convert string ID to ObjectId
-            try:
-                obj_id = ObjectId(article_id)
-            except Exception:
-                return None
-
             # Allowed fields for update
             allowed_fields = [
                 "ano",
@@ -233,16 +209,14 @@ class ArticleService:
                 "publicacao",
                 "autores",
                 "resumo",
-                "doi",
                 "especies",
-                "tipo_de_uso",
+                "tipoUso",
                 "metodologia",
                 "pais",
                 "estado",
                 "municipio",
                 "local",
                 "bioma",
-                "status",
             ]
 
             # Build update document
@@ -257,7 +231,7 @@ class ArticleService:
 
             # Execute update
             collection = db.get_collection("referencias")
-            result = collection.update_one({"_id": obj_id}, update_doc)
+            result = collection.update_one({"_id": article_id}, update_doc)
 
             if result.matched_count == 0:
                 return None
@@ -283,14 +257,8 @@ class ArticleService:
         db = get_db()
 
         try:
-            # Convert string ID to ObjectId
-            try:
-                obj_id = ObjectId(article_id)
-            except Exception:
-                return False
-
             collection = db.get_collection("referencias")
-            result = collection.delete_one({"_id": obj_id})
+            result = collection.delete_one({"_id": article_id})
 
             if result.deleted_count > 0:
                 logger.info(f"Reference deleted: {article_id}")
@@ -300,25 +268,6 @@ class ArticleService:
         except Exception as e:
             logger.error(f"Error deleting reference: {e}")
             raise
-
-    @staticmethod
-    def get_by_doi(doi: str) -> Optional[Dict[str, Any]]:
-        """Get reference by DOI"""
-        db = get_db()
-
-        try:
-            collection = db.get_collection("referencias")
-            doc = collection.find_one({"doi": doi})
-
-            if not doc:
-                return None
-
-            doc["_id"] = str(doc["_id"])
-            return doc
-
-        except Exception as e:
-            logger.error(f"Error fetching by DOI: {e}")
-            return None
 
     @staticmethod
     def check_duplicate(
@@ -359,8 +308,6 @@ class ArticleService:
 
         try:
             total = collection.count_documents({})
-            finalizados = collection.count_documents({"status": "finalizado"})
-            rascunhos = collection.count_documents({"status": "rascunho"})
 
             # Count by year (aggregate processed in Python for performance)
             por_ano_dict = {}
@@ -370,7 +317,7 @@ class ArticleService:
                     por_ano_dict[ano] = por_ano_dict.get(ano, 0) + 1
 
             # Sort by year descending
-            por_ano = [{"_id": ano, "count": count} for ano, count in sorted(por_ano_dict.items(), reverse=True)]
+            por_ano = [{"ano": ano, "count": count} for ano, count in sorted(por_ano_dict.items(), reverse=True)]
 
             # Count by country (process in Python, limit to top 10)
             por_pais_dict = {}
@@ -381,14 +328,12 @@ class ArticleService:
 
             # Sort by count descending, limit to 10
             por_pais = [
-                {"_id": pais, "count": count}
+                {"pais": pais, "count": count}
                 for pais, count in sorted(por_pais_dict.items(), key=lambda x: x[1], reverse=True)[:10]
             ]
 
             return {
                 "total_referencias": total,
-                "finalizados": finalizados,
-                "rascunhos": rascunhos,
                 "por_ano": por_ano,
                 "por_pais": por_pais,
             }

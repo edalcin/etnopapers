@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Current Status**: Design & specification phase (no implementation code yet - only detailed specifications)
 - **Frontend**: React 18 + TypeScript (not implemented)
 - **Backend**: Python FastAPI (not implemented)
-- **Database**: Mongita (embedded MongoDB-compatible NoSQL with JSON/BSON documents)
+- **Database**: MongoDB (NoSQL with JSON/BSON documents, via MONGO_URI environment variable)
 - **Data Model**: Document-centric (references as root documents with aggregated metadata)
 - **Deployment**: Docker + Docker Compose for UNRAID servers (lightweight: ~180-200MB)
 - **AI Integration**: Frontend-driven extraction using user-provided API keys (Gemini, ChatGPT, or Claude)
@@ -30,18 +30,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `ManualEditor`: Edit and correct extracted data
   - `ArticlesTable`: Browse all articles with sort/filter/pagination
   - `ResearcherProfile`: Optional personalization for extraction context
-  - `DatabaseDownload`: Download Mongita database backup (zip archive)
+  - `DatabaseDownload`: Download MongoDB database backup (zip archive)
 
 ### Backend (Python FastAPI)
 - **Structure**: Router-based API with service layer for business logic
-- **Database**: Mongita (embedded MongoDB-compatible document store with BSON serialization)
-- **Data Layer**: PyMongo-compatible API for CRUD operations with MongoDB-style queries
+- **Database**: MongoDB (NoSQL document store with BSON serialization via PyMongo)
+- **Data Layer**: PyMongo API for CRUD operations with MongoDB-style queries
+- **Connection**: Via MONGO_URI environment variable (supports local MongoDB or cloud providers like MongoDB Atlas)
 - **API Endpoints**: 29 planned endpoints covering articles/references, species, taxonomy validation, locations, communities, drafts, database download
 - **Taxonomy Integration**: GBIF API (primary) + Tropicos (fallback) with 30-day in-memory cache
-- **Async**: Full async/await support via FastAPI/uvicorn with async Mongita driver (motor or sync wrapper)
+- **Async**: Full async/await support via FastAPI/uvicorn
 - **No Authentication**: System designed for open networks (future: add auth layer)
 
-### Database (Mongita - Embedded NoSQL)
+### Database (MongoDB - NoSQL)
 
 **Simplified Document-Centric Model** (single collection with denormalized documents):
 
@@ -115,19 +116,27 @@ A single `referencias` collection stores complete reference documents with all m
 
 ### Docker Setup
 ```yaml
-# Single service (etnopapers) - lightweight NoSQL configuration
+# Two services: MongoDB + Etnopapers API
+# MongoDB Service:
+- Port: 27017 (MongoDB server)
+- Volume: mongodb_data:/data/db (persistent MongoDB database)
+- Image: mongo:7.0
+- Health Check: mongosh ping command
+
+# Etnopapers Service:
 - Port: 8000 (web app + API)
-- Volume: /mnt/user/appdata/etnopapers/:/data (persistent Mongita database files)
+- Depends on: MongoDB service (healthy condition)
 - Base Image: python:3.11-slim (minimal, ~150MB)
-- Dependencies: FastAPI, Mongita, PyMongo (client library), aiofiles
-- Estimated Docker Image Size: ~180-200MB (vs 300MB+ with SQLite + ORM)
+- Dependencies: FastAPI, PyMongo (client library)
+- Estimated Docker Image Size: ~180-200MB
 - Environment (defaults):
-  - DATABASE_PATH=/data (points to mounted volume)
-  - DATABASE_BACKEND=disk
+  - MONGO_URI=mongodb://mongo:27017/etnopapers (connection to MongoDB service)
   - PORT=8000
   - LOG_LEVEL=info
+  - ENVIRONMENT=development
   - TAXONOMY_API_TIMEOUT=5
   - CACHE_TTL_DAYS=30
+  - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 ```
 
 ## Development Commands
@@ -160,17 +169,17 @@ pytest -v                              # Verbose test output
 pytest tests/routers/test_articles.py  # Single test file
 ```
 
-### Database (Mongita)
+### Database (MongoDB)
 ```bash
-# Mongita database is file-based (no migrations needed - schema-less)
-# Data persists in the /data directory (or ./data/ for local dev)
+# MongoDB database is remote/networked (connection via MONGO_URI environment variable)
+# Connect to MongoDB using local instance or MongoDB Atlas
 
-# Inspect Mongita database (from Python)
+# Inspect MongoDB database (from Python)
 python -c "
-from mongita import MongitaClientDisk
+from pymongo import MongoClient
 
-# Connect to Mongita (defaults to ./data)
-client = MongitaClientDisk(database_dir='./data')
+# Connect to MongoDB (use environment variable or local instance)
+client = MongoClient('mongodb://localhost:27017/etnopapers')
 db = client['etnopapers']
 
 # List all collections
@@ -194,9 +203,10 @@ refs_with_species = list(db['referencias'].find({
 print(f'References with Chamomilla recutita: {len(refs_with_species)}')
 "
 
-# Database files (BSON format, auto-created by Mongita)
-# ./data/__db__.json - metadata
-# ./data/referencias/ - single collection with all references
+# Connection string examples:
+# - Local MongoDB: mongodb://localhost:27017/etnopapers
+# - MongoDB Atlas: mongodb+srv://user:password@cluster.mongodb.net/etnopapers
+# - Docker service: mongodb://mongo:27017/etnopapers
 ```
 
 ### Docker
@@ -233,7 +243,7 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 - [ ] Configure backend requirements.txt and frontend package.json
 
 ### Phase 1: Core API & Database (P0-P1)
-- [ ] Setup Mongita client initialization in backend (MongitaClientDisk with data directory)
+- [ ] Setup MongoDB client initialization in backend (MongoClient with MONGO_URI)
 - [ ] Create collections: `referencias`, `especies_plantas`, `comunidades_indígenas`, `localizacoes` (optional)
 - [ ] Create Pydantic schemas for document validation
 - [ ] Implement indexes for performance (DOI, status, ano_publicacao, etc.)
@@ -266,13 +276,14 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 
 1. **Frontend-Driven AI Extraction**: API keys never leave the browser. Backend only manages metadata persistence. This eliminates key management overhead and privacy concerns.
 
-2. **Mongita for Embedded NoSQL** (🆕 Main Decision):
+2. **MongoDB for NoSQL** (Cloud-Ready):
    - **Zero-Migration Schema Evolution**: New ethnobotanical fields added to code without database migrations
-   - **BSON Binary Serialization**: 20% more compact than JSON via binary encoding
-   - **MongoDB-Compatible**: PyMongo API enables seamless migration to MongoDB cloud when needed
-   - **Lightweight**: ~180-200MB Docker (40% smaller than SQLite + ORMs)
-   - **Directory-Based**: Single directory `/data/etnopapers/` instead of single `.db` file
-   - **No External Server**: Embedded in Python, perfect for UNRAID deployment
+   - **BSON Binary Serialization**: Efficient binary encoding via BSON format
+   - **MongoDB Native**: PyMongo API works with local MongoDB or MongoDB Atlas cloud
+   - **Flexible Deployment**: Works with local MongoDB server or cloud providers
+   - **Environment Configuration**: Connection via MONGO_URI environment variable
+   - **Scalability Path**: Can grow from local MongoDB to MongoDB Atlas without code changes
+   - **Standards-Based**: Uses standard MongoDB query syntax and operations
 
 3. **Document-Centric Data Model**:
    - **References as Root**: Scientific articles aggregated with species, communities, locations
@@ -348,7 +359,7 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 6. Document in OpenAPI spec (`specs/main/contracts/api-rest.yaml`)
 
 ### Adding a New Document Field (NoSQL)
-**No migrations needed!** Mongita is schema-less. Simply:
+**No migrations needed!** MongoDB is schema-less. Simply:
 1. Update the reference document structure in `backend/models/article.py` (Pydantic schema)
 2. Add new field(s) when creating/updating documents in `backend/services/article_service.py`
 3. Update any extraction logic to populate the new field
@@ -407,33 +418,45 @@ npm install
 npm run dev
 ```
 
-### Backend Won't Connect to Database (Mongita)
+### Backend Won't Connect to Database (MongoDB)
 ```bash
-# Check if Mongita database directory exists
-ls -la data/etnopapers/
+# Check if MongoDB server is running
+# For local MongoDB:
+mongosh # Connect to local MongoDB
 
-# If directory doesn't exist, Mongita will create it automatically on first run
-# No manual initialization needed (unlike SQLite)
-
-# Check database files
-ls -la data/etnopapers/__db__.json  # Metadata file
-ls -la data/etnopapers/referencias/ # Collection data
+# For Docker Compose:
+docker-compose logs mongo # Check MongoDB service logs
+docker-compose ps         # Check if mongo service is running
 
 # Test connection from Python
 python -c "
-from mongita import MongitaClientDisk
+from pymongo import MongoClient
 try:
-    client = MongitaClientDisk(database_dir='./data/etnopapers')
+    client = MongoClient('mongodb://localhost:27017/etnopapers', serverSelectionTimeoutMS=5000)
+    client.admin.command('ping')
     db = client['etnopapers']
-    print('Connected to Mongita')
+    print('Connected to MongoDB')
     print('Collections:', db.list_collection_names())
 except Exception as e:
     print(f'Connection error: {e}')
 "
 
-# If data is corrupted, you can safely delete and let Mongita recreate:
-rm -rf data/etnopapers/
-# Mongita will auto-create on restart (starts with empty database)
+# Verify MONGO_URI environment variable is set:
+echo $MONGO_URI
+
+# For Docker, verify the environment variable in docker-compose.yml:
+# - MONGO_URI=mongodb://mongo:27017/etnopapers
+
+# Test MongoDB connection from the app container:
+docker-compose exec etnopapers python -c "
+from pymongo import MongoClient
+import os
+uri = os.getenv('MONGO_URI')
+print(f'MONGO_URI: {uri}')
+client = MongoClient(uri)
+client.admin.command('ping')
+print('Connected!')
+"
 ```
 
 ### API Key Validation Fails
