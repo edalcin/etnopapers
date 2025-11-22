@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import APIKeySetup from '@components/APIKeySetup'
 import DatabaseDownload from '@components/DatabaseDownload'
-import ResearcherProfile from '@components/ResearcherProfile'
+import AIInstructions from '@components/AIInstructions'
 import './Settings.css'
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState<'api' | 'profile' | 'database' | 'about'>('api')
+  const [activeTab, setActiveTab] = useState<'api' | 'instructions' | 'database' | 'about'>('api')
 
   return (
     <div className="settings-page">
@@ -21,10 +21,10 @@ export default function Settings() {
           🔑 Chaves de API
         </button>
         <button
-          className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}
-          onClick={() => setActiveTab('profile')}
+          className={`tab-button ${activeTab === 'instructions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('instructions')}
         >
-          👨‍🔬 Perfil do Pesquisador
+          📋 Instruções para a I.A.
         </button>
         <button
           className={`tab-button ${activeTab === 'database' ? 'active' : ''}`}
@@ -48,9 +48,9 @@ export default function Settings() {
           </section>
         )}
 
-        {activeTab === 'profile' && (
+        {activeTab === 'instructions' && (
           <section className="settings-section">
-            <ResearcherProfile />
+            <AIInstructions />
           </section>
         )}
 
@@ -74,12 +74,12 @@ export default function Settings() {
                 <ul>
                   <li>✅ Upload de artigos em PDF</li>
                   <li>✅ Extração automática de metadados com IA (Gemini, ChatGPT, Claude)</li>
+                  <li>✅ Instruções customizáveis para a I.A.</li>
                   <li>✅ Edição manual de metadados</li>
                   <li>✅ Detecção de artigos duplicados</li>
                   <li>✅ Validação automática de nomes científicos</li>
                   <li>✅ Auto-salvamento de rascunhos</li>
                   <li>✅ Download do banco de dados completo</li>
-                  <li>✅ Personalização de perfil de pesquisador</li>
                 </ul>
               </div>
 
@@ -104,9 +104,9 @@ export default function Settings() {
                 <h4>Dicas de Uso</h4>
                 <ul>
                   <li>Configure sua chave de API antes de fazer upload</li>
+                  <li>Configure instruções customizadas para melhorar a extração</li>
                   <li>Revise os metadados extraídos antes de salvar</li>
                   <li>Use a edição manual para corrigir erros de extração</li>
-                  <li>Personalize seu perfil para melhorar a qualidade da extração</li>
                   <li>Faça backup regular do seu banco de dados</li>
                 </ul>
               </div>

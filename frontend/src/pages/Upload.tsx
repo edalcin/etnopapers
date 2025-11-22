@@ -65,22 +65,25 @@ export default function Upload() {
         return
       }
 
+      // Load AI Instructions from localStorage
+      const aiInstructions = localStorage.getItem('etnopapers_ai_instructions') || undefined
+
       // Extract with AI based on provider
       let metadata: ExtractedMetadata
 
       switch (apiKey.provider) {
         case 'openai':
           console.log('Extracting metadata with OpenAI ChatGPT...')
-          metadata = await extractWithOpenAI(result.text, apiKey.key)
+          metadata = await extractWithOpenAI(result.text, apiKey.key, aiInstructions)
           break
         case 'claude':
           console.log('Extracting metadata with Claude...')
-          metadata = await extractWithClaude(result.text, apiKey.key)
+          metadata = await extractWithClaude(result.text, apiKey.key, aiInstructions)
           break
         case 'gemini':
         default:
           console.log('Extracting metadata with Gemini...')
-          metadata = await extractWithGemini(result.text, apiKey.key)
+          metadata = await extractWithGemini(result.text, apiKey.key, aiInstructions)
           break
       }
 
