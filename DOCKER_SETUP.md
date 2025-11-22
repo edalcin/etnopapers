@@ -4,6 +4,32 @@
 
 The application **requires** the `MONGO_URI` environment variable to start. Without it, the application will fail to initialize.
 
+### After Code Update: Rebuild Docker Image
+
+If you have already pulled the image before, you **must rebuild it** after code updates:
+
+```bash
+# Pull latest code
+git pull origin main
+
+# Rebuild the Docker image
+docker build -t etnopapers:latest .
+
+# Stop and remove old container
+docker stop etnopapers
+docker rm etnopapers
+
+# Run with new image
+docker run -d \
+  --name='etnopapers' \
+  --net='bridge' \
+  -e MONGO_URI='mongodb://useflora:yfH8WaEp9Ccf@192.168.1.10:27017/useflora?authSource=useflora' \
+  -p '8007:8000/tcp' \
+  'etnopapers:latest'
+```
+
+**Or on Unraid:** Use the WebUI to rebuild and restart the container with the latest changes.
+
 ### Correct Docker Run Command
 
 ```bash
@@ -63,17 +89,47 @@ Look for:
 
 ### Debugging Connection Issues
 
-If you see `mongo:27017` in error messages, this means:
-1. The `MONGO_URI` environment variable was not set correctly
-2. The application is falling back to a default (which no longer exists)
+#### Error: `mongo:27017: Name or service not known`
 
-**Solution:** Verify your Docker command:
-```bash
-# Check what the container received
-docker inspect etnopapers | grep -A 10 "Env"
+This error means the application tried to connect to `mongo:27017` instead of your MONGO_URI.
 
-# Look for MONGO_URI in the output
-```
+**Causes:**
+1. ❌ Old Docker image with hardcoded default (FIXED - rebuild image)
+2. ❌ MONGO_URI environment variable not passed to container
+3. ❌ MONGO_URI syntax error (missing `/database` or `?authSource`)
+
+**Solutions:**
+
+1. **Verify environment variable is being passed:**
+   ```bash
+   # Check what the container received
+   docker inspect etnopapers | grep -A 20 "Env"
+
+   # Look for MONGO_URI in the output
+   # Should show: MONGO_URI=mongodb://...
+   ```
+
+2. **Check container logs:**
+   ```bash
+   docker logs etnopapers | grep -i mongo
+
+   # Should see: MONGO_URI configured: YES
+   # Should NOT see: mongo:27017
+   ```
+
+3. **Rebuild image (if using old version):**
+   ```bash
+   docker build -t etnopapers:latest .
+   docker stop etnopapers
+   docker rm etnopapers
+   # Then run again with -e MONGO_URI=...
+   ```
+
+4. **Test MONGO_URI syntax:**
+   ```bash
+   # Format: mongodb://user:pass@host:port/database?authSource=database
+   # Example: mongodb://useflora:yfH8WaEp9Ccf@192.168.1.10:27017/useflora?authSource=useflora
+   ```
 
 ### Health Check Endpoint
 
