@@ -1,14 +1,5 @@
 import { create } from 'zustand'
-
-export interface Article {
-  _id: string
-  titulo: string
-  ano_publicacao: number
-  autores: Array<{ nome: string; sobrenome: string; email?: string }>
-  doi?: string
-  resumo?: string
-  status: 'rascunho' | 'finalizado'
-}
+import type { APIKeyConfig, Article, AIProvider } from '@types'
 
 interface UploadState {
   file: File | null
@@ -23,9 +14,8 @@ interface ExtractState {
 
 interface StoreState {
   // API Key Management
-  apiKey: string | null
-  apiKeyValid: boolean
-  setAPIKey: (key: string) => void
+  apiKey: APIKeyConfig | null
+  setAPIKey: (provider: AIProvider, key: string) => void
   setAPIKeyValidity: (valid: boolean) => void
 
   // Upload State
@@ -49,9 +39,18 @@ interface StoreState {
 const useStoreBase = create<StoreState>((set) => ({
   // API Key Management
   apiKey: null,
-  apiKeyValid: false,
-  setAPIKey: (key: string) => set({ apiKey: key }),
-  setAPIKeyValidity: (valid: boolean) => set({ apiKeyValid: valid }),
+  setAPIKey: (provider: AIProvider, key: string) =>
+    set((state) => ({
+      apiKey: {
+        provider,
+        key,
+        isValid: state.apiKey?.isValid ?? false,
+      },
+    })),
+  setAPIKeyValidity: (valid: boolean) =>
+    set((state) => ({
+      apiKey: state.apiKey ? { ...state.apiKey, isValid: valid } : null,
+    })),
 
   // Upload State
   uploadState: { file: null, error: null },
@@ -72,9 +71,9 @@ const useStoreBase = create<StoreState>((set) => ({
 }))
 
 // Hook-style selectors for cleaner component imports
+export const useAPIKey = () => useStoreBase((state) => state.apiKey)
 export const useSetAPIKey = () => useStoreBase((state) => state.setAPIKey)
 export const useSetAPIKeyValidity = () => useStoreBase((state) => state.setAPIKeyValidity)
-export const useAPIKey = () => useStoreBase((state) => state.apiKey)
 
 export const useSetUploadFile = () => useStoreBase((state) => state.setUploadFile)
 export const useSetUploadError = () => useStoreBase((state) => state.setUploadError)

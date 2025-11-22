@@ -9,8 +9,8 @@ export default function APIKeySetup() {
   const setAPIKey = useSetAPIKey()
   const setAPIKeyValidity = useSetAPIKeyValidity()
 
-  const [tempProvider, setTempProvider] = useState<AIProvider>(apiKey.provider)
-  const [tempKey, setTempKey] = useState(apiKey.key)
+  const [tempProvider, setTempProvider] = useState<AIProvider>(apiKey?.provider ?? 'gemini')
+  const [tempKey, setTempKey] = useState(apiKey?.key ?? '')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [showKey, setShowKey] = useState(false)
@@ -142,10 +142,10 @@ export default function APIKeySetup() {
           </p>
         </div>
 
-        {apiKey.isValid && (
+        {apiKey?.isValid && (
           <div className="status-box success">
             <p>✅ Chave validada e ativa</p>
-            <p className="provider">Provedor: <strong>{tempProvider}</strong></p>
+            <p className="provider">Provedor: <strong>{apiKey.provider}</strong></p>
           </div>
         )}
       </div>

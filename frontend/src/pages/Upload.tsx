@@ -58,7 +58,7 @@ export default function Upload() {
       setIsScanned(result.isScanned)
 
       // Check if API key is configured
-      if (!apiKey.key || !apiKey.isValid) {
+      if (!apiKey || !apiKey.key || !apiKey.isValid) {
         setExtractLoading(false)
         setError('Configure sua chave de API antes de continuar')
         setStep('config')

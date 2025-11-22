@@ -1,3 +1,13 @@
+// AI Provider types
+export type AIProvider = 'gemini' | 'openai' | 'claude'
+
+export interface APIKeyConfig {
+  provider: AIProvider
+  key: string
+  isValid: boolean
+}
+
+// Article types
 export interface Author {
   nome: string
   sobrenome: string
