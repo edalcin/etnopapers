@@ -364,7 +364,7 @@ class ArticleService:
 
             # Count by year (process in Python since Mongita doesn't support aggregate)
             por_ano_dict = {}
-            for doc in collection.find({}, {"ano": 1}):
+            for doc in collection.find({}):
                 ano = doc.get("ano")
                 if ano:
                     por_ano_dict[ano] = por_ano_dict.get(ano, 0) + 1
@@ -374,7 +374,7 @@ class ArticleService:
 
             # Count by country (process in Python, limit to top 10)
             por_pais_dict = {}
-            for doc in collection.find({}, {"pais": 1}):
+            for doc in collection.find({}):
                 pais = doc.get("pais")
                 if pais:
                     por_pais_dict[pais] = por_pais_dict.get(pais, 0) + 1
