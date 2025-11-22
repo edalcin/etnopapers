@@ -19,7 +19,7 @@ def temp_db():
     # Get MongoDB URI from environment variable
     test_mongo_uri = os.getenv("MONGO_URI")
     if not test_mongo_uri:
-        pytest.skip("MONGO_URI environment variable not set - skipping database tests")
+        pytest.skip("MONGO_URI not configured - database tests skipped (configure GitHub secret 'MONGO_URI' to enable)")
 
     init_database(test_mongo_uri)
     # Reset singleton for testing
