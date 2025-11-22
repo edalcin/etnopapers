@@ -2,11 +2,10 @@
 Article/Reference service layer for business logic
 
 Uses Mongita (MongoDB-compatible) for document operations.
-Articles are now called "referencias" (references) in the Mongita model.
+Simplified denormalized model with single "referencias" collection.
 """
 
 import logging
-from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import List
@@ -20,35 +19,45 @@ logger = logging.getLogger(__name__)
 
 
 class ArticleService:
-    """Service for reference/article-related operations"""
+    """Service for reference/article-related operations (simplified model)"""
 
     @staticmethod
     def create_article(
+        ano: int,
         titulo: str,
-        ano_publicacao: int,
         autores: List[str],
-        doi: Optional[str] = None,
+        publicacao: Optional[str] = None,
         resumo: Optional[str] = None,
-        status: str = "rascunho",
-        metadata_estudo: Optional[Dict] = None,
+        doi: Optional[str] = None,
         especies: Optional[List[Dict]] = None,
-        comunidades: Optional[List[Dict]] = None,
-        localizacoes: Optional[List[Dict]] = None,
+        tipo_de_uso: Optional[str] = None,
+        metodologia: Optional[str] = None,
+        pais: Optional[str] = None,
+        estado: Optional[str] = None,
+        municipio: Optional[str] = None,
+        local: Optional[str] = None,
+        bioma: Optional[str] = None,
+        status: str = "rascunho",
     ) -> Dict[str, Any]:
         """
         Create a new reference/article
 
         Args:
+            ano: Publication year
             titulo: Article title
-            ano_publicacao: Publication year
             autores: List of author names
+            publicacao: Publication venue
+            resumo: Abstract/summary
             doi: Digital Object Identifier
-            resumo: Abstract/Summary
-            status: Article status (rascunho or finalizado)
-            metadata_estudo: Study metadata (dict)
-            especies: Associated species (list)
-            comunidades: Associated communities (list)
-            localizacoes: Associated locations (list)
+            especies: List of species dicts with vernacular and nomeCientifico
+            tipo_de_uso: Type of use
+            metodologia: Research methodology
+            pais: Country
+            estado: State
+            municipio: Municipality
+            local: Specific location
+            bioma: Biome
+            status: Document status (rascunho or finalizado)
 
         Returns:
             Created document data with ID
@@ -58,18 +67,20 @@ class ArticleService:
         try:
             # Build document
             doc = {
+                "ano": ano,
                 "titulo": titulo,
-                "ano_publicacao": ano_publicacao,
                 "autores": autores,
+                "publicacao": publicacao,
                 "resumo": resumo,
-                "status": status,
-                "data_processamento": datetime.utcnow(),
-                "data_ultima_modificacao": datetime.utcnow(),
-                "editado_manualmente": False,
-                "metadata_estudo": metadata_estudo or {},
                 "especies": especies or [],
-                "comunidades": comunidades or [],
-                "localizacoes": localizacoes or [],
+                "tipo_de_uso": tipo_de_uso,
+                "metodologia": metodologia,
+                "pais": pais,
+                "estado": estado,
+                "municipio": municipio,
+                "local": local,
+                "bioma": bioma,
+                "status": status,
             }
 
             # Add DOI only if provided (to maintain unique index)
@@ -97,7 +108,7 @@ class ArticleService:
             # Convert string ID to ObjectId
             try:
                 obj_id = ObjectId(article_id)
-            except:
+            except Exception:
                 return None
 
             collection = db.get_collection("referencias")
@@ -121,6 +132,7 @@ class ArticleService:
         status: Optional[str] = None,
         search: Optional[str] = None,
         ano: Optional[int] = None,
+        pais: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         List articles/references with pagination and filters
@@ -131,6 +143,7 @@ class ArticleService:
             status: Filter by status (rascunho or finalizado)
             search: Search text in title or authors
             ano: Filter by year
+            pais: Filter by country
 
         Returns:
             Paginated list of articles
@@ -146,24 +159,26 @@ class ArticleService:
                 query["status"] = status
 
             if ano:
-                query["ano_publicacao"] = ano
+                query["ano"] = ano
 
-            # Note: Mongita 1.2.0 doesn't support $regex
+            if pais:
+                query["pais"] = pais
+
+            # Note: Mongita doesn't support $regex
             # Search will be applied in Python after fetching
 
-            # Get all matching documents (without search filter)
-            cursor = collection.find(query).sort("data_processamento", -1)
+            # Get all matching documents
+            cursor = collection.find(query).sort("ano", -1)
 
             all_items = []
             for doc in cursor:
-                # Apply search filter in Python since Mongita doesn't support $regex
+                # Apply search filter in Python
                 if search:
                     search_lower = search.lower()
                     titulo_match = search_lower in doc.get("titulo", "").lower()
                     # Check if search matches any author
                     autores_match = any(
-                        search_lower in (author.get("nome", "") or "").lower() or
-                        search_lower in (author.get("sobrenome", "") or "").lower()
+                        search_lower in (author or "").lower()
                         for author in doc.get("autores", [])
                     )
                     if not (titulo_match or autores_match):
@@ -177,7 +192,7 @@ class ArticleService:
 
             # Apply pagination
             offset = (page - 1) * page_size
-            items = all_items[offset:offset + page_size]
+            items = all_items[offset : offset + page_size]
 
             return {
                 "total": total,
@@ -208,22 +223,26 @@ class ArticleService:
             # Convert string ID to ObjectId
             try:
                 obj_id = ObjectId(article_id)
-            except:
+            except Exception:
                 return None
 
             # Allowed fields for update
             allowed_fields = [
+                "ano",
                 "titulo",
-                "doi",
-                "ano_publicacao",
+                "publicacao",
                 "autores",
                 "resumo",
-                "status",
-                "metadata_estudo",
+                "doi",
                 "especies",
-                "comunidades",
-                "localizacoes",
-                "editado_manualmente",
+                "tipo_de_uso",
+                "metodologia",
+                "pais",
+                "estado",
+                "municipio",
+                "local",
+                "bioma",
+                "status",
             ]
 
             # Build update document
@@ -231,9 +250,6 @@ class ArticleService:
             for field, value in kwargs.items():
                 if field in allowed_fields:
                     update_doc["$set"][field] = value
-
-            # Always update modification timestamp
-            update_doc["$set"]["data_ultima_modificacao"] = datetime.utcnow()
 
             if not update_doc["$set"]:
                 # No valid fields to update
@@ -270,7 +286,7 @@ class ArticleService:
             # Convert string ID to ObjectId
             try:
                 obj_id = ObjectId(article_id)
-            except:
+            except Exception:
                 return False
 
             collection = db.get_collection("referencias")
@@ -322,7 +338,7 @@ class ArticleService:
             doc = collection.find_one(
                 {
                     "titulo": titulo,
-                    "ano_publicacao": ano,
+                    "ano": ano,
                     "autores": primeiro_autor,
                 }
             )
@@ -352,11 +368,27 @@ class ArticleService:
                     [
                         {
                             "$group": {
-                                "_id": "$ano_publicacao",
+                                "_id": "$ano",
                                 "count": {"$sum": 1},
                             }
                         },
                         {"$sort": {"_id": -1}},
+                    ]
+                )
+            )
+
+            # Count by country
+            por_pais = list(
+                collection.aggregate(
+                    [
+                        {
+                            "$group": {
+                                "_id": "$pais",
+                                "count": {"$sum": 1},
+                            }
+                        },
+                        {"$sort": {"count": -1}},
+                        {"$limit": 10},
                     ]
                 )
             )
@@ -366,6 +398,7 @@ class ArticleService:
                 "finalizados": finalizados,
                 "rascunhos": rascunhos,
                 "por_ano": por_ano,
+                "por_pais": por_pais,
             }
 
         except Exception as e:

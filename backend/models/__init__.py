@@ -1,18 +1,12 @@
 """Models package for Etnopapers backend"""
 
 from .article import (
-    ArticleRequest,
-    ArticleResponse,
-    ArticleListResponse,
-    DadosEstudoRequest,
-    DadosEstudoResponse,
-    AuthorInfo,
-)
-from .duplicate import (
-    DuplicateCheckRequest,
-    DuplicateArticleResponse,
-    DuplicateCheckResponse,
-    SimilarArticlesRequest,
+    SpeciesData,
+    ReferenceData,
+    ReferenceResponse,
+    ReferenceListResponse,
+    ReferenceBulkCreateRequest,
+    ReferenceBulkCreateResponse,
 )
 from .species import (
     SpeciesValidationRequest,
@@ -24,16 +18,14 @@ from .species import (
 )
 
 __all__ = [
-    "ArticleRequest",
-    "ArticleResponse",
-    "ArticleListResponse",
-    "DadosEstudoRequest",
-    "DadosEstudoResponse",
-    "AuthorInfo",
-    "DuplicateCheckRequest",
-    "DuplicateArticleResponse",
-    "DuplicateCheckResponse",
-    "SimilarArticlesRequest",
+    # Reference/Article models (simplified)
+    "SpeciesData",
+    "ReferenceData",
+    "ReferenceResponse",
+    "ReferenceListResponse",
+    "ReferenceBulkCreateRequest",
+    "ReferenceBulkCreateResponse",
+    # Species validation models
     "SpeciesValidationRequest",
     "SpeciesResponse",
     "SpeciesValidationResponse",

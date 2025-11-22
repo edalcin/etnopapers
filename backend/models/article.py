@@ -1,8 +1,9 @@
 """
-Pydantic models for article-related data
+Pydantic models for reference/article data
+
+Simplified denormalized model with all fields embedded in a single document.
 """
 
-from datetime import datetime
 from typing import List
 from typing import Optional
 
@@ -10,76 +11,86 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-class AuthorInfo(BaseModel):
-    """Author information"""
+# Nested models for reference document
+class SpeciesData(BaseModel):
+    """Species data embedded in reference document"""
 
-    nome: str
-    sobrenome: Optional[str] = None
-    email: Optional[str] = None
+    vernacular: str = Field(..., min_length=1, description="Vernacular/common name")
+    nomeCientifico: str = Field(..., min_length=1, description="Scientific name")
 
 
-class ArticleRequest(BaseModel):
-    """Request model for creating/updating articles"""
+class ReferenceData(BaseModel):
+    """Complete reference/article data structure (denormalized)"""
 
-    titulo: str = Field(..., min_length=1, max_length=500)
-    doi: Optional[str] = None
-    ano_publicacao: int = Field(..., ge=1900, le=2100)
-    autores: List[AuthorInfo]
-    resumo: Optional[str] = None
+    # Basic article information
+    ano: int = Field(..., ge=1900, le=2100, description="Publication year")
+    titulo: str = Field(..., min_length=1, max_length=500, description="Article title")
+    publicacao: Optional[str] = Field(None, description="Publication venue (journal, conference)")
+    autores: List[str] = Field(..., min_items=1, description="List of author names")
+    resumo: Optional[str] = Field(None, description="Article abstract/summary")
+    doi: Optional[str] = Field(None, description="Digital Object Identifier")
+
+    # Species data (embedded)
+    especies: List[SpeciesData] = Field(default_factory=list, description="Plant species mentioned")
+
+    # Use and methodology information
+    tipo_de_uso: Optional[str] = Field(None, description="Type of use (medicinal, alimentar, etc.)")
+    metodologia: Optional[str] = Field(None, description="Research methodology")
+
+    # Geographic information (denormalized)
+    pais: Optional[str] = Field(None, description="Country")
+    estado: Optional[str] = Field(None, description="State/Province")
+    municipio: Optional[str] = Field(None, description="Municipality")
+    local: Optional[str] = Field(None, description="Specific location/community")
+    bioma: Optional[str] = Field(None, description="Biome")
+
+    # Status
     status: str = Field(default="rascunho", pattern="^(rascunho|finalizado)$")
 
 
-class ArticleResponse(BaseModel):
-    """Response model for articles"""
+class ReferenceResponse(BaseModel):
+    """Response model for a reference (with MongoDB ID)"""
 
-    id: int
+    id: str = Field(..., alias="_id", description="MongoDB ObjectId as string")
+    ano: int
     titulo: str
-    doi: Optional[str] = None
-    ano_publicacao: int
-    autores: List[AuthorInfo]
+    publicacao: Optional[str] = None
+    autores: List[str]
     resumo: Optional[str] = None
+    doi: Optional[str] = None
+    especies: List[SpeciesData]
+    tipo_de_uso: Optional[str] = None
+    metodologia: Optional[str] = None
+    pais: Optional[str] = None
+    estado: Optional[str] = None
+    municipio: Optional[str] = None
+    local: Optional[str] = None
+    bioma: Optional[str] = None
     status: str
-    editado_manualmente: bool
-    data_processamento: datetime
-    data_ultima_modificacao: datetime
 
     class Config:
-        from_attributes = True
+        populate_by_name = True  # Allow _id or id
 
 
-class ArticleListResponse(BaseModel):
-    """Response model for article list with pagination"""
+class ReferenceListResponse(BaseModel):
+    """Response model for paginated reference list"""
 
     total: int
     page: int
     page_size: int
-    items: List[ArticleResponse]
+    items: List[ReferenceResponse]
 
 
-class DadosEstudoRequest(BaseModel):
-    """Request model for study data"""
+class ReferenceBulkCreateRequest(BaseModel):
+    """Request model for bulk creating references"""
 
-    periodo_inicio: Optional[int] = Field(None, ge=1900, le=2100)
-    periodo_fim: Optional[int] = Field(None, ge=1900, le=2100)
-    duracao_meses: Optional[int] = None
-    metodos_coleta_dados: Optional[str] = None
-    tipo_amostragem: Optional[str] = None
-    tamanho_amostra: Optional[int] = None
-    instrumentos_coleta: Optional[List[str]] = None
+    references: List[ReferenceData]
 
 
-class DadosEstudoResponse(BaseModel):
-    """Response model for study data"""
+class ReferenceBulkCreateResponse(BaseModel):
+    """Response model for bulk creation result"""
 
-    id: int
-    artigo_id: int
-    periodo_inicio: Optional[int] = None
-    periodo_fim: Optional[int] = None
-    duracao_meses: Optional[int] = None
-    metodos_coleta_dados: Optional[str] = None
-    tipo_amostragem: Optional[str] = None
-    tamanho_amostra: Optional[int] = None
-    instrumentos_coleta: Optional[List[str]] = None
-
-    class Config:
-        from_attributes = True
+    created: int
+    failed: int
+    ids: List[str]
+    errors: Optional[List[str]] = None

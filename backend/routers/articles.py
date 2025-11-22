@@ -1,14 +1,14 @@
 """
-Articles router for FastAPI
+References/Articles router for FastAPI
 
-Handles all article-related endpoints:
-- POST /api/articles - Create article
-- GET /api/articles - List articles with pagination
-- GET /api/articles/{id} - Get specific article
-- PUT /api/articles/{id} - Update article
-- DELETE /api/articles/{id} - Delete article
-- POST /api/articles/check-duplicate - Check for duplicates
-- GET /api/articles/{id}/similar - Get similar articles
+Handles all reference-related endpoints:
+- POST /api/referencias - Create reference
+- GET /api/referencias - List references with pagination
+- GET /api/referencias/{id} - Get specific reference
+- PUT /api/referencias/{id} - Update reference
+- DELETE /api/referencias/{id} - Delete reference
+- POST /api/referencias/check-duplicate - Check for duplicates
+- GET /api/referencias/stats - Get statistics
 """
 
 import logging
@@ -18,62 +18,75 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Query
 
-from backend.models import ArticleListResponse
-from backend.models import ArticleRequest
-from backend.models import ArticleResponse
-from backend.models import DuplicateArticleResponse
-from backend.models import DuplicateCheckRequest
-from backend.models import DuplicateCheckResponse
-from backend.models import SimilarArticlesRequest
-from backend.services import ArticleService
-from backend.services import DuplicateChecker
+from backend.models.article import ReferenceData
+from backend.models.article import ReferenceListResponse
+from backend.models.article import ReferenceResponse
+from backend.services.article_service import ArticleService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/articles", tags=["articles"])
+router = APIRouter(prefix="/api/referencias", tags=["references"])
 
 
-@router.post("", response_model=ArticleResponse, status_code=201)
-async def create_article(article: ArticleRequest):
+@router.post("", response_model=ReferenceResponse, status_code=201)
+async def create_reference(reference: ReferenceData):
     """
-    Create a new article
+    Create a new reference/article
 
+    - **ano**: Publication year (required, 1900-2100)
     - **titulo**: Article title (required)
-    - **ano_publicacao**: Publication year (1900-2100, required)
-    - **autores**: List of authors with name, surname, email (required)
+    - **autores**: List of author names (required)
+    - **publicacao**: Publication venue (journal, conference, etc.)
+    - **resumo**: Abstract (optional)
     - **doi**: Digital Object Identifier (optional)
-    - **resumo**: Article abstract (optional)
+    - **especies**: Array of species with vernacular and nomeCientifico
+    - **tipo_de_uso**: Type of use (medicinal, alimentar, etc.)
+    - **metodologia**: Research methodology
+    - **pais**, **estado**, **municipio**, **local**, **bioma**: Geographic info
     - **status**: rascunho (draft) or finalizado (completed) - default: rascunho
     """
     try:
         result = ArticleService.create_article(
-            titulo=article.titulo,
-            ano_publicacao=article.ano_publicacao,
-            autores=[a.dict() for a in article.autores],
-            doi=article.doi,
-            resumo=article.resumo,
-            status=article.status,
+            ano=reference.ano,
+            titulo=reference.titulo,
+            autores=reference.autores,
+            publicacao=reference.publicacao,
+            resumo=reference.resumo,
+            doi=reference.doi,
+            especies=[e.dict() for e in reference.especies],
+            tipo_de_uso=reference.tipo_de_uso,
+            metodologia=reference.metodologia,
+            pais=reference.pais,
+            estado=reference.estado,
+            municipio=reference.municipio,
+            local=reference.local,
+            bioma=reference.bioma,
+            status=reference.status,
         )
         return result
     except Exception as e:
-        logger.error(f"Error creating article: {e}")
-        raise HTTPException(status_code=500, detail="Error creating article")
+        logger.error(f"Error creating reference: {e}")
+        raise HTTPException(status_code=500, detail="Error creating reference")
 
 
-@router.get("", response_model=ArticleListResponse)
-async def list_articles(
+@router.get("", response_model=ReferenceListResponse)
+async def list_references(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=500),
     status: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    ano: Optional[int] = Query(None, ge=1900, le=2100),
+    pais: Optional[str] = Query(None),
 ):
     """
-    List articles with pagination and filtering
+    List references with pagination and filtering
 
     - **page**: Page number (1-based), default: 1
     - **page_size**: Items per page (1-500), default: 50
     - **status**: Filter by status (rascunho or finalizado), optional
     - **search**: Search text in title or authors, optional
+    - **ano**: Filter by publication year, optional
+    - **pais**: Filter by country, optional
     """
     try:
         result = ArticleService.list_articles(
@@ -81,154 +94,117 @@ async def list_articles(
             page_size=page_size,
             status=status,
             search=search,
+            ano=ano,
+            pais=pais,
         )
         return result
     except Exception as e:
-        logger.error(f"Error listing articles: {e}")
-        raise HTTPException(status_code=500, detail="Error listing articles")
+        logger.error(f"Error listing references: {e}")
+        raise HTTPException(status_code=500, detail="Error listing references")
 
 
-@router.get("/{article_id}", response_model=ArticleResponse)
-async def get_article(article_id: str):
-    """Get a specific article by ID"""
+@router.get("/{reference_id}", response_model=ReferenceResponse)
+async def get_reference(reference_id: str):
+    """
+    Get a specific reference by ID
+
+    - **reference_id**: MongoDB ObjectId as string
+    """
     try:
-        article = ArticleService.get_article_by_id(article_id)
-        if not article:
-            raise HTTPException(status_code=404, detail="Article not found")
-        return article
+        result = ArticleService.get_article_by_id(reference_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Reference not found")
+        return result
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting article: {e}")
-        raise HTTPException(status_code=500, detail="Error getting article")
+        logger.error(f"Error fetching reference: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching reference")
 
 
-@router.put("/{article_id}", response_model=ArticleResponse)
-async def update_article(article_id: str, article: ArticleRequest):
+@router.put("/{reference_id}", response_model=ReferenceResponse)
+async def update_reference(reference_id: str, reference: ReferenceData):
     """
-    Update an article
+    Update a reference/article
 
-    - **titulo**: Article title
-    - **ano_publicacao**: Publication year
-    - **autores**: List of authors
-    - **doi**: Digital Object Identifier
-    - **resumo**: Article abstract
-    - **status**: Article status
+    - **reference_id**: MongoDB ObjectId as string
+    - **reference**: Updated reference data
     """
     try:
-        # Check if article exists
-        existing = ArticleService.get_article_by_id(article_id)
-        if not existing:
-            raise HTTPException(status_code=404, detail="Article not found")
-
         result = ArticleService.update_article(
-            article_id,
-            titulo=article.titulo,
-            ano_publicacao=article.ano_publicacao,
-            autores=[a.dict() for a in article.autores],
-            doi=article.doi,
-            resumo=article.resumo,
-            status=article.status,
+            reference_id,
+            ano=reference.ano,
+            titulo=reference.titulo,
+            autores=reference.autores,
+            publicacao=reference.publicacao,
+            resumo=reference.resumo,
+            doi=reference.doi,
+            especies=[e.dict() for e in reference.especies],
+            tipo_de_uso=reference.tipo_de_uso,
+            metodologia=reference.metodologia,
+            pais=reference.pais,
+            estado=reference.estado,
+            municipio=reference.municipio,
+            local=reference.local,
+            bioma=reference.bioma,
+            status=reference.status,
         )
+        if not result:
+            raise HTTPException(status_code=404, detail="Reference not found")
         return result
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating article: {e}")
-        raise HTTPException(status_code=500, detail="Error updating article")
+        logger.error(f"Error updating reference: {e}")
+        raise HTTPException(status_code=500, detail="Error updating reference")
 
 
-@router.delete("/{article_id}", status_code=204)
-async def delete_article(article_id: str):
-    """Delete an article by ID"""
+@router.delete("/{reference_id}", status_code=204)
+async def delete_reference(reference_id: str):
+    """
+    Delete a reference/article
+
+    - **reference_id**: MongoDB ObjectId as string
+    """
     try:
-        # Check if article exists
-        existing = ArticleService.get_article_by_id(article_id)
-        if not existing:
-            raise HTTPException(status_code=404, detail="Article not found")
-
-        ArticleService.delete_article(article_id)
+        success = ArticleService.delete_article(reference_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Reference not found")
         return None
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting article: {e}")
-        raise HTTPException(status_code=500, detail="Error deleting article")
+        logger.error(f"Error deleting reference: {e}")
+        raise HTTPException(status_code=500, detail="Error deleting reference")
 
 
-@router.post("/check-duplicate", response_model=DuplicateCheckResponse)
-async def check_duplicate(request: DuplicateCheckRequest):
+@router.get("/doi/{doi}", response_model=ReferenceResponse)
+async def get_by_doi(doi: str):
     """
-    Check if an article is a duplicate of an existing one
+    Get reference by DOI
 
-    Uses multi-strategy detection:
-    1. Primary: DOI uniqueness
-    2. Secondary: Title + Year + First Author
-
-    Returns:
-    - is_duplicate: True if duplicate found
-    - duplicate: Details of the duplicate article if found
-    - similar_articles: List of potentially similar articles for review
+    - **doi**: Digital Object Identifier
     """
     try:
-        duplicate = DuplicateChecker.check_duplicate(
-            titulo=request.titulo,
-            ano_publicacao=request.ano_publicacao,
-            autores=[a.dict() for a in request.autores],
-            doi=request.doi,
-        )
-
-        if duplicate:
-            similar = DuplicateChecker.get_similar_articles(
-                titulo=request.titulo,
-                ano_publicacao=request.ano_publicacao,
-                limit=3,
-            )
-
-            return {
-                "is_duplicate": True,
-                "duplicate": duplicate,
-                "message": f"Artigo duplicado detectado: {duplicate['titulo']} ({duplicate['ano_publicacao']})",
-                "similar_articles": similar,
-            }
-
-        return {
-            "is_duplicate": False,
-            "duplicate": None,
-            "message": "Nenhum artigo duplicado detectado",
-            "similar_articles": None,
-        }
-
-    except Exception as e:
-        logger.error(f"Error checking duplicate: {e}")
-        raise HTTPException(status_code=500, detail="Error checking duplicate")
-
-
-@router.get("/{article_id}/similar", response_model=list[DuplicateArticleResponse])
-async def get_similar_articles(article_id: str, limit: int = Query(5, ge=1, le=20)):
-    """
-    Get articles similar to the specified article
-
-    - **article_id**: ID of the article to find similar to
-    - **limit**: Maximum number of similar articles (1-20), default: 5
-
-    Returns list of similar articles ordered by relevance
-    """
-    try:
-        article = ArticleService.get_article_by_id(article_id)
-        if not article:
-            raise HTTPException(status_code=404, detail="Article not found")
-
-        similar = DuplicateChecker.get_similar_articles(
-            titulo=article["titulo"],
-            ano_publicacao=article["ano_publicacao"],
-            limit=limit,
-        )
-
-        return similar
-
+        result = ArticleService.get_by_doi(doi)
+        if not result:
+            raise HTTPException(status_code=404, detail="Reference with this DOI not found")
+        return result
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting similar articles: {e}")
-        raise HTTPException(status_code=500, detail="Error getting similar articles")
+        logger.error(f"Error fetching by DOI: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching reference")
+
+
+@router.get("/stats/summary")
+async def get_statistics():
+    """
+    Get statistics about references in the database
+    """
+    try:
+        result = ArticleService.get_statistics()
+        return result
+    except Exception as e:
+        logger.error(f"Error getting statistics: {e}")
+        raise HTTPException(status_code=500, detail="Error getting statistics")

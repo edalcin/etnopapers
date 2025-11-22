@@ -73,41 +73,21 @@ class DatabaseConnection:
             # Mongita creates collections automatically on first insert/operation
             # We just need to create the indexes for performance
 
-            # Collection: referencias (main documents)
+            # Single collection: referencias (simplified denormalized model)
             try:
+                # Unique index for DOI
                 self.db["referencias"].create_index("doi", unique=True)
+                # Indexes for filtering
+                self.db["referencias"].create_index("ano")
                 self.db["referencias"].create_index("status")
-                self.db["referencias"].create_index("ano_publicacao")
-                self.db["referencias"].create_index("data_processamento")
-                self.db["referencias"].create_index([("especies.especie_id", 1)])
-                self.db["referencias"].create_index([("comunidades.comunidade_id", 1)])
-                self.db["referencias"].create_index([("localizacoes.territorio", 1)])
-                logger.info("Indexes created for: referencias")
+                # Index for text search on title
+                self.db["referencias"].create_index("titulo")
+                logger.info("Indexes created for: referencias (doi, ano, status, titulo)")
             except Exception as e:
                 logger.warning(f"Index creation for referencias: {e}")
 
-            # Collection: especies_plantas (taxonomy deduplication)
-            try:
-                self.db["especies_plantas"].create_index("nome_cientifico", unique=True)
-                self.db["especies_plantas"].create_index("familia_botanica")
-                self.db["especies_plantas"].create_index("status_validacao")
-                logger.info("Indexes created for: especies_plantas")
-            except Exception as e:
-                logger.warning(f"Index creation for especies_plantas: {e}")
-
-            # Collection: comunidades_indígenas
-            try:
-                self.db["comunidades_indígenas"].create_index("nome")
-                self.db["comunidades_indígenas"].create_index("tipo")
-                logger.info("Indexes created for: comunidades_indígenas")
-            except Exception as e:
-                logger.warning(f"Index creation for comunidades_indígenas: {e}")
-
-            # Collection: localizacoes (optional, for large datasets)
-            # No indexes needed for localizacoes at this time
-
             logger.info(
-                "Mongita collections ready (auto-created on first use, indexes initialized)"
+                "Mongita database ready (single 'referencias' collection, indexes initialized)"
             )
 
         except Exception as e:

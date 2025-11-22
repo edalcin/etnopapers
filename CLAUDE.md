@@ -43,57 +43,86 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Database (Mongita - Embedded NoSQL)
 
-**Document-Centric Model** (references as root documents with aggregated metadata):
+**Simplified Document-Centric Model** (single collection with denormalized documents):
 
-Reference documents are the primary entity, with all related information (species, communities, locations, study data) embedded or deeply linked within each reference document. This allows:
-- **Flexible schema evolution**: New attributes (e.g., new ethnobotanical metadata fields) can be added to reference documents without migrations
-- **Aggregated data access**: All metadata for a reference retrieved in one query
-- **Natural document structure**: JSON mirrors the hierarchical nature of ethnobotanical research
+A single `referencias` collection stores complete reference documents with all metadata embedded. This model prioritizes simplicity and denormalization over normalization.
 
-**Core Collections:**
+**Document Structure Example:**
+```json
+{
+  "_id": "ObjectId",
+  "ano": 2010,
+  "titulo": "Uso e conhecimento tradicional de plantas medicinais no Sertão",
+  "publicacao": "Acta bot. bras. 24(2): 395-406",
+  "autores": ["Giraldi, M.", "Hanazaki, N."],
+  "resumo": "O objetivo desta pesquisa foi realizar um estudo etnobotânico...",
+  "doi": "10.1590/...",
+  "especies": [
+    {
+      "vernacular": "maçanilha",
+      "nomeCientifico": "Chamomilla recutita"
+    },
+    {
+      "vernacular": "hortelã-branca",
+      "nomeCientifico": "Mentha sp1."
+    }
+  ],
+  "tipo_de_uso": "medicinal",
+  "metodologia": "entrevistas",
+  "pais": "Brasil",
+  "estado": "SC",
+  "municipio": "Florianópolis",
+  "local": "Sertão do Ribeirão",
+  "bioma": "Mata Atlântica",
+  "status": "rascunho"
+}
+```
 
-1. **referencias** - Scientific articles/references (main collection)
-   - Document structure: Root reference with embedded/linked species, communities, locations, study data
-   - Fields: `_id`, `titulo`, `doi` (unique index), `ano_publicacao`, `autores`, `resumo`, `status` ('rascunho'|'finalizado')
-   - Nested: `metadata_estudo`, `localizacoes`, `especies`, `comunidades`, `usos_reportados`
-   - Audit: `data_processamento`, `data_ultima_modificacao`, `editado_manualmente`
-   - Duplicate detection: DOI (unique) or (titulo + ano_publicacao + primeiro_autor)
+**Single Collection:**
 
-2. **especies_plantas** - Plant species (separate collection for taxonomic reuse)
-   - Fields: `_id` (ObjectId), `nome_cientifico` (unique index), `familia_botanica`, `nome_aceito_atual`, `autores_nome`
-   - Validation: `status_validacao` ('validado'|'nao_validado'), `fonte_validacao`, `data_validacao`
-   - Cross-reference: Referenced by ID in `referencias.especies[].especie_id`
-   - Supports homonomy via `nomes_vernaculares[]` with confidence levels
-
-3. **comunidades_indígenas** - Community/cultural references (separate collection)
-   - Fields: `_id` (ObjectId), `nome`, `tipo` ('indígena'|'quilombola'|'ribeirinha'|'caiçara'|'seringueira'|'pantaneira'|'outro')
-   - Geography: Linked to `localizacoes` (hierarchy: país → estado → município OR territorio)
-   - Cross-reference: Referenced by ID in `referencias.comunidades[].comunidade_id`
-
-4. **localizacoes** - Geographic locations (optional separate collection for performance)
-   - Fields: `_id` (ObjectId), `pais`, `estado`, `municipio`, `territorio`
-   - Can also be embedded directly in reference documents for small datasets
+1. **referencias** - Scientific articles/references (all-in-one collection)
+   - `_id`: ObjectId (unique identifier)
+   - `ano`: Publication year (indexed for filtering)
+   - `titulo`: Article title
+   - `publicacao`: Publication venue (journal, conference, etc.)
+   - `autores`: Array of author names (strings)
+   - `resumo`: Abstract/summary (optional)
+   - `doi`: Digital Object Identifier (optional, unique index)
+   - `especies`: Array of species objects with `vernacular` and `nomeCientifico`
+   - `tipo_de_uso`: Type of use (medicinal, alimentar, etc.)
+   - `metodologia`: Research methodology (entrevistas, observação, etc.)
+   - `pais`: Country name
+   - `estado`: State/province abbreviation
+   - `municipio`: Municipality name
+   - `local`: Specific location/community name
+   - `bioma`: Biome name (Mata Atlântica, Cerrado, etc.)
+   - `status`: Document status ('rascunho' or 'finalizado')
 
 **Collection Indexes** (for performance):
-- `referencias`: doi (unique), status, ano_publicacao, data_processamento, `especies.especie_id`, `comunidades.comunidade_id`
-- `especies_plantas`: nome_cientifico (unique), familia_botanica, status_validacao
-- `comunidades_indígenas`: nome, tipo
+- `referencias`: doi (unique), ano, status, titulo (text search friendly)
 
-**Estimated Database Sizes (BSON format, more compact than JSON):**
-- 1,000 references: ~0.8 MB (more compact than JSON due to BSON binary encoding)
-- 10,000 references: ~8 MB
-- 100,000 references: ~80 MB
+**Advantages of This Model:**
+- ✅ **Simple queries**: All reference data in one document, no JOINs needed
+- ✅ **Fast retrieval**: Single find() returns complete reference with all metadata
+- ✅ **Schema flexibility**: Add new fields anytime without migrations
+- ✅ **Easier extraction**: Direct mapping from AI extraction output to document structure
+- ✅ **Smaller database**: No redundant species/location documents
+
+**Estimated Database Sizes (BSON format):**
+- 1,000 references: ~1-2 MB (depending on average species count per reference)
+- 10,000 references: ~10-20 MB
+- 100,000 references: ~100-200 MB
 
 ### Docker Setup
 ```yaml
 # Single service (etnopapers) - lightweight NoSQL configuration
 - Port: 8000 (web app + API)
-- Volume: ./data:/data (persistent Mongita database files)
+- Volume: /mnt/user/appdata/etnopapers/:/data (persistent Mongita database files)
 - Base Image: python:3.11-slim (minimal, ~150MB)
 - Dependencies: FastAPI, Mongita, PyMongo (client library), aiofiles
 - Estimated Docker Image Size: ~180-200MB (vs 300MB+ with SQLite + ORM)
-- Environment:
-  - DATABASE_PATH=/data/etnopapers
+- Environment (defaults):
+  - DATABASE_PATH=/data (points to mounted volume)
   - DATABASE_BACKEND=disk
   - PORT=8000
   - LOG_LEVEL=info
@@ -134,34 +163,40 @@ pytest tests/routers/test_articles.py  # Single test file
 ### Database (Mongita)
 ```bash
 # Mongita database is file-based (no migrations needed - schema-less)
-# Data persists in ./data/etnopapers/ directory
+# Data persists in the /data directory (or ./data/ for local dev)
 
 # Inspect Mongita database (from Python)
 python -c "
-from mongita import MongitaClientMemory
 from mongita import MongitaClientDisk
 
-# Connect to Mongita
-client = MongitaClientDisk(database_dir='./data/etnopapers')
+# Connect to Mongita (defaults to ./data)
+client = MongitaClientDisk(database_dir='./data')
 db = client['etnopapers']
 
 # List all collections
 print('Collections:', db.list_collection_names())
 
-# Query examples
-referencias = db['referencias'].find_one()
-print('Sample reference:', referencias)
+# Query examples - get first reference
+ref = db['referencias'].find_one()
+print('Sample reference:', ref)
 
 # Count documents
 print('Total referencias:', db['referencias'].count_documents({}))
-print('Total especies:', db['especies_plantas'].count_documents({}))
+
+# Example: Find all references by year
+refs_2010 = list(db['referencias'].find({'ano': 2010}))
+print(f'References from 2010: {len(refs_2010)}')
+
+# Example: Search by species name
+refs_with_species = list(db['referencias'].find({
+    'especies.nomeCientifico': 'Chamomilla recutita'
+}))
+print(f'References with Chamomilla recutita: {len(refs_with_species)}')
 "
 
 # Database files (BSON format, auto-created by Mongita)
-# ./data/etnopapers/__db__.json - metadata
-# ./data/etnopapers/referencias/ - collection data
-# ./data/etnopapers/especies_plantas/ - collection data
-# ./data/etnopapers/comunidades_indígenas/ - collection data
+# ./data/__db__.json - metadata
+# ./data/referencias/ - single collection with all references
 ```
 
 ### Docker
@@ -312,32 +347,40 @@ docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:lat
 5. Test with pytest
 6. Document in OpenAPI spec (`specs/main/contracts/api-rest.yaml`)
 
-### Adding a New Collection or Document Field (NoSQL)
+### Adding a New Document Field (NoSQL)
 **No migrations needed!** Mongita is schema-less. Simply:
-1. Define Pydantic schema in `backend/models/` (for validation/documentation)
-2. Add new field(s) to your document insert/update code in `backend/services/`
-3. Create service methods for CRUD operations (insert, find, update, delete)
-4. Create router endpoint
-5. Test with pytest
-6. For performance: add indexes manually via `db[collection_name].create_index(...)` in initialization code
+1. Update the reference document structure in `backend/models/article.py` (Pydantic schema)
+2. Add new field(s) when creating/updating documents in `backend/services/article_service.py`
+3. Update any extraction logic to populate the new field
+4. Test with pytest
+5. For performance: add indexes if filtering by the new field via `db['referencias'].create_index('new_field')` in `backend/database/connection.py`
 
-**Example: Adding a new `origem_do_artigo` field to references**
+**Example: Adding a new `palavras_chave` (keywords) field to references**
 ```python
-# In backend/models/reference.py (validation schema)
-class Reference(BaseModel):
+# In backend/models/article.py (validation schema)
+class ReferenceData(BaseModel):
     titulo: str
-    origem_do_artigo: Optional[str] = None  # NEW FIELD
+    autores: List[str]
+    especies: List[SpeciesData]
+    palavras_chave: Optional[List[str]] = None  # NEW FIELD
+    # ... other fields ...
 
-# In backend/services/reference_service.py
-def create_reference(ref_data: dict):
-    result = db['referencias'].insert_one({
-        'titulo': ref_data['titulo'],
-        'origem_do_artigo': ref_data.get('origem_do_artigo'),  # NEW FIELD
-        'data_processamento': datetime.now()
-    })
-    return result.inserted_id
+# In backend/services/article_service.py
+def create_article(
+    titulo: str,
+    autores: List[str],
+    # ... other params ...
+    palavras_chave: Optional[List[str]] = None,  # NEW PARAM
+) -> Dict[str, Any]:
+    doc = {
+        'titulo': titulo,
+        'autores': autores,
+        'palavras_chave': palavras_chave or [],  # NEW FIELD
+        # ... other fields ...
+    }
+    # Insert document...
 ```
-No migration, no schema update—just code it and deploy!
+No migration, no schema update—just add it and deploy!
 
 ### Extracting Metadata from PDF
 1. Frontend uses `pdfjs-dist` to extract text
