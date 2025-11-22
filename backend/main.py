@@ -23,9 +23,19 @@ logger = logging.getLogger(__name__)
 
 # Initialize MongoDB database
 logger.info("Initializing MongoDB database...")
-init_database(settings.MONGO_URI)
-db = get_db()
-logger.info("MongoDB database initialized successfully")
+if not settings.MONGO_URI:
+    logger.error("MONGO_URI environment variable not set - application cannot start")
+    logger.error("Please set MONGO_URI environment variable with your MongoDB connection string")
+    raise ValueError("MONGO_URI environment variable is required")
+
+try:
+    init_database(settings.MONGO_URI)
+    db = get_db()
+    logger.info("MongoDB database initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize database: {e}")
+    logger.error("Check your MONGO_URI environment variable and MongoDB server status")
+    raise
 
 # Create FastAPI app
 app = FastAPI(
