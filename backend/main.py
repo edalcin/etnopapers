@@ -3,17 +3,20 @@ Etnopapers Backend - Main FastAPI Application
 """
 
 import logging
-import json
 from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.config import settings
 from backend.database.connection import get_db
 from backend.database.init_db import init_database
-from backend.routers import articles_router, species_router, database_router
+from backend.routers import articles_router
+from backend.routers import database_router
+from backend.routers import species_router
 
 # Configure logging
 logger = logging.getLogger(__name__)

@@ -2,9 +2,12 @@
 Pydantic models for article-related data
 """
 
-from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class AuthorInfo(BaseModel):

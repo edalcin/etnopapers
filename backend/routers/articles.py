@@ -13,17 +13,20 @@ Handles all article-related endpoints:
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query
-from backend.models import (
-    ArticleRequest,
-    ArticleResponse,
-    ArticleListResponse,
-    DuplicateCheckRequest,
-    DuplicateCheckResponse,
-    DuplicateArticleResponse,
-    SimilarArticlesRequest,
-)
-from backend.services import ArticleService, DuplicateChecker
+
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Query
+
+from backend.models import ArticleListResponse
+from backend.models import ArticleRequest
+from backend.models import ArticleResponse
+from backend.models import DuplicateArticleResponse
+from backend.models import DuplicateCheckRequest
+from backend.models import DuplicateCheckResponse
+from backend.models import SimilarArticlesRequest
+from backend.services import ArticleService
+from backend.services import DuplicateChecker
 
 logger = logging.getLogger(__name__)
 

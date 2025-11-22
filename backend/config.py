@@ -2,10 +2,10 @@
 Configuration management for Etnopapers backend
 """
 
-import os
 import logging
-from typing import Optional
+import os
 from pathlib import Path
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,8 @@ class Settings:
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
     # Database (Mongita)
-    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "/data")
+    # Use /data in Docker (production), fall back to relative path for tests
+    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/etnopapers")
     DATABASE_BACKEND: str = os.getenv("DATABASE_BACKEND", "disk")  # disk or memory
 
     # Logging

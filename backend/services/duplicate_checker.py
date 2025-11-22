@@ -7,8 +7,12 @@ Implements multi-strategy duplicate detection:
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 from bson import ObjectId
+
 from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)

@@ -2,12 +2,13 @@
 Pytest configuration and fixtures
 """
 
-from pathlib import Path
-import pytest
 import tempfile
+from pathlib import Path
 
-from backend.database.init_db import init_database
+import pytest
+
 from backend.database.connection import DatabaseConnection
+from backend.database.init_db import init_database
 
 
 @pytest.fixture

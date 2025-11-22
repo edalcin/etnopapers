@@ -5,10 +5,14 @@ Integrates with Tropicos (Missouri Botanical Garden) API as fallback for taxonom
 https://www.tropicos.org/
 """
 
-import logging
-import httpx
 import asyncio
-from typing import Optional, Dict, Any
+import logging
+from typing import Any
+from typing import Dict
+from typing import Optional
+
+import httpx
+
 from backend.config import settings
 
 logger = logging.getLogger(__name__)

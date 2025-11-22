@@ -5,12 +5,14 @@ Mongita is an embedded MongoDB-compatible document database.
 This module provides connection and query management using PyMongo API.
 """
 
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Optional
-from mongita import MongitaClientDisk, MongitaClientMemory
+
 from bson import ObjectId
+from mongita import MongitaClientDisk
+from mongita import MongitaClientMemory
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +21,9 @@ class DatabaseConnection:
     """Manages Mongita database connection and collections"""
 
     _instance: Optional["DatabaseConnection"] = None
-    _db_path: str = "/data"
+    _db_path: str = "data/etnopapers"
 
-    def __init__(self, db_path: str = "/data", backend: str = "disk"):
+    def __init__(self, db_path: str = "data/etnopapers", backend: str = "disk"):
         """
         Initialize Mongita database connection
 
@@ -35,7 +37,7 @@ class DatabaseConnection:
 
     @classmethod
     def get_instance(
-        cls, db_path: str = "/data", backend: str = "disk"
+        cls, db_path: str = "data/etnopapers", backend: str = "disk"
     ) -> "DatabaseConnection":
         """Get singleton instance of DatabaseConnection"""
         if cls._instance is None:
@@ -169,5 +171,5 @@ class DatabaseConnection:
 def get_db() -> DatabaseConnection:
     """Get database connection instance"""
     backend = os.getenv("DATABASE_BACKEND", "disk")
-    db_path = os.getenv("DATABASE_PATH", "/data")
+    db_path = os.getenv("DATABASE_PATH", "data/etnopapers")
     return DatabaseConnection.get_instance(db_path, backend)

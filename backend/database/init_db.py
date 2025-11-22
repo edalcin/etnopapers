@@ -5,9 +5,9 @@ Mongita is schema-less, so initialization just creates collections and indexes.
 No SQL schema files needed!
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 
 # Add project root to path to allow absolute imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -17,7 +17,7 @@ from backend.database.connection import get_db
 logger = logging.getLogger(__name__)
 
 
-def init_database(db_path: str = "/data", backend: str = "disk") -> bool:
+def init_database(db_path: str = "data/etnopapers", backend: str = "disk") -> bool:
     """
     Initialize Mongita database with collections and indexes
 

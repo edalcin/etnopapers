@@ -2,7 +2,9 @@
 Pydantic models for species-related data
 """
 
-from typing import Optional, List
+from typing import List
+from typing import Optional
+
 from pydantic import BaseModel
 
 

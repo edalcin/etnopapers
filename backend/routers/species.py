@@ -8,16 +8,17 @@ Handles plant species endpoints:
 - POST /api/species/clear-cache - Clear taxonomy cache
 """
 
-import logging
 import asyncio
-from fastapi import APIRouter, HTTPException
-from backend.models.species import (
-    SpeciesValidationRequest,
-    SpeciesValidationResponse,
-    BulkSpeciesValidationRequest,
-    BulkSpeciesValidationResponse,
-    TaxonomyCacheStats,
-)
+import logging
+
+from fastapi import APIRouter
+from fastapi import HTTPException
+
+from backend.models.species import BulkSpeciesValidationRequest
+from backend.models.species import BulkSpeciesValidationResponse
+from backend.models.species import SpeciesValidationRequest
+from backend.models.species import SpeciesValidationResponse
+from backend.models.species import TaxonomyCacheStats
 from backend.services.taxonomy_service import TaxonomyService
 
 logger = logging.getLogger(__name__)

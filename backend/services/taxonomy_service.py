@@ -4,15 +4,19 @@ Taxonomy validation service
 Orchestrates GBIF and Tropicos APIs with in-memory caching
 """
 
-import logging
-import json
 import asyncio
-from typing import Optional, Dict, Any
+import json
+import logging
+from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
-from datetime import datetime, timedelta
-from backend.config import settings
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 from backend.clients.gbif_client import GBIFClient
 from backend.clients.tropicos_client import TropicosClient
+from backend.config import settings
 
 logger = logging.getLogger(__name__)
 

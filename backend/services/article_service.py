@@ -6,9 +6,14 @@ Articles are now called "referencias" (references) in the Mongita model.
 """
 
 import logging
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
 from bson import ObjectId
+
 from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
