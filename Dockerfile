@@ -42,9 +42,6 @@ COPY backend ./backend
 # Copy built frontend from builder
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Create Mongita data directory (stores BSON files)
-RUN mkdir -p /data/etnopapers
-
 # Expose port
 EXPOSE 8000
 
@@ -53,7 +50,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
 # Environment defaults (can be overridden at runtime)
-ENV DATABASE_PATH=/data/etnopapers
+# Map directly to /data (volume mount point) instead of subdirectory
+ENV DATABASE_PATH=/data
 ENV DATABASE_BACKEND=disk
 ENV PORT=8000
 ENV LOG_LEVEL=info

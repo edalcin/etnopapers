@@ -19,9 +19,9 @@ class DatabaseConnection:
     """Manages Mongita database connection and collections"""
 
     _instance: Optional["DatabaseConnection"] = None
-    _db_path: str = "data/etnopapers"
+    _db_path: str = "/data"
 
-    def __init__(self, db_path: str = "data/etnopapers", backend: str = "disk"):
+    def __init__(self, db_path: str = "/data", backend: str = "disk"):
         """
         Initialize Mongita database connection
 
@@ -35,7 +35,7 @@ class DatabaseConnection:
 
     @classmethod
     def get_instance(
-        cls, db_path: str = "data/etnopapers", backend: str = "disk"
+        cls, db_path: str = "/data", backend: str = "disk"
     ) -> "DatabaseConnection":
         """Get singleton instance of DatabaseConnection"""
         if cls._instance is None:
@@ -169,5 +169,5 @@ class DatabaseConnection:
 def get_db() -> DatabaseConnection:
     """Get database connection instance"""
     backend = os.getenv("DATABASE_BACKEND", "disk")
-    db_path = os.getenv("DATABASE_PATH", "data/etnopapers")
+    db_path = os.getenv("DATABASE_PATH", "/data")
     return DatabaseConnection.get_instance(db_path, backend)

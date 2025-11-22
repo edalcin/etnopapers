@@ -17,7 +17,7 @@ from backend.database.connection import get_db
 logger = logging.getLogger(__name__)
 
 
-def init_database(db_path: str = "data/etnopapers", backend: str = "disk") -> bool:
+def init_database(db_path: str = "/data", backend: str = "disk") -> bool:
     """
     Initialize Mongita database with collections and indexes
 

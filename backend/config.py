@@ -19,7 +19,7 @@ class Settings:
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
     # Database (Mongita)
-    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/etnopapers")
+    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "/data")
     DATABASE_BACKEND: str = os.getenv("DATABASE_BACKEND", "disk")  # disk or memory
 
     # Logging
