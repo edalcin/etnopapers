@@ -21,6 +21,9 @@ from backend.routers import species_router
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Log startup configuration for debugging
+settings.log_startup_config()
+
 # Initialize MongoDB database
 logger.info("Initializing MongoDB database...")
 if not settings.MONGO_URI:

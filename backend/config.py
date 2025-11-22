@@ -25,6 +25,17 @@ class Settings:
     # IMPORTANT: MONGO_URI environment variable is required
     MONGO_URI: str = os.getenv("MONGO_URI", "")
 
+    @classmethod
+    def log_startup_config(cls):
+        """Log startup configuration for debugging"""
+        logger.info(f"MONGO_URI configured: {'YES (length: ' + str(len(cls.MONGO_URI)) + ' chars)' if cls.MONGO_URI else 'NO - NOT SET'}")
+        if cls.MONGO_URI:
+            # Mask password in logs
+            masked = cls.MONGO_URI.split("://")[0] + "://***:***@" + cls.MONGO_URI.split("@")[-1] if "@" in cls.MONGO_URI else cls.MONGO_URI
+            logger.info(f"MONGO_URI value: {masked}")
+        logger.info(f"PORT: {cls.PORT}")
+        logger.info(f"ENVIRONMENT: {cls.ENVIRONMENT}")
+
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info").upper()
 
