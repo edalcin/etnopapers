@@ -26,7 +26,11 @@
       "Bash(nul)",
       "Bash(tree /F /L 3 2)",
       "Bash(mkdir:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(python:*)",
+      "Bash(set MONGO_URI=mongodb://useflora:yfH8WaEp9Ccf@192.168.1.10:27017/useflora?authSource=useflora:*)",
+      "Bash(export MONGO_URI=\"mongodb://useflora:yfH8WaEp9Ccf@192.168.1.10:27017/useflora?authSource=useflora\")"
     ],
     "deny": [],
     "ask": []

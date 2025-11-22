@@ -48,15 +48,23 @@ class DatabaseConnection:
             # Verify connection
             self.client.admin.command("ping")
 
-            # Get database (extracted from URI or defaults to 'etnopapers')
-            # If URI is mongodb://localhost:27017/etnopapers, database name is 'etnopapers'
-            # If URI doesn't specify database, we use 'etnopapers' as default
-            db_name = "etnopapers"
-            if "/" in self._mongo_uri.split("mongodb+srv://")[-1].split("mongodb://")[-1]:
-                # Extract database name from URI if present
-                parts = self._mongo_uri.split("/")
-                if len(parts) > 1 and parts[-1] and not "?" in parts[-1].split("@")[-1]:
-                    db_name = parts[-1].split("?")[0]
+            # Get database name from URI
+            # Format: mongodb://user:pass@host:port/dbname?params
+            # or mongodb+srv://user:pass@host/dbname?params
+            db_name = None
+
+            # Split by '/' to extract database portion
+            uri_parts = self._mongo_uri.split("/")
+            if len(uri_parts) >= 4:
+                # Parts: ['mongodb:', '', 'host:port', 'dbname?params']
+                db_candidate = uri_parts[3].split("?")[0].strip()
+                if db_candidate:
+                    db_name = db_candidate
+
+            # Fallback if database not found in URI
+            if not db_name:
+                db_name = "etnopapers"
+                logger.warning(f"Database name not found in URI, using default: {db_name}")
 
             self.db = self.client[db_name]
 
