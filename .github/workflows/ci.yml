@@ -52,14 +52,17 @@ jobs:
         continue-on-error: true
 
       - name: Run unit tests
+        if: always()
         run: |
           pytest backend/tests/ -v --tb=short
 
       - name: Run tests with coverage
+        if: always()
         run: |
           pytest backend/tests/ -v --cov=backend --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
+        if: always()
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
