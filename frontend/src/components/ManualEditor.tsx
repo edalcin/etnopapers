@@ -101,7 +101,7 @@ export default function ManualEditor({
       const cleanData: ExtractedMetadata = {
         ...data,
         autores: data.autores.filter(a => a.nome || a.sobrenome),
-        especies: (data.especies || []).filter(s => s && s.trim() !== ''),
+        especies: (data.especies || []).filter(s => s && s.nomeCientifico && s.nomeCientifico.trim() !== ''),
         regioes: (data.regioes || []).filter(r => r && r.trim() !== ''),
         comunidades: (data.comunidades || []).filter(c => c && c.trim() !== ''),
       }
@@ -303,7 +303,7 @@ export default function ManualEditor({
             <h4>🌿 Espécies de Plantas</h4>
             <button
               type="button"
-              onClick={() => appendSpecies('')}
+              onClick={() => appendSpecies({ vernacular: '', nomeCientifico: '' })}
               className="btn-add"
             >
               + Adicionar Espécie
@@ -312,30 +312,47 @@ export default function ManualEditor({
 
           {speciesFields.map((field, index) => (
             <div key={field.id} className="array-item species-item">
-              <Controller
-                name={`especies.${index}`}
-                control={control}
-                render={({ field }) => (
-                  <div className="form-group flex-grow">
-                    <label>Nome Científico</label>
-                    <input
-                      {...field}
-                      type="text"
-                      placeholder="ex: Areca catechu"
-                    />
-                  </div>
-                )}
-              />
+              <div className="form-row">
+                <Controller
+                  name={`especies.${index}.vernacular`}
+                  control={control}
+                  render={({ field }) => (
+                    <div className="form-group">
+                      <label>Nome Comum</label>
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="ex: Açaí"
+                      />
+                    </div>
+                  )}
+                />
 
-              {watchedSpecies?.[index] && (
+                <Controller
+                  name={`especies.${index}.nomeCientifico`}
+                  control={control}
+                  render={({ field }) => (
+                    <div className="form-group flex-grow">
+                      <label>Nome Científico</label>
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="ex: Euterpe oleracea"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+
+              {watchedSpecies?.[index]?.nomeCientifico && (
                 <div className={`validation-badge ${
-                  validatingSpecies[watchedSpecies[index]] ? 'validating' : ''
+                  validatingSpecies[watchedSpecies[index].nomeCientifico] ? 'validating' : ''
                 } ${
-                  speciesValidation[watchedSpecies[index]] ? 'valid' : 'invalid'
+                  speciesValidation[watchedSpecies[index].nomeCientifico] ? 'valid' : 'invalid'
                 }`}>
-                  {validatingSpecies[watchedSpecies[index]] ? (
+                  {validatingSpecies[watchedSpecies[index].nomeCientifico] ? (
                     <span>⏳ Validando...</span>
-                  ) : speciesValidation[watchedSpecies[index]] ? (
+                  ) : speciesValidation[watchedSpecies[index].nomeCientifico] ? (
                     <span>✅ Validado</span>
                   ) : (
                     <span>⚠️ Não validado</span>

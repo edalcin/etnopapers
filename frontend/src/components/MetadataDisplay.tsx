@@ -121,11 +121,12 @@ export default function MetadataDisplay({
         <section className="metadata-section">
           <h4>🌿 Espécies de Plantas</h4>
           {data.especies && data.especies.length > 0 ? (
-            <div className="tags-list">
+            <div className="species-list">
               {data.especies.map((species, i) => (
-                <span key={i} className="tag species">
-                  <em>{species}</em>
-                </span>
+                <div key={i} className="species-item">
+                  <span className="vernacular">{species.vernacular}</span>
+                  <span className="scientific"><em>{species.nomeCientifico}</em></span>
+                </div>
               ))}
             </div>
           ) : (

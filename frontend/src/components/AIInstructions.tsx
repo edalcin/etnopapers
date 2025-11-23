@@ -5,14 +5,35 @@ const STORAGE_KEY = 'etnopapers_ai_instructions'
 
 const DEFAULT_INSTRUCTIONS = `Você é um especialista em extração de metadados de artigos científicos sobre etnobotânica.
 
-Sua tarefa é extrair as seguintes informações do texto do artigo:
-- Título: Nome completo do artigo
-- Autores: Lista de nomes dos autores
-- Ano de Publicação: Ano em que o artigo foi publicado
-- Resumo: Resumo ou abstrato do artigo (se disponível)
-- DOI: Digital Object Identifier (se disponível)
+Sua tarefa é extrair as seguintes informações do texto do artigo e retornar um JSON estruturado:
 
-Por favor, extraia apenas informações que estão explicitamente mencionadas no texto do artigo. Se alguma informação não estiver disponível, indique como não encontrada.`
+**INFORMAÇÕES BIBLIOGRÁFICAS:**
+- titulo: Nome completo do artigo (obrigatório)
+- autores: Lista de objetos com {nome, sobrenome, email (opcional)} (obrigatório, mínimo 1)
+- ano_publicacao: Ano de publicação (obrigatório, número 1900-2100)
+- resumo: Resumo ou abstrato do artigo (opcional)
+- doi: Digital Object Identifier (opcional)
+
+**INFORMAÇÕES ETNOBOTÂNICAS:**
+- especies: Array de objetos com {vernacular (nome comum), nomeCientifico} (opcional)
+- tipo_de_uso: Tipo de uso das plantas (ex: medicinal, alimentar, ritual, combustível) (opcional)
+- metodologia: Metodologia de pesquisa (ex: entrevistas, observação participante, levantamento) (opcional)
+- comunidades: Array de nomes de comunidades indígenas ou tradicionais mencionadas (opcional)
+
+**INFORMAÇÕES GEOGRÁFICAS:**
+- pais: País onde o estudo foi realizado (opcional)
+- estado: Estado ou região (opcional)
+- municipio: Município (opcional)
+- local: Local específico ou nome da comunidade/territorialidade (opcional)
+- bioma: Bioma onde o estudo foi realizado (ex: Mata Atlântica, Cerrado, Amazônia) (opcional)
+- regioes: Array de regiões mencionadas no estudo (opcional)
+
+**IMPORTANTE:**
+- Retorne APENAS um objeto JSON válido
+- Extraia apenas informações que estão EXPLICITAMENTE mencionadas no texto
+- Para campos não encontrados, omita-os do JSON ou use null
+- Nomes científicos de plantas devem estar em formato binomial (Gênero species)
+- Mantenha a ordem dos autores conforme aparecem no artigo`
 
 export default function AIInstructions() {
   const [instructions, setInstructions] = useState(DEFAULT_INSTRUCTIONS)
