@@ -1,4 +1,4 @@
-import { getDefaultGeminiModel } from './geminiModels'
+import { getDefaultGeminiModel } from '../geminiModels'
 import type { ExtractedMetadata } from '@types'
 
 export const extractWithGemini = async (
