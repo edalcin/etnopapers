@@ -54,7 +54,7 @@ class ReferenceResponse(BaseModel):
     publicacao: Optional[str] = None
     autores: List[str]
     resumo: Optional[str] = None
-    especies: List[SpeciesData]
+    especies: List[SpeciesData] = Field(default_factory=list, description="Plant species mentioned")
     tipoUso: Optional[str] = None
     metodologia: Optional[str] = None
     pais: Optional[str] = None

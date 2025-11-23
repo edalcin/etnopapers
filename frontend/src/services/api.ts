@@ -41,11 +41,83 @@ export const databaseAPI = {
   download: () => api.get('/database/download', { responseType: 'blob' }),
 }
 
+/**
+ * Validate API key by calling the actual provider's API
+ * Each provider has different validation endpoints
+ */
 export const validateAPIKey = async (provider: string, key: string): Promise<boolean> => {
   try {
-    // This is a stub - actual validation would call the provider's API
-    // For now, just check if the key is non-empty
-    return key.trim().length > 0
+    if (!key || key.trim().length === 0) {
+      return false
+    }
+
+    switch (provider) {
+      case 'gemini':
+        return await validateGeminiKey(key)
+      case 'openai':
+        return await validateOpenAIKey(key)
+      case 'claude':
+        return await validateClaudeKey(key)
+      default:
+        return false
+    }
+  } catch (error) {
+    console.error(`API key validation error for ${provider}:`, error)
+    return false
+  }
+}
+
+/**
+ * Validate Gemini API key by calling the models list endpoint
+ */
+const validateGeminiKey = async (key: string): Promise<boolean> => {
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models?key=${key}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Validate OpenAI API key by calling the models list endpoint
+ */
+const validateOpenAIKey = async (key: string): Promise<boolean> => {
+  try {
+    const response = await fetch('https://api.openai.com/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Validate Claude API key by calling the models list endpoint
+ */
+const validateClaudeKey = async (key: string): Promise<boolean> => {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/models', {
+      method: 'GET',
+      headers: {
+        'x-api-key': key,
+        'Content-Type': 'application/json',
+      },
+    })
+    return response.ok
   } catch {
     return false
   }
