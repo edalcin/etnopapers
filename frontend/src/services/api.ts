@@ -1,6 +1,18 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8000/api'
+// Auto-detect API base URL: in production, use relative path to current host
+// In development, use localhost:8000
+const getAPIBaseURL = (): string => {
+  // If running on localhost (dev), use direct connection to API port
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000/api'
+  }
+  // In production, use relative path (same host)
+  // e.g., if accessing http://192.168.1.10:8007, use /api
+  return '/api'
+}
+
+const API_BASE_URL = getAPIBaseURL()
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -16,6 +28,7 @@ export const articlesAPI = {
   create: (data: any) => api.post('/articles', data),
   update: (id: string, data: any) => api.put(`/articles/${id}`, data),
   delete: (id: string) => api.delete(`/articles/${id}`),
+  checkDuplicate: (data: any) => api.post('/articles/check-duplicate', data),
 }
 
 export const speciesAPI = {

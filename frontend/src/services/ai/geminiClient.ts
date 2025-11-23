@@ -95,8 +95,20 @@ REGRAS OBRIGATÓRIAS:
 
     const data = await response.json()
 
-    if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
-      throw new Error('Invalid response format from Gemini API')
+    // Better error handling with debugging info
+    if (!data.candidates || data.candidates.length === 0) {
+      console.error('Gemini response:', JSON.stringify(data, null, 2))
+      throw new Error(`Gemini API returned no candidates. Response: ${JSON.stringify(data).substring(0, 200)}`)
+    }
+
+    if (!data.candidates[0]?.content?.parts) {
+      console.error('Gemini response:', JSON.stringify(data.candidates[0], null, 2))
+      throw new Error('Gemini response has no content parts')
+    }
+
+    if (!data.candidates[0].content.parts[0]?.text) {
+      console.error('Gemini response:', JSON.stringify(data.candidates[0].content, null, 2))
+      throw new Error('Gemini response part has no text')
     }
 
     const responseText = data.candidates[0].content.parts[0].text
