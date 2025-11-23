@@ -1,3 +1,4 @@
+import { getDefaultGeminiModel } from './geminiModels'
 import type { ExtractedMetadata } from '@types'
 
 export const extractWithGemini = async (
@@ -5,6 +6,9 @@ export const extractWithGemini = async (
   apiKey: string,
   instructions?: string
 ): Promise<ExtractedMetadata> => {
+  // Get model from localStorage or use default
+  const geminiModel = localStorage.getItem('etnopapers_gemini_model') || getDefaultGeminiModel()
+
   const defaultInstructions = `Você é um especialista em extração de metadados de artigos científicos sobre etnobotânica.
 
 Sua tarefa é extrair as seguintes informações do texto do artigo e retornar um JSON estruturado:
@@ -41,7 +45,7 @@ Sua tarefa é extrair as seguintes informações do texto do artigo e retornar u
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/${geminiModel}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {

@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { validateAPIKey } from '@services/api'
 import { useSetAPIKey, useSetAPIKeyValidity, useAPIKey } from '@store/useStore'
+import {
+  listAvailableGeminiModels,
+  getDefaultGeminiModel,
+  type GeminiModel,
+} from '@services/geminiModels'
 import type { AIProvider } from '@types'
 import './APIKeySetup.css'
 
@@ -14,6 +19,11 @@ export default function APIKeySetup() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [showKey, setShowKey] = useState(false)
+  const [geminiModels, setGeminiModels] = useState<GeminiModel[]>([])
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState<string>(
+    localStorage.getItem('etnopapers_gemini_model') || getDefaultGeminiModel()
+  )
+  const [loadingModels, setLoadingModels] = useState(false)
 
   const providers: { id: AIProvider; name: string; url: string }[] = [
     {
@@ -49,6 +59,19 @@ export default function APIKeySetup() {
         setAPIKey(tempProvider, tempKey)
         setAPIKeyValidity(true)
         setMessage('✅ Chave validada com sucesso!')
+
+        // If Gemini, load available models
+        if (tempProvider === 'gemini') {
+          setLoadingModels(true)
+          try {
+            const models = await listAvailableGeminiModels(tempKey)
+            setGeminiModels(models)
+          } catch (error) {
+            console.error('Failed to load Gemini models:', error)
+          } finally {
+            setLoadingModels(false)
+          }
+        }
       } else {
         setMessage('❌ Chave inválida ou sem permissão')
         setAPIKeyValidity(false)
@@ -59,6 +82,11 @@ export default function APIKeySetup() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSaveGeminiModel = () => {
+    localStorage.setItem('etnopapers_gemini_model', selectedGeminiModel)
+    setMessage('✅ Modelo Gemini salvo com sucesso!')
   }
 
   return (
@@ -121,6 +149,33 @@ export default function APIKeySetup() {
             }`}
           >
             {message}
+          </div>
+        )}
+
+        {tempProvider === 'gemini' && apiKey?.isValid && geminiModels.length > 0 && (
+          <div className="form-group">
+            <label>Modelo Gemini</label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <select
+                value={selectedGeminiModel}
+                onChange={e => setSelectedGeminiModel(e.target.value)}
+                disabled={loadingModels}
+                style={{ flex: 1 }}
+              >
+                {geminiModels.map(model => (
+                  <option key={model.name} value={model.name}>
+                    {model.displayName} - {model.description}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleSaveGeminiModel}
+                disabled={loadingModels}
+                className="btn-primary"
+              >
+                Salvar Modelo
+              </button>
+            </div>
           </div>
         )}
 
