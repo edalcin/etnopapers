@@ -80,7 +80,6 @@ class ArticleService:
                 "autores": autores,
                 "publicacao": publicacao,
                 "resumo": resumo,
-                "doi": doi,
                 "especies": especies or [],
                 "tipoUso": use_type,
                 "tipo_de_uso": use_type,
@@ -94,6 +93,10 @@ class ArticleService:
                 "comunidades": comunidades or [],
                 "status": status or "rascunho",
             }
+
+            # Only add doi if it's not None (to avoid unique index constraint on null values)
+            if doi is not None:
+                doc["doi"] = doi
 
             # Insert into collection
             collection = db.get_collection("referencias")
