@@ -23,37 +23,38 @@ export const extractWithGemini = async (
     localStorage.removeItem('etnopapers_gemini_model')
   }
 
-  const defaultInstructions = `Você é um especialista em extração de metadados de artigos científicos sobre etnobotânica.
+  const defaultInstructions = `INSTRUÇÃO CRÍTICA: Você DEVE retornar APENAS um objeto JSON válido. NADA de texto, NADA de explicações, APENAS JSON.
 
-Sua tarefa é extrair as seguintes informações do texto do artigo e retornar um JSON estruturado:
+Você é um especialista em extração de metadados de artigos científicos sobre etnobotânica.
 
-**INFORMAÇÕES BIBLIOGRÁFICAS:**
-- titulo: Nome completo do artigo (obrigatório)
-- autores: Lista de objetos com {nome, sobrenome, email (opcional)} (obrigatório, mínimo 1)
-- ano_publicacao: Ano de publicação (obrigatório, número 1900-2100)
-- resumo: Resumo ou abstrato do artigo (opcional)
-- doi: Digital Object Identifier (opcional)
+EXTRAIA estas informações do texto do artigo e retorne APENAS um objeto JSON válido (sem markdown, sem texto extra):
 
-**INFORMAÇÕES ETNOBOTÂNICAS:**
-- especies: Array de objetos com {vernacular (nome comum), nomeCientifico} (opcional)
-- tipo_de_uso: Tipo de uso das plantas (ex: medicinal, alimentar, ritual, combustível) (opcional)
-- metodologia: Metodologia de pesquisa (ex: entrevistas, observação participante, levantamento) (opcional)
-- comunidades: Array de nomes de comunidades indígenas ou tradicionais mencionadas (opcional)
+SCHEMA JSON ESPERADO:
+{
+  "titulo": "string (obrigatório)",
+  "autores": [{"nome": "string", "sobrenome": "string", "email": "string (opcional)"}],
+  "ano_publicacao": "número",
+  "resumo": "string (opcional)",
+  "doi": "string (opcional)",
+  "especies": [{"vernacular": "string", "nomeCientifico": "string"}],
+  "tipo_de_uso": "string (opcional)",
+  "metodologia": "string (opcional)",
+  "comunidades": ["string"],
+  "pais": "string (opcional)",
+  "estado": "string (opcional)",
+  "municipio": "string (opcional)",
+  "local": "string (opcional)",
+  "bioma": "string (opcional)",
+  "regioes": ["string"]
+}
 
-**INFORMAÇÕES GEOGRÁFICAS:**
-- pais: País onde o estudo foi realizado (opcional)
-- estado: Estado ou região (opcional)
-- municipio: Município (opcional)
-- local: Local específico ou nome da comunidade/territorialidade (opcional)
-- bioma: Bioma onde o estudo foi realizado (ex: Mata Atlântica, Cerrado, Amazônia) (opcional)
-- regioes: Array de regiões mencionadas no estudo (opcional)
-
-**IMPORTANTE:**
-- Retorne APENAS um objeto JSON válido
-- Extraia apenas informações que estão EXPLICITAMENTE mencionadas no texto
-- Para campos não encontrados, omita-os do JSON
-- Nomes científicos de plantas devem estar em formato binomial (Gênero species)
-- Mantenha a ordem dos autores conforme aparecem no artigo`
+REGRAS OBRIGATÓRIAS:
+1. Retorne APENAS JSON válido, sem markdown code blocks
+2. NENHUM texto antes ou depois do JSON
+3. Extraia apenas informações EXPLICITAMENTE mencionadas no texto
+4. Omita campos não encontrados
+5. Nomes científicos em formato binomial (Gênero species)
+6. Mantenha ordem dos autores conforme artigo`
 
   const systemPrompt = instructions || defaultInstructions
 
@@ -70,15 +71,15 @@ Sua tarefa é extrair as seguintes informações do texto do artigo e retornar u
             {
               parts: [
                 {
-                  text: `${systemPrompt}\n\nExtraía os metadados do seguinte texto de artigo científico e retorne um objeto JSON válido:\n\n${pdfText}`,
+                  text: `${systemPrompt}\n\nAGORA EXTRAIA OS METADADOS do seguinte texto de artigo científico.\n\nRETORNE APENAS O JSON, SEM NENHUM OUTRO TEXTO.\n\nTEXTO DO ARTIGO:\n${pdfText}`,
                 },
               ],
             },
           ],
           generationConfig: {
-            temperature: 0.2,
-            topK: 40,
-            topP: 0.95,
+            temperature: 0.1,
+            topK: 1,
+            topP: 0.1,
             maxOutputTokens: 2048,
           },
         }),
@@ -105,7 +106,15 @@ Sua tarefa é extrair as seguintes informações do texto do artigo e retornar u
       responseText.match(/```\n([\s\S]*?)\n```/) || [null, responseText]
 
     const jsonStr = jsonMatch[1] || responseText
-    const metadata = JSON.parse(jsonStr.trim())
+
+    let metadata
+    try {
+      metadata = JSON.parse(jsonStr.trim())
+    } catch (parseError) {
+      // If JSON parsing fails, provide helpful error message
+      const preview = jsonStr.trim().substring(0, 100)
+      throw new Error(`Invalid JSON response from Gemini. Response preview: "${preview}"`)
+    }
 
     // Validate and normalize the response
     const extracted: ExtractedMetadata = {
