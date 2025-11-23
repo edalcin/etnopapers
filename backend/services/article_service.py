@@ -13,6 +13,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from pymongo.errors import DuplicateKeyError
+
 from backend.database.connection import get_db
 
 logger = logging.getLogger(__name__)
@@ -100,11 +102,20 @@ class ArticleService:
 
             # Insert into collection
             collection = db.get_collection("referencias")
-            result = collection.insert_one(doc)
-            article_id = str(result.inserted_id)
-
-            logger.info(f"Reference created: {article_id} - {titulo}")
-            return ArticleService.get_article_by_id(article_id)
+            try:
+                result = collection.insert_one(doc)
+                article_id = str(result.inserted_id)
+                logger.info(f"Reference created: {article_id} - {titulo}")
+                return ArticleService.get_article_by_id(article_id)
+            except DuplicateKeyError as e:
+                # Handle duplicate DOI by returning existing article
+                if doi:
+                    logger.warning(f"Duplicate DOI detected: {doi}. Returning existing article.")
+                    existing = ArticleService.get_by_doi(doi)
+                    if existing:
+                        return existing
+                # If it's a different duplicate error, re-raise
+                raise
 
         except Exception as e:
             logger.error(f"Error creating reference: {e}")

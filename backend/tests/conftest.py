@@ -24,11 +24,22 @@ def temp_db():
     init_database(test_mongo_uri)
     # Reset singleton for testing
     DatabaseConnection._instance = DatabaseConnection(test_mongo_uri)
-    yield test_mongo_uri
-    # Cleanup - drop test database
+
+    # Clean up database before tests
     try:
         db_connection = DatabaseConnection.get_instance(test_mongo_uri)
-        db_connection.client.drop_database("etnopapers_test")
+        # Drop the referencias collection to start fresh
+        db_connection.db["referencias"].drop()
+    except Exception as e:
+        print(f"Cleanup warning: {e}")
+
+    yield test_mongo_uri
+
+    # Cleanup - drop collections after tests
+    try:
+        db_connection = DatabaseConnection.get_instance(test_mongo_uri)
+        # Drop the referencias collection
+        db_connection.db["referencias"].drop()
         DatabaseConnection._instance = None
     except Exception as e:
         print(f"Cleanup warning: {e}")
