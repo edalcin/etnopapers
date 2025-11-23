@@ -43,6 +43,17 @@ export default function Upload() {
     }
   }, [])
 
+  // Clear upload state when returning to upload step
+  useEffect(() => {
+    if (step === 'upload') {
+      setPdfText('')
+      setExtractedMetadata(null)
+      setIsScanned(false)
+      setError(null)
+    }
+  }, [step])
+
+
   const handleUpload = async (file: File) => {
     try {
       setError(null)
@@ -137,11 +148,8 @@ export default function Upload() {
       // Show success message and reset form immediately
       alert('✅ Artigo salvo com sucesso!')
 
-      // Reset form state immediately after save
+      // Reset form state immediately after save (useEffect will clean up when step changes)
       setStep('upload')
-      setPdfText('')
-      setExtractedMetadata(null)
-      setIsScanned(false)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao salvar'
       setError(errorMsg)
@@ -151,10 +159,6 @@ export default function Upload() {
   const handleDiscard = () => {
     if (window.confirm('Descartar metadados extraídos?')) {
       setStep('upload')
-      setPdfText('')
-      setExtractedMetadata(null)
-      setIsScanned(false)
-      setError(null)
     }
   }
 
