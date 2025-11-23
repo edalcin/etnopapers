@@ -23,12 +23,13 @@ const api = axios.create({
 
 export const articlesAPI = {
   list: (page: number = 1, pageSize: number = 50) =>
-    api.get('/articles', { params: { page, page_size: pageSize } }),
-  get: (id: string) => api.get(`/articles/${id}`),
-  create: (data: any) => api.post('/articles', data),
-  update: (id: string, data: any) => api.put(`/articles/${id}`, data),
-  delete: (id: string) => api.delete(`/articles/${id}`),
-  checkDuplicate: (data: any) => api.post('/articles/check-duplicate', data),
+    api.get('/referencias', { params: { page, page_size: pageSize } }),
+  get: (id: string) => api.get(`/referencias/${id}`),
+  create: (data: any) => api.post('/referencias', data),
+  update: (id: string, data: any) => api.put(`/referencias/${id}`, data),
+  delete: (id: string) => api.delete(`/referencias/${id}`),
+  // TODO: Implement check-duplicate endpoint in backend when needed
+  // checkDuplicate: (data: any) => api.post('/referencias/check-duplicate', data),
 }
 
 export const speciesAPI = {

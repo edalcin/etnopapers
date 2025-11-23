@@ -36,22 +36,35 @@ export default function Home() {
     loadArticles()
   }, [setArticles])
 
+  // Helper to get author display string
+  const getAuthorString = (autores: string[] | any[]): string => {
+    if (!autores || autores.length === 0) return ''
+    const firstAutor = autores[0]
+    if (typeof firstAutor === 'string') return firstAutor
+    return `${firstAutor.nome} ${firstAutor.sobrenome}`
+  }
+
   // Filter and sort articles
   const filteredArticles = articles
-    .filter(article =>
-      article.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.autores?.some(a =>
-        `${a.nome} ${a.sobrenome}`.toLowerCase().includes(searchTerm.toLowerCase())
-      ) ||
-      String(article.ano_publicacao).includes(searchTerm)
-    )
+    .filter(article => {
+      const authorStr = getAuthorString(article.autores)
+      const ano = article.ano || article.ano_publicacao
+      return (
+        article.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        authorStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(ano).includes(searchTerm)
+      )
+    })
     .sort((a, b) => {
       let compareA: any = a[sortBy]
       let compareB: any = b[sortBy]
 
       if (sortBy === 'autores') {
-        compareA = a.autores?.[0]?.sobrenome || ''
-        compareB = b.autores?.[0]?.sobrenome || ''
+        compareA = getAuthorString(a.autores).split(' ')[1] || getAuthorString(a.autores)
+        compareB = getAuthorString(b.autores).split(' ')[1] || getAuthorString(b.autores)
+      } else if (sortBy === 'ano') {
+        compareA = a.ano || a.ano_publicacao
+        compareB = b.ano || b.ano_publicacao
       }
 
       if (compareA < compareB) return sortDir === 'asc' ? -1 : 1
@@ -154,11 +167,9 @@ export default function Home() {
                       className="article-row"
                     >
                       <td className="titulo">{article.titulo}</td>
-                      <td className="ano">{article.ano_publicacao}</td>
+                      <td className="ano">{article.ano || article.ano_publicacao}</td>
                       <td className="autores">
-                        {article.autores?.[0]
-                          ? `${article.autores[0].nome} ${article.autores[0].sobrenome}`
-                          : '-'}
+                        {getAuthorString(article.autores) || '-'}
                       </td>
                     </tr>
                   ))}

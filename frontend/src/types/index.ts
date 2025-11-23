@@ -16,12 +16,23 @@ export interface Author {
 
 export interface Article {
   _id: string
+  id?: string
   titulo: string
-  ano_publicacao: number
-  autores: Author[]
+  ano: number
+  ano_publicacao?: number // For backward compatibility
+  autores: string[] | Author[]
+  publicacao?: string
   doi?: string
   resumo?: string
-  status: 'rascunho' | 'finalizado'
+  especies?: Species[]
+  tipoUso?: string
+  metodologia?: string
+  pais?: string
+  estado?: string
+  municipio?: string
+  local?: string
+  bioma?: string
+  status?: 'rascunho' | 'finalizado'
 }
 
 export interface Species {

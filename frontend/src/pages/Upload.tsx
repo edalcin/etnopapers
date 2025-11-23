@@ -114,32 +114,29 @@ export default function Upload() {
     try {
       setError(null)
 
-      // Check duplicate before saving
-      const dupCheck = await articlesAPI.checkDuplicate({
-        titulo: data.titulo,
-        ano_publicacao: data.ano_publicacao,
-        autores: data.autores,
-        doi: data.doi,
-      })
+      // TODO: Implement duplicate checking when backend endpoint is available
+      // Currently skipping duplicate check - uncomment when /api/referencias/check-duplicate is implemented
+      // const dupCheck = await articlesAPI.checkDuplicate({
+      //   titulo: data.titulo,
+      //   ano_publicacao: data.ano_publicacao,
+      //   autores: data.autores,
+      //   doi: data.doi,
+      // })
 
-      if (dupCheck.data.is_duplicate) {
-        const confirmed = window.confirm(
-          `Artigo duplicado detectado:\n${dupCheck.data.duplicate.titulo}\n\nDeseja sobrescrever?`
-        )
-        if (!confirmed) {
-          setError('Salvamento cancelado')
-          return
-        }
-      }
-
-      // Save article
+      // Save article - convert to backend field names
       const response = await articlesAPI.create({
         titulo: data.titulo,
-        doi: data.doi,
-        ano_publicacao: data.ano_publicacao,
-        autores: data.autores,
+        ano: data.ano_publicacao,
+        autores: data.autores.map(a => `${a.nome} ${a.sobrenome}`),
         resumo: data.resumo,
-        status: 'rascunho',
+        especies: data.especies || [],
+        tipoUso: data.tipo_de_uso,
+        metodologia: data.metodologia,
+        pais: data.pais,
+        estado: data.estado,
+        municipio: data.municipio,
+        local: data.local,
+        bioma: data.bioma,
       })
 
       addArticle(response.data)

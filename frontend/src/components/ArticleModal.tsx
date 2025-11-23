@@ -23,19 +23,24 @@ export default function ArticleModal({ article, isOpen, onClose }: ArticleModalP
         <div className="modal-body">
           <div className="modal-field">
             <label>Ano de Publicação</label>
-            <p>{article.ano_publicacao}</p>
+            <p>{article.ano || article.ano_publicacao}</p>
           </div>
 
           <div className="modal-field">
-            <label>Autores ({article.autores?.length || 0})</label>
-            {article.autores && article.autores.length > 0 ? (
+            <label>Autores ({Array.isArray(article.autores) ? article.autores.length : 0})</label>
+            {article.autores && Array.isArray(article.autores) && article.autores.length > 0 ? (
               <ul className="authors-list">
-                {article.autores.map((author, i) => (
-                  <li key={i}>
-                    <strong>{author.nome}</strong> {author.sobrenome}
-                    {author.email && <span className="email">({author.email})</span>}
-                  </li>
-                ))}
+                {article.autores.map((author, i) => {
+                  // Handle both string and object formats
+                  const authorName = typeof author === 'string' ? author : `${author.nome} ${author.sobrenome}`
+                  const email = typeof author === 'string' ? undefined : author.email
+                  return (
+                    <li key={i}>
+                      <strong>{authorName}</strong>
+                      {email && <span className="email">({email})</span>}
+                    </li>
+                  )
+                })}
               </ul>
             ) : (
               <p className="empty">Nenhum autor registrado</p>
