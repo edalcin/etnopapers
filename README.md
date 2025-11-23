@@ -1,8 +1,10 @@
 # 🌿 Etnopapers
 
+![Etnopapers Logo](docs/etnopapers.png)
+
 **Sistema de Extração de Metadados de Artigos Etnobotânicos**
 
-Etnopapers é uma ferramenta que automatiza a extração de informações sobre o uso de plantas por comunidades tradicionais a partir de artigos científicos em PDF. O sistema usa inteligência artificial para ler artigos e criar um banco de dados organizado com essas informações.
+Etnopapers é uma ferramenta que automatiza a extração de informações sobre o uso de plantas por comunidades tradicionais a partir de artigos científicos em PDF. O sistema usa inteligência artificial para ler artigos e criar um banco de dados MongoDB organizado com essas informações.
 
 ---
 

@@ -17,8 +17,8 @@ export default function Home() {
           <p>Valide nomes científicos de plantas através do GBIF e Tropicos com cache inteligente.</p>
         </div>
         <div className="feature">
-          <h3>💾 Banco de Dados Local</h3>
-          <p>Todos os dados são armazenados em um banco SQLite portável - sem servidor necessário.</p>
+          <h3>💾 Banco de Dados MongoDB</h3>
+          <p>Armazene e consulte dados com MongoDB - escalável, flexível e pronto para nuvem.</p>
         </div>
       </div>
     </div>
