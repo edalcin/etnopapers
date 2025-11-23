@@ -85,8 +85,11 @@ export default function APIKeySetup() {
   }
 
   const handleSaveGeminiModel = () => {
-    localStorage.setItem('etnopapers_gemini_model', selectedGeminiModel)
-    setMessage('✅ Modelo Gemini salvo com sucesso!')
+    // Normalize model name: remove 'models/' prefix if present
+    const normalizedModel = selectedGeminiModel.replace(/^models\//, '').trim()
+    localStorage.setItem('etnopapers_gemini_model', normalizedModel)
+    setMessage(`✅ Modelo "${normalizedModel}" salvo com sucesso!`)
+    setTimeout(() => setMessage(''), 3000)
   }
 
   return (
@@ -176,6 +179,9 @@ export default function APIKeySetup() {
                 Salvar Modelo
               </button>
             </div>
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+              Modelo atual: <strong>{selectedGeminiModel.replace('models/', '')}</strong>
+            </p>
           </div>
         )}
 
@@ -201,6 +207,11 @@ export default function APIKeySetup() {
           <div className="status-box success">
             <p>✅ Chave validada e ativa</p>
             <p className="provider">Provedor: <strong>{apiKey.provider}</strong></p>
+            {apiKey.provider === 'gemini' && (
+              <p className="provider">
+                Modelo para extração: <strong>{localStorage.getItem('etnopapers_gemini_model')?.replace('models/', '') || 'Padrão (Gemini 2.5 Flash)'}</strong>
+              </p>
+            )}
           </div>
         )}
       </div>

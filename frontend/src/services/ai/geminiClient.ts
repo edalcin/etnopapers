@@ -1,13 +1,27 @@
 import { getDefaultGeminiModel } from '../geminiModels'
 import type { ExtractedMetadata } from '@types'
 
+// Normalize model name: remove 'models/' prefix if present
+const normalizeModelName = (modelName: string): string => {
+  return modelName.replace(/^models\//, '').trim()
+}
+
 export const extractWithGemini = async (
   pdfText: string,
   apiKey: string,
   instructions?: string
 ): Promise<ExtractedMetadata> => {
   // Get model from localStorage or use default
-  const geminiModel = localStorage.getItem('etnopapers_gemini_model') || getDefaultGeminiModel()
+  let geminiModel = localStorage.getItem('etnopapers_gemini_model') || getDefaultGeminiModel()
+
+  // Normalize model name to ensure correct format
+  geminiModel = normalizeModelName(geminiModel)
+
+  // Clear invalid cached model (gemini-pro is deprecated)
+  if (geminiModel === 'gemini-pro') {
+    geminiModel = getDefaultGeminiModel()
+    localStorage.removeItem('etnopapers_gemini_model')
+  }
 
   const defaultInstructions = `Você é um especialista em extração de metadados de artigos científicos sobre etnobotânica.
 

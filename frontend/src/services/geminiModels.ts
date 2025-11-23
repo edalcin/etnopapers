@@ -11,6 +11,11 @@ export interface GeminiModel {
 
 const GEMINI_MODELS: GeminiModel[] = [
   {
+    name: 'gemini-2.5-flash',
+    displayName: 'Gemini 2.5 Flash',
+    description: 'Stable version of Gemini 2.5 Flash, mid-size multimodal model supporting up to 1 million tokens'
+  },
+  {
     name: 'gemini-2.0-flash',
     displayName: 'Gemini 2.0 Flash',
     description: 'Fastest Gemini model with improved performance'
@@ -32,7 +37,7 @@ export const listGeminiModels = (): GeminiModel[] => {
 }
 
 export const getDefaultGeminiModel = (): string => {
-  return 'gemini-2.0-flash'
+  return 'gemini-2.5-flash'
 }
 
 export const validateGeminiModel = async (
