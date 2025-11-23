@@ -1,6 +1,6 @@
 # 🌿 Etnopapers
 
-![Etnopapers Logo](docs/etnopapers.png)
+<img src="docs/etnopapers.png" alt="Etnopapers Logo" width="150" height="150">
 
 **Sistema de Extração de Metadados de Artigos Etnobotânicos**
 
@@ -11,15 +11,6 @@ Etnopapers é uma ferramenta que automatiza a extração de informações sobre 
 ## 📖 O que é Etnobotânica?
 
 Etnobotânica é o estudo da relação entre pessoas e plantas. Pesquisadores documentam como comunidades tradicionais (indígenas, quilombolas, ribeirinhas) usam plantas para medicina, alimentação, rituais e outras finalidades. Esses conhecimentos são publicados em artigos científicos, mas ficam dispersos e difíceis de consultar.
-
-## 🎯 Para que serve o Etnopapers?
-
-O Etnopapers ajuda pesquisadores a:
-
-- **Economizar tempo**: Extrai automaticamente metadados de PDFs que levariam horas para serem catalogados manualmente
-- **Organizar conhecimento**: Cria um banco de dados estruturado com informações sobre plantas, comunidades e regiões de estudo
-- **Evitar duplicação**: Garante que a mesma espécie de planta não seja cadastrada múltiplas vezes
-- **Facilitar pesquisas**: Permite consultar rapidamente quais plantas são usadas por quais comunidades e para quais finalidades
 
 ## 💡 Como funciona?
 

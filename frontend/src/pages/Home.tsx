@@ -1,6 +1,7 @@
 export default function Home() {
   return (
     <div className="home">
+      <img src="/favicon.png" alt="Etnopapers Logo" className="home-logo" width="120" height="120" />
       <h2>Bem-vindo ao Etnopapers</h2>
       <p>Sistema de extração automática de metadados de artigos científicos sobre etnobotânica.</p>
       <div className="features">
