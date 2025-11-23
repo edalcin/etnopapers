@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { validateAPIKey } from '@services/api'
 import { useSetAPIKey, useSetAPIKeyValidity, useAPIKey } from '@store/useStore'
 import {
@@ -24,6 +24,16 @@ export default function APIKeySetup() {
     localStorage.getItem('etnopapers_gemini_model') || getDefaultGeminiModel()
   )
   const [loadingModels, setLoadingModels] = useState(false)
+
+  // Clear key and validity when provider changes
+  useEffect(() => {
+    if (tempProvider !== apiKey?.provider) {
+      setTempKey('')
+      setMessage('')
+      setGeminiModels([])
+      setSelectedGeminiModel(getDefaultGeminiModel())
+    }
+  }, [tempProvider, apiKey?.provider])
 
   const providers: { id: AIProvider; name: string; url: string }[] = [
     {
