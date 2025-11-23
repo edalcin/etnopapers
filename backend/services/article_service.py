@@ -28,14 +28,19 @@ class ArticleService:
         autores: List[str],
         publicacao: Optional[str] = None,
         resumo: Optional[str] = None,
+        doi: Optional[str] = None,
         especies: Optional[List[Dict]] = None,
         tipoUso: Optional[str] = None,
+        tipo_de_uso: Optional[str] = None,
         metodologia: Optional[str] = None,
         pais: Optional[str] = None,
         estado: Optional[str] = None,
         municipio: Optional[str] = None,
         local: Optional[str] = None,
         bioma: Optional[str] = None,
+        regioes: Optional[List[str]] = None,
+        comunidades: Optional[List[str]] = None,
+        status: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Create a new reference/article
@@ -64,6 +69,9 @@ class ArticleService:
             # Generate UUID for document
             doc_id = str(uuid.uuid4())
 
+            # Handle tipo_de_uso alias
+            use_type = tipo_de_uso if tipo_de_uso is not None else tipoUso
+
             # Build document
             doc = {
                 "_id": doc_id,
@@ -72,14 +80,19 @@ class ArticleService:
                 "autores": autores,
                 "publicacao": publicacao,
                 "resumo": resumo,
+                "doi": doi,
                 "especies": especies or [],
-                "tipoUso": tipoUso,
+                "tipoUso": use_type,
+                "tipo_de_uso": use_type,
                 "metodologia": metodologia,
                 "pais": pais,
                 "estado": estado,
                 "municipio": municipio,
                 "local": local,
                 "bioma": bioma,
+                "regioes": regioes or [],
+                "comunidades": comunidades or [],
+                "status": status or "rascunho",
             }
 
             # Insert into collection
@@ -119,6 +132,7 @@ class ArticleService:
         search: Optional[str] = None,
         ano: Optional[int] = None,
         pais: Optional[str] = None,
+        status: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         List articles/references with pagination and filters
@@ -129,6 +143,7 @@ class ArticleService:
             search: Search text in title or authors
             ano: Filter by year
             pais: Filter by country
+            status: Filter by status (rascunho, finalizado)
 
         Returns:
             Paginated list of articles
@@ -145,6 +160,9 @@ class ArticleService:
 
             if pais:
                 query["pais"] = pais
+
+            if status:
+                query["status"] = status
 
             # Note: MongoDB $regex requires index, search applied in Python for simplicity
             # Search will be applied in Python after fetching
@@ -209,14 +227,19 @@ class ArticleService:
                 "publicacao",
                 "autores",
                 "resumo",
+                "doi",
                 "especies",
                 "tipoUso",
+                "tipo_de_uso",
                 "metodologia",
                 "pais",
                 "estado",
                 "municipio",
                 "local",
                 "bioma",
+                "regioes",
+                "comunidades",
+                "status",
             ]
 
             # Build update document
@@ -301,6 +324,31 @@ class ArticleService:
             return None
 
     @staticmethod
+    def get_by_doi(doi: str) -> Optional[Dict[str, Any]]:
+        """
+        Get article by DOI
+
+        Args:
+            doi: Digital Object Identifier
+
+        Returns:
+            Article data or None if not found
+        """
+        db = get_db()
+
+        try:
+            collection = db.get_collection("referencias")
+            doc = collection.find_one({"doi": doi})
+
+            if doc:
+                return doc
+            return None
+
+        except Exception as e:
+            logger.error(f"Error getting article by DOI: {e}")
+            return None
+
+    @staticmethod
     def get_statistics() -> Dict[str, Any]:
         """Get statistics about references (processed in Python, not MongoDB)"""
         db = get_db()
@@ -308,6 +356,10 @@ class ArticleService:
 
         try:
             total = collection.count_documents({})
+
+            # Count by status
+            finalizados = collection.count_documents({"status": "finalizado"})
+            rascunhos = collection.count_documents({"status": "rascunho"})
 
             # Count by year (aggregate processed in Python for performance)
             por_ano_dict = {}
@@ -317,7 +369,7 @@ class ArticleService:
                     por_ano_dict[ano] = por_ano_dict.get(ano, 0) + 1
 
             # Sort by year descending
-            por_ano = [{"ano": ano, "count": count} for ano, count in sorted(por_ano_dict.items(), reverse=True)]
+            por_ano = [{"_id": ano, "count": count} for ano, count in sorted(por_ano_dict.items(), reverse=True)]
 
             # Count by country (process in Python, limit to top 10)
             por_pais_dict = {}
@@ -328,12 +380,14 @@ class ArticleService:
 
             # Sort by count descending, limit to 10
             por_pais = [
-                {"pais": pais, "count": count}
+                {"_id": pais, "count": count}
                 for pais, count in sorted(por_pais_dict.items(), key=lambda x: x[1], reverse=True)[:10]
             ]
 
             return {
                 "total_referencias": total,
+                "finalizados": finalizados,
+                "rascunhos": rascunhos,
                 "por_ano": por_ano,
                 "por_pais": por_pais,
             }
