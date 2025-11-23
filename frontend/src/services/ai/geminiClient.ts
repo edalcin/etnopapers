@@ -41,21 +41,18 @@ Sua tarefa é extrair as seguintes informações do texto do artigo e retornar u
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }],
-          },
           contents: [
             {
               parts: [
                 {
-                  text: `Extraia os metadados do seguinte texto de artigo científico e retorne um objeto JSON válido:\n\n${pdfText}`,
+                  text: `${systemPrompt}\n\nExtraía os metadados do seguinte texto de artigo científico e retorne um objeto JSON válido:\n\n${pdfText}`,
                 },
               ],
             },
