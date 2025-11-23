@@ -88,11 +88,21 @@ class DatabaseConnection:
 
             # Single collection: referencias (simplified denormalized model)
             try:
+                referencias_col = self.db["referencias"]
+
+                # Drop existing doi index to recreate with sparse=True
+                try:
+                    referencias_col.drop_index("doi_1")
+                    logger.info("Dropped existing doi index")
+                except Exception:
+                    # Index doesn't exist, that's fine
+                    pass
+
                 # Create indexes for filtering and searching
-                self.db["referencias"].create_index("doi", unique=True, sparse=True)
-                self.db["referencias"].create_index("ano")
-                self.db["referencias"].create_index("status")
-                self.db["referencias"].create_index("titulo")
+                referencias_col.create_index("doi", unique=True, sparse=True)
+                referencias_col.create_index("ano")
+                referencias_col.create_index("status")
+                referencias_col.create_index("titulo")
                 logger.info("Indexes created for: referencias (doi, ano, status, titulo)")
             except Exception as e:
                 logger.warning(f"Index creation for referencias: {e}")
