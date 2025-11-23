@@ -2,10 +2,22 @@
 
 **Branch da Funcionalidade**: `main`
 **Criado**: 2025-11-20
-**Status**: Rascunho
-**Entrada**: Sistema de extração de metadados de artigos científicos em PDF sobre etnobotânica usando APIs externas de IA (Gemini, ChatGPT, Claude) com chaves fornecidas pelo usuário, rodando em Docker com banco SQLite
+**Atualizado**: 2025-01-23 (v2.0 - AI Local)
+**Status**: Em Planejamento
+**Arquitetura**: Sistema de extração de metadados de artigos científicos em PDF sobre etnobotânica usando **modelo de AI local** (Ollama + Qwen2.5-7B-Instruct) com inferência em GPU, rodando em Docker com banco MongoDB
 
 ## Clarifications
+
+### Session 2025-01-23 (v2.0 - Migração para AI Local)
+
+- **Q: Por que migrar de APIs externas para AI local?** → A: Privacidade total (dados nunca saem do servidor), custo fixo (sem custos por requisição), sem limites de quota, latência consistente, e simplicidade (um único modelo em vez de gerenciar múltiplas APIs)
+- **Q: Qual modelo de AI será usado?** → A: Qwen2.5-7B-Instruct quantizado (Q4) via Ollama. Escolhido por: excelente português, suporte nativo a JSON estruturado, 4.8 GB de tamanho, e 128K tokens de contexto
+- **Q: Quais os requisitos de GPU?** → A: NVIDIA GPU com 6-8 GB VRAM mínimo (RTX 3060 ou superior). Inferência leva 1-3 segundos por artigo
+- **Q: Qual o tamanho total do Docker?** → A: ~8.5 GB (MongoDB ~700 MB + Ollama ~2 GB + Modelo ~4.8 GB + Backend ~800 MB + Frontend ~10 MB)
+- **Q: E se não houver GPU disponível?** → A: Sistema pode usar CPU mas será muito mais lento (~30-60s por extração). Recomenda-se GPU para produção
+- **Q: Como fica a segurança dos dados?** → A: Dados nunca saem do servidor UNRAID. Totalmente privado e offline-capable após download do modelo
+- **Q: Banco de dados SQLite ou MongoDB?** → A: Migrado para MongoDB (NoSQL) para melhor flexibilidade de schema e crescimento sem migrações
+- **Q: Usuário ainda precisa configurar API keys?** → A: Não! Sistema é totalmente self-contained. Sem configuração de API keys
 
 ### Session 2025-11-20
 
@@ -13,37 +25,37 @@
 - Q: Como tratar PDFs escaneados (sem texto pesquisável)? → A: Tentar processar mas exibir aviso de qualidade reduzida, e após extração mostrar tela de edição para correção/complementação manual dos metadados
 - Q: Como garantir unicidade de espécies de plantas no banco de dados? → A: Nome científico (binomial) como chave única, com validação via API externa para obter nome aceito atual, família botânica e autores do nome científico
 - Q: O que acontece se usuário fechar janela sem salvar? → A: Salvar automaticamente como rascunho. Após extração, apresentar botões "Salvar" (finalizar no BD), "Editar" (abrir interface de edição) e "Descartar" (excluir dados extraídos)
-- Q: Como será feita a extração de metadados? → A: Usando APIs externas (Gemini, ChatGPT, Claude) com chave fornecida pelo usuário. A chave é armazenada apenas no navegador (browser storage), nunca no servidor
+- Q: Como será feita a extração de metadados? → A: ~~Usando APIs externas (Gemini, ChatGPT, Claude) com chave fornecida pelo usuário~~ **[ATUALIZADO v2.0]** Usando modelo de AI local (Qwen2.5-7B-Instruct) rodando no próprio servidor via Ollama com inferência em GPU. Sem necessidade de API keys
 - Q: Como evitar duplicação de artigos na base de dados? → A: Sistema verifica duplicatas após extração de metadados usando DOI (se disponível) ou combinação título+ano+primeiro autor. Se duplicata for detectada, usuário é informado e pode optar por descartar ou sobrescrever o registro existente
 - Q: O sistema deve usar contexto do pesquisador para melhorar extração? → A: Sim, pesquisador pode configurar perfil opcional (área de especialização, região de foco, idiomas/línguas indígenas relevantes, comunidades estudadas) que é incluído como contexto no prompt enviado à API de IA, melhorando precisão da extração
 
 ## Cenários de Usuário e Testes *(obrigatório)*
 
-### História de Usuário 1 - Upload e Extração Básica de PDF (Prioridade: P1)
+### História de Usuário 1 - Upload e Extração Básica de PDF (Prioridade: P0) **[ATUALIZADO v2.0]**
 
-Um pesquisador acessa o sistema através de uma página web, fornece sua chave de API para um serviço de IA (Gemini, ChatGPT ou Claude) que fica armazenada apenas no navegador, faz o upload de um artigo científico em PDF sobre etnobotânica, e o sistema extrai automaticamente os metadados disponíveis no artigo usando a API de IA selecionada. A página principal exibe uma tabela com os artigos já processados, permitindo busca e ordenação. Após o processamento do novo PDF, o sistema exibe um resumo estruturado dos metadados extraídos na mesma página, sem armazenar o arquivo PDF original nem a chave de API no servidor. O pesquisador também pode fazer download completo do banco de dados SQLite para backup ou análise externa.
+Um pesquisador acessa o sistema através de uma página web e faz o upload de um artigo científico em PDF sobre etnobotânica. O sistema extrai automaticamente os metadados disponíveis no artigo usando **modelo de AI local** (Qwen2.5-7B-Instruct) rodando no servidor UNRAID com inferência em GPU. A página principal exibe uma tabela com os artigos já processados, permitindo busca e ordenação. Após o processamento do novo PDF (1-3 segundos), o sistema exibe um resumo estruturado dos metadados extraídos na mesma página, sem armazenar o arquivo PDF original. O pesquisador também pode fazer download completo do banco de dados MongoDB para backup ou análise externa. **Não há necessidade de configurar API keys - o sistema é totalmente self-contained e privado.**
 
-**Por que esta prioridade**: Esta é a funcionalidade central do sistema. Sem ela, nenhum outro componente tem valor. Representa o MVP completo e entregável. A visualização dos artigos já processados e a funcionalidade de download são essenciais para o pesquisador ter visibilidade completa dos dados coletados.
+**Por que esta prioridade**: Esta é a funcionalidade central do sistema. Sem ela, nenhum outro componente tem valor. Representa o MVP completo e entregável. A visualização dos artigos já processados e a funcionalidade de download são essenciais para o pesquisador ter visibilidade completa dos dados coletados. **Atualizado para P0 (prioridade máxima) pois inclui setup de infraestrutura de AI local.**
 
 **Teste Independente**: Pode ser totalmente testado fazendo upload de um único PDF e verificando se os metadados são extraídos e exibidos corretamente. Entrega valor imediato ao permitir que usuários extraiam dados de artigos sem processamento manual. A tabela e funcionalidade de download podem ser testadas após processar múltiplos artigos.
 
 **Cenários de Aceitação**:
 
-1. **Dado** que o usuário acessa o sistema pela primeira vez, **Quando** o usuário visualiza a página de upload, **Então** o sistema solicita que o usuário selecione um provedor de IA (Gemini, ChatGPT ou Claude) e insira sua chave de API
-2. **Dado** que o usuário inseriu uma chave de API válida, **Quando** o usuário confirma, **Então** a chave é armazenada apenas no navegador (localStorage) e nunca enviada ao servidor para armazenamento
-3. **Dado** que o usuário já configurou sua chave de API, **Quando** o usuário retorna ao sistema, **Então** a chave é recuperada do navegador e o usuário pode fazer upload diretamente
-4. **Dado** que o usuário está na página principal do sistema com chave configurada, **Quando** o usuário seleciona um arquivo PDF válido e clica em upload, **Então** o sistema processa o arquivo usando a API de IA selecionada e exibe os metadados extraídos em formato estruturado
+1. ~~**Dado** que o usuário acessa o sistema pela primeira vez, **Quando** o usuário visualiza a página de upload, **Então** o sistema solicita que o usuário selecione um provedor de IA~~ **[REMOVIDO v2.0 - Sem API keys]**
+2. ~~**Dado** que o usuário inseriu uma chave de API válida, **Quando** o usuário confirma, **Então** a chave é armazenada apenas no navegador~~ **[REMOVIDO v2.0 - Sem API keys]**
+3. ~~**Dado** que o usuário já configurou sua chave de API, **Quando** o usuário retorna ao sistema, **Então** a chave é recuperada do navegador~~ **[REMOVIDO v2.0 - Sem API keys]**
+4. **Dado** que o usuário está na página principal do sistema, **Quando** o usuário seleciona um arquivo PDF válido e clica em upload, **Então** o sistema processa o arquivo usando **AI local (Ollama + Qwen2.5)** no servidor e exibe os metadados extraídos em formato estruturado (inferência: 1-3 segundos)
 5. **Dado** que o processamento foi concluído, **Quando** o sistema exibe os resultados, **Então** os metadados incluem título, autores, ano, resumo, DOI, local de publicação, região do estudo, comunidades envolvidas, espécies de plantas (nomes científicos e vernaculares), período do estudo, métodos de coleta de dados e tipo de amostragem
 6. **Dado** que os metadados foram extraídos, **Quando** o usuário visualiza o resumo, **Então** o sistema indica claramente quais campos não puderam ser extraídos do artigo E apresenta três botões de ação: "Salvar", "Editar" e "Descartar"
-7. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Salvar", **Então** os metadados são salvos finalizados no banco de dados SQLite e o PDF não é armazenado
+7. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Salvar", **Então** os metadados são salvos finalizados no banco de dados **MongoDB** e o PDF não é armazenado
 8. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Editar", **Então** o sistema abre a interface de edição manual permitindo correções e complementações
 9. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Descartar", **Então** o sistema exclui os dados extraídos e solicita confirmação antes de descartar
 10. **Dado** que o usuário fechou a janela/navegador sem clicar em nenhum botão, **Quando** o usuário retorna ao sistema, **Então** os dados extraídos estão salvos como rascunho e podem ser recuperados
 11. **Dado** que o usuário está na página principal, **Quando** a página carrega, **Então** o sistema exibe uma tabela com todos os artigos já processados, mostrando colunas: título, ano, autores, status, data de processamento e número de espécies
 12. **Dado** que a tabela de artigos está visível, **Quando** o usuário clica no cabeçalho de uma coluna, **Então** a tabela é ordenada por aquela coluna (crescente/decrescente alternadamente)
 13. **Dado** que a tabela de artigos está visível, **Quando** o usuário digita texto no campo de busca/filtro, **Então** a tabela filtra em tempo real mostrando apenas artigos que contenham o texto buscado em qualquer campo visível
-14. **Dado** que o usuário está na página principal, **Quando** o usuário clica no botão "Download Base de Dados", **Então** o sistema inicia o download do arquivo SQLite completo (.db) contendo todos os artigos e metadados
-15. **Dado** que o usuário clicou em "Download Base de Dados", **Quando** o download é concluído, **Então** o arquivo tem nome descritivo incluindo data (ex: etnopapers_20251120.db) e pode ser aberto em qualquer ferramenta SQLite
+14. **Dado** que o usuário está na página principal, **Quando** o usuário clica no botão "Download Base de Dados", **Então** o sistema inicia o download de um **arquivo ZIP** contendo backup completo do banco MongoDB (formato BSON/JSON) com todos os artigos e metadados
+15. **Dado** que o usuário clicou em "Download Base de Dados", **Quando** o download é concluído, **Então** o arquivo tem nome descritivo incluindo data (ex: etnopapers_backup_20251120.zip) e pode ser importado em qualquer instância MongoDB ou visualizado como JSON
 
 ---
 
@@ -134,19 +146,19 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 ### Requisitos Funcionais
 
 - **RF-001**: O sistema DEVE fornecer uma interface web com funcionalidade de upload de arquivos PDF
-- **RF-002**: O sistema DEVE permitir que o usuário selecione entre provedores de IA: Google Gemini, OpenAI ChatGPT ou Anthropic Claude
-- **RF-003**: O sistema DEVE solicitar ao usuário que forneça sua chave de API para o provedor de IA selecionado
-- **RF-004**: O sistema DEVE armazenar a chave de API fornecida APENAS no localStorage do navegador do usuário
-- **RF-005**: O sistema NÃO DEVE enviar ou armazenar a chave de API do usuário no servidor em nenhuma circunstância
-- **RF-006**: O sistema DEVE processar arquivos PDF usando a API de IA selecionada pelo usuário com a chave fornecida
+- ~~**RF-002**: O sistema DEVE permitir que o usuário selecione entre provedores de IA~~ **[REMOVIDO v2.0 - AI local]**
+- ~~**RF-003**: O sistema DEVE solicitar ao usuário que forneça sua chave de API~~ **[REMOVIDO v2.0 - Sem API keys]**
+- ~~**RF-004**: O sistema DEVE armazenar a chave de API fornecida APENAS no localStorage~~ **[REMOVIDO v2.0 - Sem API keys]**
+- ~~**RF-005**: O sistema NÃO DEVE enviar ou armazenar a chave de API do usuário no servidor~~ **[REMOVIDO v2.0 - Sem API keys]**
+- **RF-006**: O sistema DEVE processar arquivos PDF usando **modelo de AI local (Qwen2.5-7B-Instruct via Ollama)** rodando no servidor com inferência em GPU **[ATUALIZADO v2.0]**
 - **RF-007**: O sistema DEVE extrair os seguintes metadados quando disponíveis no artigo: título, ano de publicação, lista de autores, resumo/abstract, DOI (Digital Object Identifier), local/jornal de publicação, região geográfica do estudo, comunidades tradicionais envolvidas, espécies de plantas identificadas (nomes científicos e vernaculares), ano ou período em que o estudo foi conduzido, métodos de coleta de dados das comunidades, e tipo de amostragem utilizado
-- **RF-008**: O sistema DEVE armazenar os metadados extraídos em um banco de dados SQLite
+- **RF-008**: O sistema DEVE armazenar os metadados extraídos em um banco de dados **MongoDB (NoSQL)** **[ATUALIZADO v2.0 de SQLite para MongoDB]**
 - **RF-009**: O sistema DEVE exibir um resumo estruturado dos metadados extraídos após o processamento do PDF
 - **RF-010**: O sistema NÃO DEVE armazenar os arquivos PDF após a extração dos metadados
 - **RF-011**: O sistema DEVE indicar claramente quais metadados não foram encontrados ou não puderam ser extraídos de cada artigo
 - **RF-012**: O sistema DEVE ser empacotado e executado em um container Docker
-- **RF-013**: O sistema DEVE ser compatível com instalação em servidor UNRAID
-- **RF-014**: O sistema DEVE aceitar o caminho do banco de dados SQLite como variável de ambiente durante a criação do container Docker
+- **RF-013**: O sistema DEVE ser compatível com instalação em servidor UNRAID **com GPU NVIDIA (6-8 GB VRAM mínimo)** **[ATUALIZADO v2.0]**
+- **RF-014**: O sistema DEVE aceitar **URI de conexão MongoDB (MONGO_URI)** e **URL do serviço Ollama (OLLAMA_URL)** como variáveis de ambiente durante a criação do container Docker **[ATUALIZADO v2.0]**
 - **RF-015**: Toda a documentação do sistema DEVE ser gerada e mantida em português brasileiro
 - **RF-016**: O sistema DEVE operar exclusivamente na branch main, sem branches de desenvolvimento separadas
 - **RF-017**: O sistema DEVE rejeitar arquivos PDF maiores que 50 MB com mensagem de erro clara informando o limite de tamanho
@@ -154,9 +166,9 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-019**: O sistema DEVE processar PDFs escaneados (formato de imagem) mas DEVE exibir aviso informando que a qualidade da extração pode estar reduzida
 - **RF-020**: Ao detectar PDF escaneado ou extração de baixa qualidade, o sistema DEVE direcionar o usuário automaticamente para a tela de edição manual após exibir os resultados
 - **RF-021**: O sistema DEVE garantir unicidade de espécies de plantas no banco de dados usando o nome científico (binomial) como chave primária
-- **RF-022**: O sistema DEVE validar a chave de API fornecida fazendo uma chamada de teste antes de permitir o upload de PDFs
-- **RF-023**: O sistema DEVE exibir mensagens de erro claras quando a chave de API for inválida, expirada ou quando a API estiver indisponível
-- **RF-024**: O sistema DEVE permitir ao usuário visualizar, editar ou remover a chave de API armazenada no navegador a qualquer momento
+- ~~**RF-022**: O sistema DEVE validar a chave de API fornecida~~ **[REMOVIDO v2.0 - Sem API keys]**
+- ~~**RF-023**: O sistema DEVE exibir mensagens de erro claras quando a chave de API for inválida~~ **[REMOVIDO v2.0 - Sem API keys]**
+- ~~**RF-024**: O sistema DEVE permitir ao usuário visualizar, editar ou remover a chave de API~~ **[REMOVIDO v2.0 - Sem API keys]**
 - **RF-025**: O sistema DEVE validar nomes científicos de plantas extraídos consultando API de taxonomia botânica para obter o nome aceito atual
 - **RF-026**: O sistema DEVE armazenar automaticamente família botânica e autores do nome científico obtidos da API de taxonomia
 - **RF-027**: Quando múltiplos artigos mencionam a mesma espécie (mesmo nome científico), o sistema DEVE reutilizar o registro existente ao invés de criar duplicata
@@ -181,9 +193,9 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-046**: A tabela DEVE incluir campo de busca/filtro que permite filtrar artigos em tempo real por qualquer conteúdo visível nas colunas
 - **RF-047**: O filtro de busca DEVE ser case-insensitive (não distinguir maiúsculas/minúsculas) e buscar por substring (conteúdo parcial)
 - **RF-048**: O sistema DEVE fornecer botão "Download Base de Dados" visível na página principal
-- **RF-049**: Ao clicar em "Download Base de Dados", o sistema DEVE gerar e baixar o arquivo SQLite completo (.db) contendo todos os dados
-- **RF-050**: O arquivo de download DEVE ter nome descritivo incluindo data no formato: etnopapers_YYYYMMDD.db (ex: etnopapers_20251120.db)
-- **RF-051**: O download do banco de dados DEVE incluir todas as tabelas e dados: artigos, espécies, regiões, comunidades, dados de estudo e relacionamentos
+- **RF-049**: Ao clicar em "Download Base de Dados", o sistema DEVE gerar e baixar um **arquivo ZIP** contendo backup completo do banco MongoDB (formato BSON/JSON) com todos os dados **[ATUALIZADO v2.0]**
+- **RF-050**: O arquivo de download DEVE ter nome descritivo incluindo data no formato: etnopapers_backup_YYYYMMDD.zip (ex: etnopapers_backup_20251120.zip) **[ATUALIZADO v2.0]**
+- **RF-051**: O download do banco de dados DEVE incluir todas as **coleções MongoDB** e dados: referencias (artigos), especies_plantas, comunidades_indígenas, localizacoes **[ATUALIZADO v2.0]**
 - **RF-052**: A tabela de artigos DEVE exibir mensagem apropriada quando não houver artigos processados (ex: "Nenhum artigo processado ainda. Faça upload do primeiro PDF!")
 - **RF-053**: O sistema DEVE armazenar localizações geográficas usando hierarquia administrativa de três níveis: País → Estado/Província → Município/Cidade
 - **RF-054**: O sistema DEVE armazenar territórios comunitários como entidades separadas, independentes da hierarquia geográfica administrativa
@@ -243,120 +255,129 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 
 ## Dependências *(opcional)*
 
-### Dependências Externas
+### Dependências Externas **[ATUALIZADO v2.0]**
 
-- Servidor (pode ser UNRAID ou qualquer servidor compatível com Docker, não requer GPU)
-- Docker instalado e configurado no servidor
-- Espaço em disco suficiente para armazenamento do banco de dados SQLite
-- Acesso à internet para consulta a APIs externas:
-  - API de IA selecionada pelo usuário (Gemini, ChatGPT ou Claude) com chave de API válida fornecida pelo usuário
-  - API de taxonomia botânica acessível (sugestões: GBIF Species API, Tropicos, POWO - Plants of the World Online)
-- Usuários devem possuir conta e chave de API válida em pelo menos um dos provedores de IA:
-  - Google AI Studio (Gemini API): https://makersuite.google.com/app/apikey
-  - OpenAI Platform (ChatGPT API): https://platform.openai.com/api-keys
-  - Anthropic Console (Claude API): https://console.anthropic.com/settings/keys
+- **Servidor UNRAID** (ou qualquer servidor compatível com Docker) **COM GPU NVIDIA** (6-8 GB VRAM mínimo, ex: RTX 3060+)
+- **Docker + Docker Compose** instalado e configurado no servidor
+- **NVIDIA Container Toolkit** (nvidia-docker) para GPU passthrough nos containers
+- **NVIDIA GPU Driver** compatível instalado no host UNRAID
+- **Espaço em disco:** Mínimo 20 GB, recomendado 50+ GB (Docker images ~8.5 GB + MongoDB data + modelos)
+- **RAM:** Mínimo 8 GB, recomendado 16+ GB
+- **Acesso à internet** (uma vez) para:
+  - Download do modelo Qwen2.5-7B-Instruct-Q4 (~4.8 GB) via Ollama
+  - Consulta opcional à API de taxonomia botânica (GBIF Species API, Tropicos, POWO)
+- **Após setup inicial**: Sistema é **offline-capable** (não requer internet para extração de metadados)
+- ~~Usuários devem possuir conta e chave de API válida em provedores de IA~~ **[REMOVIDO v2.0 - Sem API keys necessárias]**
 
-### Dependências de Conhecimento
+### Dependências de Conhecimento **[ATUALIZADO v2.0]**
 
-- Integração com APIs de IA externas (Gemini, ChatGPT, Claude) para extração de informações de documentos PDF
-- Gerenciamento seguro de chaves de API no frontend (localStorage do navegador)
+- **Integração com Ollama** (framework de inferência local) para extração de informações de documentos PDF usando Qwen2.5-7B-Instruct
+- **MongoDB** (NoSQL database) para armazenamento de metadados em formato BSON/JSON
+- **Instructor + Pydantic** (Python) para outputs estruturados garantidos do modelo de AI
+- **GPU passthrough em Docker** (NVIDIA Container Toolkit) para permitir que containers usem GPU do host
+- **pdfplumber** (Python) para extração de texto de PDFs
 - Compreensão de taxonomia botânica e nomenclatura científica para validação de extração de nomes de espécies
-- Conhecimento básico sobre obtenção de chaves de API dos provedores de IA (processo de cadastro e geração de chaves)
+- ~~Gerenciamento seguro de chaves de API no frontend~~ **[REMOVIDO v2.0 - Sem API keys]**
+- ~~Conhecimento básico sobre obtenção de chaves de API dos provedores de IA~~ **[REMOVIDO v2.0 - Sem API keys]**
 
-## Suposições *(opcional)*
+## Suposições *(opcional)* **[ATUALIZADO v2.0]**
 
 - Os artigos científicos em PDF estão majoritariamente em formato de texto pesquisável (não exclusivamente imagens escaneadas)
-- O servidor tem recursos de hardware suficientes (RAM, CPU) para executar a aplicação web e gerenciar o banco de dados
+- **O servidor UNRAID possui GPU NVIDIA com 6-8 GB VRAM mínimo** (ex: RTX 3060, RTX 3070, RTX 3080, ou superior)
+- O servidor tem recursos de hardware suficientes (RAM 8+ GB, CPU multi-core, disco 20+ GB) para executar a aplicação web, MongoDB e Ollama
+- **NVIDIA Container Toolkit está instalado e configurado** no servidor UNRAID para permitir GPU passthrough em Docker
 - Os artigos seguem, em sua maioria, estruturas convencionais de papers científicos (abstract, métodos, resultados, etc.)
-- O volume de processamento não requer múltiplas instâncias ou paralelização complexa (um container é suficiente)
+- O volume de processamento não requer múltiplas instâncias ou paralelização complexa (um container de cada serviço é suficiente)
 - Usuários têm acesso de rede ao servidor para acessar a interface web
-- Usuários possuem ou estão dispostos a criar contas nos provedores de IA para obter chaves de API
-- Usuários compreendem que o uso das APIs de IA pode incorrer em custos conforme os planos de cada provedor
-- Artigos estarão predominantemente em português, inglês ou espanhol
+- ~~Usuários possuem ou estão dispostos a criar contas nos provedores de IA para obter chaves de API~~ **[REMOVIDO v2.0]**
+- ~~Usuários compreendem que o uso das APIs de IA pode incorrer em custos conforme os planos de cada provedor~~ **[REMOVIDO v2.0]**
+- Artigos estarão predominantemente em português, inglês ou espanhol (Qwen2.5 suporta 29+ idiomas)
 - A precisão de extração de 80-85% é aceitável, considerando que edição manual estará disponível para correção
-- Usuários têm acesso à internet para chamadas às APIs de IA e taxonomia durante o processamento
+- **Usuários têm acesso à internet na configuração inicial** (para download do modelo ~4.8 GB), mas sistema funciona offline após setup
+- **Inferência local leva 1-3 segundos por artigo** em GPU adequada (RTX 3060+), aceitável para uso single-user
 
 ## Exclusões de Escopo *(opcional)*
 
 - Sistema de autenticação e controle de acesso de usuários (sistema será de acesso aberto na rede local)
-- Exportação de dados para outros formatos (CSV, JSON, etc.)
+- Exportação de dados para outros formatos (CSV, JSON, etc.) além do backup ZIP do MongoDB
 - Integração com sistemas externos ou APIs de bases de dados científicas (exceto API de taxonomia botânica para validação de nomes científicos)
 - Processamento de documentos em formatos diferentes de PDF
-- Backup automático do banco de dados
+- Backup automático do banco de dados (apenas download manual via interface)
 - Interface de administração para gerenciar o banco de dados
 - Análises estatísticas ou visualizações dos dados agregados
 - Sistema de notificações ou alertas
-- Processamento em lote de múltiplos PDFs simultaneamente
+- Processamento em lote de múltiplos PDFs simultaneamente (apenas upload single-file)
 - Versionamento ou histórico de alterações dos metadados
 - Funcionalidade de OCR nativo (o sistema tentará processar PDFs escaneados mas não aplicará OCR para conversão)
-- Armazenamento ou gerenciamento de chaves de API no servidor (chaves são gerenciadas exclusivamente pelo usuário no navegador)
-- Fornecimento de créditos ou pagamento de custos de API de IA (usuários são responsáveis por seus próprios custos de API)
+- ~~Armazenamento ou gerenciamento de chaves de API no servidor~~ **[REMOVIDO v2.0 - Sem API keys]**
+- ~~Fornecimento de créditos ou pagamento de custos de API de IA~~ **[REMOVIDO v2.0 - AI local sem custos por requisição]**
+- **Fine-tuning ou retreinamento do modelo de AI** (usa modelo Qwen2.5 pré-treinado)
+- **Suporte a múltiplos modelos de AI simultaneamente** (apenas Qwen2.5-7B-Instruct)
+- **Aceleração por múltiplas GPUs** (usa apenas 1 GPU)
+- **Inferência em CPU otimizada** (requer GPU para performance aceitável)
 
 ## Notas e Considerações *(opcional)*
 
-### Seleção de Provedor de IA
+### ~~Seleção de Provedor de IA~~ **[REMOVIDO v2.0]**
 
-O sistema suporta três provedores principais de IA, cada um com suas características:
+~~O sistema suporta três provedores principais de IA~~
 
-**Google Gemini (recomendado para começar)**:
-- API gratuita com quota generosa para uso experimental
-- Excelente suporte a múltiplos idiomas incluindo português
-- Boa capacidade de análise de documentos
-- Facilidade de obtenção de chave de API
+**[ATUALIZADO v2.0]** O sistema agora usa **AI Local (Ollama + Qwen2.5-7B-Instruct)** rodando no próprio servidor UNRAID. Sem necessidade de API keys, quotas ou custos por requisição.
 
-**OpenAI ChatGPT**:
-- Alta qualidade de extração e compreensão de contexto
-- Ótimo desempenho com documentos científicos
-- Requer créditos pagos após cota gratuita inicial
-- API bem documentada e madura
+### Modelo de AI Local: Qwen2.5-7B-Instruct **[NOVO v2.0]**
 
-**Anthropic Claude**:
-- Excelente para análise de documentos longos e complexos
-- Bom raciocínio sobre estrutura de papers científicos
-- Boa capacidade multilíngue
-- Oferece modelos com diferentes níveis de custo/performance
+**Por que Qwen2.5-7B-Instruct?**
+- ✅ **Multilíngue excelente:** Treinado em 29+ idiomas incluindo português (MMLU 81.6%)
+- ✅ **JSON nativo:** Suporte built-in a structured outputs (garante JSON válido)
+- ✅ **Context window grande:** 128K tokens (artigos longos cabem inteiros)
+- ✅ **Tamanho otimizado:** 4.8 GB (Q4 quantizado) vs. 17 GB (full precision)
+- ✅ **Performance:** Inferência 1-3s em RTX 3060+ (6-8 GB VRAM)
+- ✅ **Atualizado:** Lançado em 2025, arquitetura moderna
 
-Considerações para usuários:
-- Começar com Gemini devido à quota gratuita generosa
-- Avaliar qualidade de extração e custos antes de escalar
-- Possibilidade de usar diferentes provedores para diferentes tipos de artigos
-- Monitorar uso de API para controlar custos
+**Alternativas consideradas:**
+- **NuExtract-1.5:** Purpose-built para extração, mas português mais fraco
+- **Sabiá-7B:** Nativo português, mas sem instruction tuning
+- **Mistral-7B-Instruct:** Excelente qualidade, mas maior que Qwen
+- **Gemma 2-9B:** Boa performance, mas português limitado
 
-### Considerações Técnicas de Docker
+**Recomendação:** Qwen2.5 oferece o melhor balanço para etnobotânica brasileira.
 
-- A variável de ambiente para o caminho do banco SQLite deve ser claramente documentada
-- O container deve expor a porta da aplicação web de forma configurável
-- Considerar volume Docker para persistência do banco de dados
-- Container Docker simplificado (não requer nvidia-docker runtime, apenas Docker padrão)
-- Requisitos de hardware muito reduzidos sem necessidade de GPU
+### Considerações Técnicas de Docker **[ATUALIZADO v2.0]**
 
-### Gerenciamento de Chaves de API e Privacidade
+- **Variáveis de ambiente obrigatórias:**
+  - `MONGO_URI`: URI de conexão MongoDB (ex: mongodb://mongo:27017/etnopapers)
+  - `OLLAMA_URL`: URL do serviço Ollama (ex: http://ollama:11434)
+  - `OLLAMA_MODEL`: Nome do modelo (ex: qwen2.5:7b-instruct-q4_K_M)
+- **GPU passthrough obrigatório:** Containers Ollama e Etnopapers precisam de acesso à GPU NVIDIA via nvidia-docker runtime
+- **Volumes Docker para persistência:**
+  - `mongodb_data`: Banco de dados MongoDB
+  - `ollama_models`: Modelos de AI baixados (~4.8 GB)
+- **Portas expostas:**
+  - 8000: Interface web + API backend
+  - 11434: Ollama API (interno)
+  - 27017: MongoDB (interno)
+- **Healthchecks:** Implementados para MongoDB e Ollama (garante serviços estão prontos antes de iniciar aplicação)
+- **Tamanho total Docker:** ~8.5 GB (vs. 180 MB anterior)
 
-**Armazenamento no Navegador**:
-- Chaves de API são armazenadas exclusivamente no localStorage do navegador do usuário
-- Nunca são transmitidas ao servidor backend
-- Permanecem no dispositivo do usuário
-- Podem ser visualizadas, editadas ou removidas a qualquer momento
+### ~~Gerenciamento de Chaves de API e Privacidade~~ **[REMOVIDO v2.0]**
 
-**Segurança**:
-- Frontend faz chamadas diretas às APIs de IA usando a chave armazenada localmente
-- CORS (Cross-Origin Resource Sharing) configurado adequadamente nas APIs
-- Chave visível apenas no navegador do usuário em uso
-- Se usuário limpar cache/dados do navegador, chave é perdida (precisa reconfigurar)
+~~Chaves de API são armazenadas exclusivamente no localStorage do navegador~~
 
-**Fluxo de Configuração**:
-1. Usuário seleciona provedor de IA (Gemini/ChatGPT/Claude)
-2. Sistema exibe instruções de como obter chave de API do provedor selecionado
-3. Usuário cola chave de API na interface
-4. Sistema valida chave fazendo chamada de teste à API
-5. Se válida, chave é salva no localStorage
-6. Sistema exibe confirmação e permite upload de PDFs
+**[ATUALIZADO v2.0]** Não há mais necessidade de chaves de API! O sistema usa AI local (Ollama + Qwen2.5) rodando no próprio servidor.
 
-**Gerenciamento**:
-- Botão "Configurações" na interface para visualizar/editar chave
-- Opção de trocar de provedor (requer nova chave)
-- Indicador visual de provedor em uso
-- Aviso se chave estiver inválida ou expirada
+**Privacidade Garantida:**
+- ✅ Dados de artigos nunca saem do servidor UNRAID
+- ✅ Nenhuma transmissão para APIs externas
+- ✅ Sistema totalmente offline-capable após download do modelo
+- ✅ Zero dependências de serviços terceiros para extração
+- ✅ Sem riscos de vazamento de dados sensíveis de pesquisa
+
+**Fluxo Simplificado:**
+1. ~~Usuário seleciona provedor de IA~~ **[REMOVIDO]**
+2. ~~Sistema exibe instruções de como obter chave de API~~ **[REMOVIDO]**
+3. **Usuário acessa interface e faz upload direto** (sem configuração prévia)
+4. **Backend processa com AI local em 1-3 segundos**
+5. **Metadados são exibidos instantaneamente**
 
 ### Interface de Edição Manual
 
@@ -423,16 +444,21 @@ Considerações técnicas:
 - Rate limiting: respeitar limites de requisições da API escolhida
 - Considerar fallback entre múltiplas APIs se uma estiver indisponível
 
-### Estrutura de Documentação
+### Estrutura de Documentação **[ATUALIZADO v2.0]**
 
 Toda a documentação deverá incluir:
-- README em português com instruções de instalação simplificadas (Docker padrão, sem GPU)
-- Guia passo-a-passo de como obter chave de API de cada provedor (Gemini, ChatGPT, Claude)
-- Guia de configuração das variáveis de ambiente do Docker
-- Documentação de usuário sobre configuração inicial da chave de API
-- Documentação de usuário sobre como usar a interface de upload
-- Guia sobre como usar a interface de edição manual
-- FAQ sobre privacidade e segurança das chaves de API
-- Informações sobre custos estimados de uso das APIs de IA
-- Descrição do schema do banco de dados SQLite
-- Troubleshooting de problemas comuns (incluindo erros de API, chaves inválidas, etc.)
+- **README em português** com instruções de instalação para UNRAID + GPU
+- **Guia de Setup de GPU** (NVIDIA Container Toolkit, driver installation)
+- **Guia de configuração do docker-compose.yml** (variáveis de ambiente: MONGO_URI, OLLAMA_URL, OLLAMA_MODEL)
+- **Guia de download do modelo Qwen2.5** via Ollama (pull inicial ~4.8 GB)
+- **Documentação de usuário** sobre interface de upload simplificada (sem configuração de API keys)
+- **Guia sobre interface de edição manual** de metadados
+- **FAQ sobre privacidade** (dados nunca saem do servidor, totalmente offline)
+- ~~Informações sobre custos estimados de uso das APIs de IA~~ **[REMOVIDO v2.0 - Custo fixo inicial, zero por requisição]**
+- **Descrição do schema MongoDB** (coleções: referencias, especies_plantas, etc.)
+- **Troubleshooting especializado:**
+  - GPU não detectada (nvidia-smi, nvidia-docker)
+  - Modelo Ollama não carrega (download manual, verificação de VRAM)
+  - Inferência muito lenta (verificar se GPU está sendo usada, não caiu para CPU)
+  - Erro de memória (VRAM insuficiente, usar quantização menor)
+- **Requisitos de hardware detalhados** (GPU models compatíveis, VRAM, RAM, disco)

@@ -1,15 +1,24 @@
-# Integração com APIs de IA: Etnopapers
+# Integração com AI Local: Etnopapers v2.0
 
 **Funcionalidade**: Sistema de Extração de Metadados de Artigos Etnobotânicos
 **Branch**: main
 **Criado**: 2025-11-20
-**Status**: Em Desenvolvimento
+**Atualizado**: 2025-01-23 (v2.0 - AI Local)
+**Status**: Em Planejamento
+
+---
 
 ## Visão Geral
 
-Este documento especifica como o frontend do Etnopapers se integra diretamente com APIs externas de IA (Google Gemini, OpenAI ChatGPT, Anthropic Claude) para extração de metadados de PDFs, sem passar pelo backend.
+Este documento especifica como o backend do Etnopapers se integra com **Ollama** (framework de inferência local) para extração de metadados de PDFs usando o modelo **Qwen2.5-7B-Instruct** rodando localmente com GPU.
 
-## Arquitetura de Integração
+**Mudança Arquitetural v2.0:**
+- ❌ **Antes**: Frontend chamava APIs externas (Gemini/ChatGPT/Claude) diretamente
+- ✅ **Agora**: Backend processa PDFs e chama AI local (Ollama) no próprio servidor
+
+---
+
+## Arquitetura de Integração v2.0
 
 ```
 ┌─────────────┐
@@ -17,780 +26,551 @@ Este documento especifica como o frontend do Etnopapers se integra diretamente c
 │  (Frontend) │
 └──────┬──────┘
        │
-       │ 1. localStorage.getItem('apiKey')
+       │ 1. POST /api/extract/metadata (multipart/form-data)
+       │    - pdf_file: File
+       │    - researcher_profile: JSON (opcional)
        ▼
-┌─────────────────┐
-│  PDF Upload     │
-│  + Text Extract │ ◄─── pdf.js extrai texto do PDF
-└──────┬──────────┘
-       │
-       │ 2. HTTPS direto (CORS habilitado)
-       │
-       ▼
-┌──────────────────────────────┐
-│  API de IA Externa           │
-│  ├─ Gemini (Google)          │
-│  ├─ ChatGPT (OpenAI)         │
-│  └─ Claude (Anthropic)       │
-└──────┬───────────────────────┘
-       │
-       │ 3. JSON com metadados extraídos
-       ▼
-┌─────────────────┐
-│  Frontend       │
-│  Exibe/Edita    │
-└──────┬──────────┘
-       │
-       │ 4. POST /api/articles (somente metadados)
+┌─────────────────────────────────┐
+│  Backend FastAPI                │
+│  ┌───────────────────────────┐  │
+│  │ 1. Extract PDF text       │  │ ◄─── pdfplumber
+│  │    (pdfplumber)           │  │
+│  └───────────┬───────────────┘  │
+│              │                  │
+│  ┌───────────▼───────────────┐  │
+│  │ 2. Construct prompt       │  │
+│  │    - System prompt        │  │
+│  │    - Researcher context   │  │
+│  │    - PDF text             │  │
+│  └───────────┬───────────────┘  │
+│              │                  │
+│  ┌───────────▼───────────────┐  │
+│  │ 3. Call Ollama API        │  │
+│  │    (Instructor + Pydantic)│  │
+│  └───────────┬───────────────┘  │
+└──────────────┼──────────────────┘
+               │ HTTP POST http://ollama:11434/v1/chat/completions
+               ▼
+┌────────────────────────────────────┐
+│  Ollama Container                  │
+│  ┌──────────────────────────────┐  │
+│  │ Qwen2.5-7B-Instruct-Q4       │  │ ◄─── GPU NVIDIA (6-8 GB VRAM)
+│  │ (~4.8 GB model)              │  │
+│  │                              │  │
+│  │ - Context: 128K tokens       │  │
+│  │ - Inference: 1-3s            │  │
+│  │ - Output: Structured JSON    │  │
+│  └──────────┬───────────────────┘  │
+└─────────────┼──────────────────────┘
+              │ JSON response (validated by Pydantic)
+              ▼
+┌─────────────────────────────────┐
+│  Backend FastAPI                │
+│  ┌───────────────────────────┐  │
+│  │ 4. Validate response      │  │
+│  │    (Pydantic schema)      │  │
+│  └───────────┬───────────────┘  │
+│              │                  │
+│  ┌───────────▼───────────────┐  │
+│  │ 5. Optional: Taxonomy     │  │
+│  │    validation (GBIF API)  │  │
+│  └───────────┬───────────────┘  │
+│              │                  │
+│  ┌───────────▼───────────────┐  │
+│  │ 6. Return metadata JSON   │  │
+│  └───────────┬───────────────┘  │
+└──────────────┼──────────────────┘
+               │ 200 OK + JSON
+               ▼
+┌─────────────┐
+│  Frontend   │
+│  Exibe      │
+│  Metadados  │
+└──────┬──────┘
+       │ 7. Usuário clica "Salvar"
        ▼
 ┌─────────────────┐
 │  Backend        │
-│  SQLite         │
+│  MongoDB        │ ◄─── POST /api/articles
 └─────────────────┘
 ```
 
-**Fluxo Detalhado**:
+**Fluxo Detalhado:**
 1. Usuário faz upload de PDF no frontend
-2. Frontend usa `pdf.js` para extrair texto do PDF
-3. Frontend monta prompt estruturado + texto extraído
-4. Frontend faz request HTTPS direto para API de IA selecionada usando chave do localStorage
-5. API de IA retorna JSON com metadados
-6. Frontend exibe metadados extraídos
-7. Usuário clica "Salvar" → frontend POST para backend com metadados
-8. Backend valida taxonomia e salva no SQLite
+2. Frontend envia PDF via `POST /api/extract/metadata` (multipart/form-data)
+3. Backend extrai texto do PDF com `pdfplumber`
+4. Backend constrói prompt estruturado (system + user + researcher context)
+5. Backend chama Ollama API local via biblioteca `instructor`
+6. Ollama executa inferência com Qwen2.5 em GPU (1-3s)
+7. Pydantic valida JSON response automaticamente
+8. Backend opcionalmente valida taxonomia (GBIF API)
+9. Backend retorna metadados estruturados para frontend
+10. Frontend exibe metadados + botões Save/Edit/Discard
+11. Usuário salva → frontend POST para `/api/articles` → MongoDB
 
-## Google Gemini API
+---
 
-### Endpoint
+## Ollama API Integration
+
+### Endpoint (Interno)
 
 ```
-POST https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent
+POST http://ollama:11434/v1/chat/completions
 ```
 
-### Headers
+**Nota**: Endpoint é acessado apenas pelo backend, nunca pelo frontend.
 
-```http
-Content-Type: application/json
-x-goog-api-key: {user_api_key}
+### Cliente Python (Instructor)
+
+```python
+import instructor
+from openai import OpenAI
+
+# Inicializar cliente Instructor com Ollama
+client = instructor.from_openai(
+    OpenAI(
+        base_url="http://ollama:11434/v1",
+        api_key="ollama"  # Dummy key (Ollama não requer auth)
+    ),
+    mode=instructor.Mode.JSON
+)
+
+# Fazer inferência com structured output
+metadata = client.chat.completions.create(
+    model="qwen2.5:7b-instruct-q4_K_M",
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ],
+    response_model=ReferenceMetadata,  # Pydantic schema
+    max_tokens=2000,
+    temperature=0.1,
+    top_p=0.9
+)
 ```
 
-### Request Body
+### Pydantic Schema (Structured Output)
 
-```json
-{
-  "contents": [
-    {
-      "parts": [
-        {
-          "text": "{prompt_completo}"
-        }
-      ]
-    }
-  ],
-  "generationConfig": {
-    "temperature": 0.1,
-    "topK": 1,
-    "topP": 1,
-    "maxOutputTokens": 2048
-  }
-}
+```python
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+class SpeciesData(BaseModel):
+    """Dados de uma espécie mencionada."""
+    vernacular: str = Field(
+        description="Nome popular/vernacular da planta"
+    )
+    nomeCientifico: str = Field(
+        description="Nome científico no formato 'Gênero espécie'"
+    )
+
+class ReferenceMetadata(BaseModel):
+    """Schema completo de metadados de referência."""
+
+    # Bibliográficos
+    titulo: str = Field(description="Título completo do artigo")
+    autores: List[str] = Field(description="Lista de autores")
+    ano: int = Field(description="Ano de publicação", ge=1900, le=2030)
+    publicacao: str = Field(description="Nome da revista/livro")
+    resumo: Optional[str] = Field(default=None, description="Resumo/abstract")
+    doi: Optional[str] = Field(default=None, description="DOI do artigo")
+
+    # Etnobotânicos
+    especies: List[SpeciesData] = Field(
+        description="Espécies vegetais mencionadas",
+        min_items=1
+    )
+    tipo_de_uso: str = Field(
+        description="Tipo predominante de uso (medicinal, alimentar, etc.)"
+    )
+    metodologia: str = Field(
+        description="Metodologia da pesquisa"
+    )
+
+    # Geográficos
+    pais: str = Field(description="País do estudo")
+    estado: Optional[str] = Field(default=None, description="Estado/província")
+    municipio: Optional[str] = Field(default=None, description="Município")
+    local: Optional[str] = Field(default=None, description="Local/comunidade específica")
+    bioma: Optional[str] = Field(default=None, description="Bioma")
+```
+
+### Prompts de Extração
+
+**System Prompt:**
+```
+Você é um assistente especializado em extrair metadados estruturados de artigos científicos sobre etnobotânica.
+
+Sua tarefa é analisar o texto de um artigo científico e extrair as seguintes informações no formato JSON:
+- Dados bibliográficos (título, autores, ano, publicação, resumo, DOI)
+- Espécies vegetais mencionadas (nomes populares e científicos)
+- Tipo de uso predominante das plantas
+- Metodologia de pesquisa
+- Localização geográfica do estudo (país, estado, município, local, bioma)
+
+Regras importantes:
+1. Para nomes científicos, use sempre o formato "Gênero espécie" (ex: "Chamomilla recutita")
+2. Se uma espécie não tiver nome científico identificado, use "sp." ou "sp1.", "sp2." etc.
+3. Para autores, mantenha o formato original do artigo
+4. Se alguma informação não estiver disponível, use null para campos opcionais
+5. Para biomas, use nomes padronizados: Mata Atlântica, Cerrado, Amazônia, Caatinga, Pampa, Pantanal
+6. Extraia TODAS as espécies mencionadas, não apenas as mais importantes
+```
+
+**User Prompt Template:**
+```
+{researcher_context}
+
+Texto do artigo:
+{pdf_text}
+
+Extraia os metadados estruturados seguindo o schema JSON fornecido.
+```
+
+**Researcher Context (Optional):**
+```
+Contexto do pesquisador:
+- Nome: {researcher_profile.name}
+- Instituição: {researcher_profile.institution}
+- Foco de pesquisa: {researcher_profile.research_focus}
 ```
 
 ### Response Format
 
+**Success (200 OK):**
 ```json
 {
-  "candidates": [
-    {
-      "content": {
-        "parts": [
-          {
-            "text": "{json_com_metadados}"
-          }
-        ]
-      },
-      "finishReason": "STOP"
-    }
-  ],
-  "usageMetadata": {
-    "promptTokenCount": 1234,
-    "candidatesTokenCount": 567,
-    "totalTokenCount": 1801
-  }
-}
-```
-
-### Código Frontend (TypeScript)
-
-```typescript
-interface GeminiRequest {
-  contents: { parts: { text: string }[] }[];
-  generationConfig: {
-    temperature: number;
-    topK: number;
-    topP: number;
-    maxOutputTokens: number;
-  };
-}
-
-async function extractWithGemini(
-  pdfText: string,
-  apiKey: string
-): Promise<Metadata> {
-  const prompt = buildPrompt(pdfText);
-
-  const requestBody: GeminiRequest = {
-    contents: [
+  "metadata": {
+    "titulo": "Uso e conhecimento tradicional de plantas medicinais no Sertão",
+    "autores": ["Giraldi, M.", "Hanazaki, N."],
+    "ano": 2010,
+    "publicacao": "Acta bot. bras. 24(2): 395-406",
+    "resumo": "O objetivo desta pesquisa foi realizar um estudo etnobotânico...",
+    "doi": "10.1590/...",
+    "especies": [
       {
-        parts: [{ text: prompt }],
+        "vernacular": "maçanilha",
+        "nomeCientifico": "Chamomilla recutita"
       },
+      {
+        "vernacular": "hortelã-branca",
+        "nomeCientifico": "Mentha spicata"
+      }
     ],
-    generationConfig: {
-      temperature: 0.1,
-      topK: 1,
-      topP: 1,
-      maxOutputTokens: 2048,
-    },
-  };
-
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify(requestBody),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const extractedText = data.candidates[0].content.parts[0].text;
-
-  // Parse JSON extraído
-  return parseMetadataJSON(extractedText);
+    "tipo_de_uso": "medicinal",
+    "metodologia": "entrevistas semiestruturadas",
+    "pais": "Brasil",
+    "estado": "SC",
+    "municipio": "Florianópolis",
+    "local": "Sertão do Ribeirão",
+    "bioma": "Mata Atlântica"
+  },
+  "extraction_time_ms": 1234.56,
+  "text_length": 12450,
+  "species_count": 2
 }
 ```
 
-### Validação de API Key
-
-```typescript
-async function validateGeminiKey(apiKey: string): Promise<boolean> {
-  try {
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: "test" }] }],
-          generationConfig: { maxOutputTokens: 5 },
-        }),
-      }
-    );
-
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-```
-
----
-
-## OpenAI ChatGPT API
-
-### Endpoint
-
-```
-POST https://api.openai.com/v1/chat/completions
-```
-
-### Headers
-
-```http
-Content-Type: application/json
-Authorization: Bearer {user_api_key}
-```
-
-### Request Body
-
+**Error (400 Bad Request):**
 ```json
 {
-  "model": "gpt-3.5-turbo",
-  "messages": [
-    {
-      "role": "system",
-      "content": "Você é um assistente especializado em extrair metadados de artigos científicos sobre etnobotânica. Responda APENAS com JSON válido."
-    },
-    {
-      "role": "user",
-      "content": "{prompt_com_texto_pdf}"
-    }
-  ],
-  "temperature": 0.1,
-  "max_tokens": 2048
+  "detail": "Arquivo deve ser um PDF (.pdf)"
 }
 ```
 
-### Response Format
-
+**Error (422 Unprocessable Entity):**
 ```json
 {
-  "id": "chatcmpl-xyz",
-  "object": "chat.completion",
-  "created": 1234567890,
-  "model": "gpt-3.5-turbo",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": "{json_com_metadados}"
-      },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 1234,
-    "completion_tokens": 567,
-    "total_tokens": 1801
-  }
+  "detail": "Não foi possível extrair texto do PDF. Verifique se o arquivo não está corrompido."
 }
 ```
 
-### Código Frontend (TypeScript)
-
-```typescript
-interface OpenAIRequest {
-  model: string;
-  messages: { role: string; content: string }[];
-  temperature: number;
-  max_tokens: number;
-}
-
-async function extractWithChatGPT(
-  pdfText: string,
-  apiKey: string
-): Promise<Metadata> {
-  const prompt = buildPrompt(pdfText);
-
-  const requestBody: OpenAIRequest = {
-    model: "gpt-3.5-turbo",
-    messages: [
-      {
-        role: "system",
-        content:
-          "Você é um assistente especializado em extrair metadados de artigos científicos sobre etnobotânica. Responda APENAS com JSON válido no formato especificado.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    temperature: 0.1,
-    max_tokens: 2048,
-  };
-
-  const response = await fetch(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const extractedText = data.choices[0].message.content;
-
-  return parseMetadataJSON(extractedText);
-}
-```
-
-### Validação de API Key
-
-```typescript
-async function validateOpenAIKey(apiKey: string): Promise<boolean> {
-  try {
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: "test" }],
-          max_tokens: 5,
-        }),
-      }
-    );
-
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-```
-
----
-
-## Anthropic Claude API
-
-### Endpoint
-
-```
-POST https://api.anthropic.com/v1/messages
-```
-
-### Headers
-
-```http
-Content-Type: application/json
-x-api-key: {user_api_key}
-anthropic-version: 2023-06-01
-```
-
-### Request Body
-
+**Error (500 Internal Server Error):**
 ```json
 {
-  "model": "claude-3-haiku-20240307",
-  "max_tokens": 2048,
-  "temperature": 0.1,
-  "messages": [
-    {
-      "role": "user",
-      "content": "{prompt_com_texto_pdf}"
-    }
-  ],
-  "system": "Você é um assistente especializado em extrair metadados de artigos científicos sobre etnobotânica. Responda APENAS com JSON válido."
-}
-```
-
-### Response Format
-
-```json
-{
-  "id": "msg_xyz",
-  "type": "message",
-  "role": "assistant",
-  "content": [
-    {
-      "type": "text",
-      "text": "{json_com_metadados}"
-    }
-  ],
-  "model": "claude-3-haiku-20240307",
-  "stop_reason": "end_turn",
-  "usage": {
-    "input_tokens": 1234,
-    "output_tokens": 567
-  }
-}
-```
-
-### Código Frontend (TypeScript)
-
-```typescript
-interface ClaudeRequest {
-  model: string;
-  max_tokens: number;
-  temperature: number;
-  messages: { role: string; content: string }[];
-  system: string;
-}
-
-async function extractWithClaude(
-  pdfText: string,
-  apiKey: string
-): Promise<Metadata> {
-  const prompt = buildPrompt(pdfText);
-
-  const requestBody: ClaudeRequest = {
-    model: "claude-3-haiku-20240307",
-    max_tokens: 2048,
-    temperature: 0.1,
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    system:
-      "Você é um assistente especializado em extrair metadados de artigos científicos sobre etnobotânica. Responda APENAS com JSON válido no formato especificado.",
-  };
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Claude API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const extractedText = data.content[0].text;
-
-  return parseMetadataJSON(extractedText);
-}
-```
-
-### Validação de API Key
-
-```typescript
-async function validateClaudeKey(apiKey: string): Promise<boolean> {
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-3-haiku-20240307",
-        max_tokens: 5,
-        messages: [{ role: "user", content: "test" }],
-      }),
-    });
-
-    return response.ok;
-  } catch {
-    return false;
-  }
+  "detail": "Erro na extração de metadados: [mensagem de erro específica]"
 }
 ```
 
 ---
 
-## Prompt Template para Extração
+## Backend Endpoint Specification
 
-```typescript
-function buildPrompt(pdfText: string): string {
-  return `
-Analise o seguinte artigo científico sobre etnobotânica e extraia os metadados especificados.
+### POST /api/extract/metadata
 
-IMPORTANTE: Responda APENAS com JSON válido no formato especificado abaixo. Não adicione texto extra antes ou depois do JSON.
+**Descrição**: Extrai metadados de um PDF usando AI local (Ollama + Qwen2.5).
 
-FORMATO DE RESPOSTA:
-{
-  "titulo": "string",
-  "ano_publicacao": number,
-  "autores": ["string", "string"],
-  "resumo": "string",
-  "doi": "string ou null",
-  "local_publicacao": "string ou null",
-  "regioes": [
-    {
-      "descricao": "string",
-      "pais": "string ou null",
-      "estado_provincia": "string ou null",
-      "latitude": number ou null,
-      "longitude": number ou null
-    }
-  ],
-  "comunidades": [
-    {
-      "nome": "string",
-      "tipo_comunidade": "indígena|quilombola|ribeirinha|caiçara|seringueira|pantaneira|outro ou null"
-    }
-  ],
-  "especies": [
-    {
-      "nome_cientifico": "string (formato binomial: Genus species)",
-      "nomes_vernaculares": ["string", "string"],
-      "contexto_uso": "string",
-      "parte_planta_utilizada": ["folha", "raiz", "casca"]
-    }
-  ],
-  "dados_estudo": {
-    "periodo_inicio": "YYYY-MM-DD ou null",
-    "periodo_fim": "YYYY-MM-DD ou null",
-    "metodos_coleta_dados": "string ou null",
-    "tipo_amostragem": "string ou null",
-    "tamanho_amostra": number ou null,
-    "instrumentos_coleta": ["string", "string"] ou null
-  }
-}
+**Request:**
+- **Method**: POST
+- **Content-Type**: multipart/form-data
+- **Body Parameters**:
+  - `pdf_file` (File, required): Arquivo PDF do artigo científico (max 50 MB)
+  - `researcher_profile` (string, optional): JSON com perfil do pesquisador
 
-INSTRUÇÕES:
-- Se um campo não puder ser identificado no artigo, use null ou array vazio [] conforme o tipo
-- Nomes científicos DEVEM estar no formato binomial (Genus species), sem autores
-- Extraia TODOS os autores listados
-- Anos devem ser números inteiros (ex: 2023)
-- DOI deve estar no formato 10.xxxx/xxxx
-- Tipo de comunidade deve ser um dos valores especificados ou null
-- Nomes vernaculares são nomes populares/comuns das plantas
-- Datas devem estar no formato YYYY-MM-DD
+**Example Request (curl):**
+```bash
+curl -X POST http://localhost:8000/api/extract/metadata \
+  -F "pdf_file=@artigo_etnobotanica.pdf" \
+  -F 'researcher_profile={"name":"Dr. Silva","institution":"UFSC","research_focus":"etnobotânica amazônica"}'
+```
 
-TEXTO DO ARTIGO:
-${pdfText}
+**Example Request (JavaScript):**
+```javascript
+const formData = new FormData();
+formData.append('pdf_file', pdfFile);
+formData.append('researcher_profile', JSON.stringify({
+  name: "Dr. Silva",
+  institution: "UFSC",
+  research_focus: "etnobotânica amazônica"
+}));
 
-JSON:
-`.trim();
-}
+const response = await fetch('/api/extract/metadata', {
+  method: 'POST',
+  body: formData
+});
+
+const result = await response.json();
+```
+
+**Response Codes:**
+- `200 OK`: Extração bem-sucedida
+- `400 Bad Request`: Arquivo inválido (não é PDF, muito grande, etc.)
+- `422 Unprocessable Entity`: Falha na extração de texto do PDF
+- `500 Internal Server Error`: Erro de inferência do modelo
+
+---
+
+## Configuração de Ambiente
+
+### Variáveis de Ambiente Obrigatórias
+
+```bash
+# Backend (Etnopapers container)
+OLLAMA_URL=http://ollama:11434          # URL do serviço Ollama
+OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M # Nome do modelo
+MONGO_URI=mongodb://mongo:27017/etnopapers
+```
+
+### Docker Compose Setup
+
+```yaml
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: etnopapers-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  etnopapers:
+    build: .
+    container_name: etnopapers-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
+      - MONGO_URI=mongodb://mongo:27017/etnopapers
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  ollama_models:
 ```
 
 ---
 
-## Parsing de Resposta JSON
+## Performance e Benchmarks
 
-```typescript
-interface Metadata {
-  titulo: string;
-  ano_publicacao: number;
-  autores: string[];
-  resumo: string | null;
-  doi: string | null;
-  local_publicacao: string | null;
-  regioes: Region[];
-  comunidades: Community[];
-  especies: Species[];
-  dados_estudo: StudyData | null;
-}
+### Tempos de Inferência (GPU)
 
-function parseMetadataJSON(text: string): Metadata {
-  // Remove possíveis markdown code blocks (```json ... ```)
-  let cleanedText = text.trim();
+| GPU | VRAM | Tempo Médio | Observações |
+|-----|------|-------------|-------------|
+| RTX 4090 | 24 GB | 0.5-1s | Ideal para produção de alta escala |
+| RTX 4080 | 16 GB | 1-2s | Excelente performance |
+| RTX 3080 | 10 GB | 2-3s | Boa performance |
+| **RTX 3060** | **12 GB** | **2-4s** | **Configuração mínima recomendada** |
+| RTX 2070 | 8 GB | 4-6s | Aceitável para uso ocasional |
 
-  const jsonBlockMatch = cleanedText.match(/```json?\s*([\s\S]*?)\s*```/);
-  if (jsonBlockMatch) {
-    cleanedText = jsonBlockMatch[1];
-  }
+**Notas:**
+- Tempos assumem PDFs de ~10-20 páginas
+- Primeira inferência é mais lenta (cold start ~5-10s)
+- Inferências subsequentes são rápidas (model já em memória)
 
-  // Tenta fazer parse do JSON
-  try {
-    const parsed = JSON.parse(cleanedText);
-    validateMetadata(parsed);
-    return parsed as Metadata;
-  } catch (error) {
-    throw new Error(
-      `Erro ao fazer parse do JSON retornado pela IA: ${error.message}`
-    );
-  }
-}
+### Throughput Estimado
 
-function validateMetadata(data: any): void {
-  if (!data.titulo || typeof data.titulo !== "string") {
-    throw new Error("Campo 'titulo' é obrigatório e deve ser string");
-  }
+| Cenário | Artigos/hora | Observações |
+|---------|--------------|-------------|
+| Single-user (ocasional) | ~100-500 | Uso típico de pesquisador |
+| Single-user (intensivo) | ~500-1000 | Processamento de lote |
+| Multi-user (5 users) | ~300-600 | Compartilhado entre pesquisadores |
 
-  if (
-    !data.ano_publicacao ||
-    typeof data.ano_publicacao !== "number" ||
-    data.ano_publicacao < 1900 ||
-    data.ano_publicacao > 2100
-  ) {
-    throw new Error(
-      "Campo 'ano_publicacao' é obrigatório e deve ser número entre 1900-2100"
-    );
-  }
+---
 
-  if (!Array.isArray(data.autores) || data.autores.length === 0) {
-    throw new Error(
-      "Campo 'autores' é obrigatório e deve ser array não-vazio"
-    );
-  }
+## Qualidade de Extração
 
-  // Validações adicionais...
-}
+### Acurácia Esperada
+
+| Campo | Acurácia Alvo | Métrica |
+|-------|---------------|---------|
+| Título | >95% | Exato match |
+| Autores | >90% | Nome completo correto |
+| Ano | >98% | Exato match |
+| Espécies (nome científico) | >80% | Nome aceito GBIF |
+| Localização (país/estado) | >90% | Match exato ou similar |
+| Bioma | >85% | Nome padronizado |
+
+### Fatores que Afetam Qualidade
+
+**Positivos:**
+- ✅ PDFs com texto pesquisável (não escaneados)
+- ✅ Estrutura de artigo científico padrão
+- ✅ Tabelas de espécies bem formatadas
+- ✅ Seções claramente delimitadas
+
+**Negativos:**
+- ❌ PDFs escaneados sem OCR
+- ❌ Tabelas complexas ou imagens
+- ❌ Nomes científicos abreviados sem definição
+- ❌ Artigos muito longos (>50 páginas)
+
+---
+
+## Troubleshooting
+
+### Problema: Ollama não responde
+
+**Sintoma**: Timeout ao chamar `/api/extract/metadata`
+
+**Solução:**
+```bash
+# Verificar se Ollama está rodando
+docker ps | grep ollama
+
+# Verificar logs do Ollama
+docker logs etnopapers-ollama
+
+# Reiniciar Ollama
+docker restart etnopapers-ollama
+
+# Testar Ollama diretamente
+curl http://localhost:11434/api/tags
+```
+
+### Problema: Modelo não carregado
+
+**Sintoma**: Erro "model not found"
+
+**Solução:**
+```bash
+# Listar modelos disponíveis
+docker exec etnopapers-ollama ollama list
+
+# Download manual do modelo
+docker exec etnopapers-ollama ollama pull qwen2.5:7b-instruct-q4_K_M
+
+# Verificar download
+docker exec etnopapers-ollama ollama list | grep qwen2.5
+```
+
+### Problema: Inferência muito lenta (>10s)
+
+**Causa**: GPU não está sendo usada (caiu para CPU)
+
+**Solução:**
+```bash
+# Verificar se GPU está visível
+docker exec etnopapers-ollama nvidia-smi
+
+# Verificar logs de carregamento do modelo
+docker logs etnopapers-ollama | grep -i "gpu\|cuda"
+
+# Deve mostrar: "GPU detected: NVIDIA RTX 3060"
+```
+
+### Problema: Erro de memória (OOM)
+
+**Causa**: VRAM insuficiente
+
+**Solução:**
+```bash
+# Opção 1: Usar quantização menor (Q3)
+docker exec etnopapers-ollama ollama pull qwen2.5:7b-instruct-q3_K_M
+
+# Atualizar variável de ambiente
+# OLLAMA_MODEL=qwen2.5:7b-instruct-q3_K_M
+
+# Opção 2: Usar modelo menor (NuExtract-tiny 0.5B)
+docker exec etnopapers-ollama ollama pull nuextract:tiny
 ```
 
 ---
 
-## Tratamento de Erros
+## Comparação: v1.0 (APIs Externas) vs. v2.0 (AI Local)
 
-### Erros Comuns e Soluções
-
-**Erro 401 Unauthorized**:
-- Causa: API key inválida ou expirada
-- Solução: Exibir mensagem pedindo ao usuário para atualizar chave
-
-**Erro 429 Too Many Requests**:
-- Causa: Limite de requisições excedido
-- Solução: Exibir mensagem pedindo para aguardar alguns minutos
-
-**Erro 500 Internal Server Error**:
-- Causa: Problema temporário na API de IA
-- Solução: Permitir retry após 30 segundos
-
-**JSON Malformado**:
-- Causa: IA retornou texto ao invés de JSON válido
-- Solução: Exibir mensagem e permitir edição manual
-
-### Código de Tratamento
-
-```typescript
-async function extractMetadataWithRetry(
-  pdfText: string,
-  provider: "gemini" | "openai" | "claude",
-  apiKey: string,
-  maxRetries: number = 3
-): Promise<Metadata> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      switch (provider) {
-        case "gemini":
-          return await extractWithGemini(pdfText, apiKey);
-        case "openai":
-          return await extractWithChatGPT(pdfText, apiKey);
-        case "claude":
-          return await extractWithClaude(pdfText, apiKey);
-      }
-    } catch (error) {
-      lastError = error;
-
-      // Se erro 401, não tentar retry
-      if (error.message.includes("401")) {
-        throw new Error("Chave de API inválida. Por favor, atualize sua chave.");
-      }
-
-      // Se erro 429, aguardar antes de retry
-      if (error.message.includes("429")) {
-        if (attempt < maxRetries) {
-          await sleep(30000); // 30 segundos
-          continue;
-        }
-      }
-
-      // Se último retry, lançar erro
-      if (attempt === maxRetries) {
-        break;
-      }
-
-      // Aguardar antes de retry
-      await sleep(2000 * attempt);
-    }
-  }
-
-  throw new Error(
-    `Falha ao extrair metadados após ${maxRetries} tentativas: ${lastError?.message}`
-  );
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-```
+| Aspecto | v1.0 (Gemini/ChatGPT/Claude) | v2.0 (Ollama + Qwen2.5) |
+|---------|------------------------------|--------------------------|
+| **Localização** | Frontend chama APIs externas | Backend chama Ollama local |
+| **Privacidade** | Dados trafegam pela internet | Dados nunca saem do servidor |
+| **Latência** | 2-10s (rede + API) | 1-3s (GPU local) |
+| **Custo/artigo** | $0.01-0.05 | $0 |
+| **Quota** | Limitada por plano | Ilimitada |
+| **Setup** | Configurar API key no frontend | Apenas variáveis de ambiente |
+| **Dependência** | Internet sempre | Internet apenas setup inicial |
+| **Hardware** | Não requer GPU | GPU NVIDIA obrigatória |
+| **Acurácia** | 80-85% | 80-85% (similar) |
 
 ---
 
-## Extração de Texto do PDF com pdf.js
+## Roadmap Futuro
 
-```typescript
-import * as pdfjsLib from "pdfjs-dist";
+### v2.1 (Planejado)
 
-// Configurar worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
+- [ ] Cache de inferências (evitar reprocessar PDFs idênticos)
+- [ ] Batch processing (múltiplos PDFs de uma vez)
+- [ ] Streaming de resposta (UI mostra extração em tempo real)
+- [ ] Fallback para CPU (se GPU não disponível)
 
-async function extractTextFromPDF(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+### v2.2 (Planejado)
 
-  let fullText = "";
-
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item: any) => item.str).join(" ");
-    fullText += pageText + "\n\n";
-  }
-
-  return fullText;
-}
-```
+- [ ] Fine-tuning do Qwen2.5 em corpus etnobotânico
+- [ ] Suporte a múltiplos modelos (Mistral, Sabiá, NuExtract)
+- [ ] Auto-seleção de modelo por tipo de artigo
+- [ ] RAG integration (retrieval-augmented generation)
 
 ---
-
-## Estimativa de Custos por Artigo
-
-### Gemini (Recomendado)
-
-- **Quota Gratuita**: 60 requests/minuto
-- **Custo após quota**: ~$0.00025 por 1K caracteres
-- **Artigo de 30 páginas (50K chars)**: ~$0.0125 (1 centavo)
-
-### ChatGPT
-
-- **Modelo gpt-3.5-turbo**: $0.0015 por 1K tokens
-- **Artigo de 30 páginas (~12.5K tokens)**: ~$0.01875 (2 centavos)
-
-### Claude
-
-- **Modelo claude-3-haiku**: $0.00025 por 1K tokens
-- **Artigo de 30 páginas (~12.5K tokens)**: ~$0.003125 (menos de 1 centavo)
-
----
-
-## Segurança e Privacidade
-
-### Armazenamento de API Keys
-
-```typescript
-// Salvar chave
-function saveApiKey(provider: string, key: string): void {
-  localStorage.setItem(`etnopapers_api_key_${provider}`, key);
-}
-
-// Recuperar chave
-function getApiKey(provider: string): string | null {
-  return localStorage.getItem(`etnopapers_api_key_${provider}`);
-}
-
-// Remover chave
-function clearApiKey(provider: string): void {
-  localStorage.removeItem(`etnopapers_api_key_${provider}`);
-}
-```
-
-### Importante
-
-- **API keys NUNCA são enviadas ao backend**
-- **API keys permanecem apenas no navegador do usuário**
-- **Se usuário limpar cache do navegador, precisará reconfigurar**
-- **Frontend faz chamadas HTTPS diretas para APIs de IA**
-
----
-
-## Próximos Passos
-
-1. Implementar componente React para upload de PDF
-2. Implementar extração de texto com pdf.js
-3. Implementar integração com as 3 APIs de IA
-4. Criar interface de configuração de API key
-5. Implementar tratamento de erros robusto
-6. Adicionar testes unitários para parsing de JSON
 
 ## Referências
 
-- [Google Gemini API Docs](https://ai.google.dev/docs)
-- [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
-- [Anthropic Claude API](https://docs.anthropic.com/claude/reference)
-- [pdf.js Documentation](https://mozilla.github.io/pdf.js/)
+- **Ollama**: https://ollama.com
+- **Qwen2.5**: https://qwenlm.github.io/blog/qwen2.5/
+- **Instructor**: https://python.useinstructor.com/
+- **Pydantic**: https://docs.pydantic.dev/
+- **GBIF Species API**: https://www.gbif.org/developer/species
+
+---
+
+**Última atualização**: 2025-01-23 (v2.0)
+**Responsável**: Equipe Etnopapers
+**Contato**: GitHub Issues

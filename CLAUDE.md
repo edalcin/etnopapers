@@ -7,37 +7,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Etnopapers** is a specialized ethnobotany metadata extraction system designed to automatically extract and catalog information from scientific articles about traditional plant use in indigenous and traditional communities.
 
 **Key Facts:**
-- **Current Status**: Design & specification phase (no implementation code yet - only detailed specifications)
+- **Current Status**: Design & specification phase (v2.0 - AI Local architecture planned)
 - **Frontend**: React 18 + TypeScript (not implemented)
 - **Backend**: Python FastAPI (not implemented)
 - **Database**: MongoDB (NoSQL with JSON/BSON documents, via MONGO_URI environment variable)
 - **Data Model**: Document-centric (references as root documents with aggregated metadata)
-- **Deployment**: Docker + Docker Compose for UNRAID servers (lightweight: ~180-200MB)
-- **AI Integration**: Frontend-driven extraction using user-provided API keys (Gemini, ChatGPT, or Claude)
+- **Deployment**: Docker + Docker Compose for UNRAID servers with GPU (~8.5 GB)
+- **AI Integration**: **LOCAL AI** using Ollama + Qwen2.5-7B-Instruct (GPU inference, 1-3s latency, 100% private)
 
 ## Architecture Overview
 
-### Frontend (React + TypeScript)
-- **State Management**: Zustand for lightweight global state (API keys, extracted metadata, editor state)
+### Frontend (React + TypeScript) **[UPDATED v2.0]**
+- **State Management**: Zustand for lightweight global state (extracted metadata, editor state, researcher profile)
 - **Tables**: TanStack React Table v8 for articles list (sortable, filterable, paginated)
 - **Forms**: react-hook-form for metadata editing with validation
-- **PDF Handling**: pdfjs-dist for text extraction, pdf-lib for PDF validation
-- **Security Model**: API keys stored ONLY in browser localStorage, never sent to backend
+- **PDF Handling**: Upload via multipart/form-data to backend (no client-side PDF processing)
+- **Security Model**: All processing happens on server - frontend only handles UI
 - **Key Components**:
-  - `PDFUpload`: Drag-and-drop PDF upload (<50 MB)
-  - `APIConfiguration`: Select AI provider + input API key
+  - `PDFUpload`: Drag-and-drop PDF upload (<50 MB) → sends to backend `/api/extract/metadata`
+  - ~~`APIConfiguration`~~: **[REMOVED v2.0 - No API keys needed]**
   - `MetadataDisplay`: Show extracted metadata with three actions (Save/Edit/Discard)
   - `ManualEditor`: Edit and correct extracted data
   - `ArticlesTable`: Browse all articles with sort/filter/pagination
-  - `ResearcherProfile`: Optional personalization for extraction context
+  - `ResearcherProfile`: Optional personalization for extraction context (sent to backend)
   - `DatabaseDownload`: Download MongoDB database backup (zip archive)
 
-### Backend (Python FastAPI)
+### Backend (Python FastAPI) **[UPDATED v2.0]**
 - **Structure**: Router-based API with service layer for business logic
 - **Database**: MongoDB (NoSQL document store with BSON serialization via PyMongo)
 - **Data Layer**: PyMongo API for CRUD operations with MongoDB-style queries
 - **Connection**: Via MONGO_URI environment variable (supports local MongoDB or cloud providers like MongoDB Atlas)
-- **API Endpoints**: 29 planned endpoints covering articles/references, species, taxonomy validation, locations, communities, drafts, database download
+- **AI Integration**: **Ollama + Qwen2.5-7B-Instruct** via `instructor` library for structured outputs (Pydantic schemas)
+- **PDF Processing**: `pdfplumber` for text extraction from uploaded PDFs
+- **API Endpoints**: 30+ endpoints including:
+  - `/api/extract/metadata` **[NEW v2.0]**: Upload PDF → extract metadata with AI local
+  - `/api/articles`: CRUD for references
+  - `/api/taxonomy/validate`: GBIF API integration
+  - `/api/database/download`: MongoDB backup as ZIP
 - **Taxonomy Integration**: GBIF API (primary) + Tropicos (fallback) with 30-day in-memory cache
 - **Async**: Full async/await support via FastAPI/uvicorn
 - **No Authentication**: System designed for open networks (future: add auth layer)
@@ -114,29 +120,42 @@ A single `referencias` collection stores complete reference documents with all m
 - 10,000 references: ~10-20 MB
 - 100,000 references: ~100-200 MB
 
-### Docker Setup
+### Docker Setup **[UPDATED v2.0]**
 ```yaml
-# Two services: MongoDB + Etnopapers API
+# Three services: MongoDB + Ollama + Etnopapers API
 # MongoDB Service:
 - Port: 27017 (MongoDB server)
 - Volume: mongodb_data:/data/db (persistent MongoDB database)
 - Image: mongo:7.0
 - Health Check: mongosh ping command
 
-# Etnopapers Service:
+# Ollama Service **[NEW v2.0]**:
+- Port: 11434 (Ollama API)
+- Volume: ollama_models:/root/.ollama (persistent AI models ~4.8 GB)
+- Image: ollama/ollama:latest (~2 GB)
+- GPU: NVIDIA GPU passthrough (requires nvidia-docker runtime)
+- Model: qwen2.5:7b-instruct-q4_K_M (auto-downloaded on first use)
+- Health Check: curl /api/tags
+
+# Etnopapers Service **[UPDATED v2.0]**:
 - Port: 8000 (web app + API)
-- Depends on: MongoDB service (healthy condition)
+- Depends on: MongoDB + Ollama (both healthy)
 - Base Image: python:3.11-slim (minimal, ~150MB)
-- Dependencies: FastAPI, PyMongo (client library)
-- Estimated Docker Image Size: ~180-200MB
+- Dependencies: FastAPI, PyMongo, instructor, pdfplumber, openai client
+- Estimated Docker Image Size: ~800 MB
+- GPU: NVIDIA GPU passthrough (for potential future optimizations)
 - Environment (defaults):
-  - MONGO_URI=mongodb://mongo:27017/etnopapers (connection to MongoDB service)
+  - MONGO_URI=mongodb://mongo:27017/etnopapers
+  - OLLAMA_URL=http://ollama:11434
+  - OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
   - PORT=8000
   - LOG_LEVEL=info
   - ENVIRONMENT=development
   - TAXONOMY_API_TIMEOUT=5
   - CACHE_TTL_DAYS=30
   - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+
+# Total Docker Size: ~8.5 GB (MongoDB ~700 MB + Ollama ~2 GB + Model ~4.8 GB + Etnopapers ~800 MB + overhead)
 ```
 
 ## Development Commands
@@ -209,17 +228,40 @@ print(f'References with Chamomilla recutita: {len(refs_with_species)}')
 # - Docker service: mongodb://mongo:27017/etnopapers
 ```
 
-### Docker
+### Docker **[UPDATED v2.0]**
 ```bash
+# Prerequisites: Install NVIDIA Container Toolkit on UNRAID
+# Apps → Search "nvidia" → Install "Nvidia-Driver"
+
 docker-compose build                   # Build image
 docker-compose up -d                   # Start services (detached)
 docker-compose logs -f                 # Follow logs
+docker-compose logs -f ollama          # Follow Ollama logs specifically
 docker-compose down                    # Stop services
 docker-compose down -v                 # Stop services and remove volumes
 
+# Verify GPU is available
+docker exec etnopapers-ollama nvidia-smi
+
+# Download model manually (recommended before first use)
+docker exec etnopapers-ollama ollama pull qwen2.5:7b-instruct-q4_K_M
+
+# List downloaded models
+docker exec etnopapers-ollama ollama list
+
+# Test AI extraction endpoint
+curl -X POST http://localhost:8000/api/extract/metadata \
+  -F "pdf_file=@sample.pdf" \
+  -F 'researcher_profile={"name":"Dr. Silva","institution":"UFSC"}'
+
 # Build for production
 docker build -t etnopapers:latest .
-docker run -d --name etnopapers -p 8000:8000 -v $(pwd)/data:/data etnopapers:latest
+docker run -d --name etnopapers \
+  -p 8000:8000 \
+  --gpus all \
+  -e MONGO_URI=mongodb://mongo:27017/etnopapers \
+  -e OLLAMA_URL=http://ollama:11434 \
+  etnopapers:latest
 ```
 
 ## Testing Strategy
