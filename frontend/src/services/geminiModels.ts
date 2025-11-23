@@ -11,14 +11,19 @@ export interface GeminiModel {
 
 const GEMINI_MODELS: GeminiModel[] = [
   {
-    name: 'gemini-pro',
-    displayName: 'Gemini Pro',
-    description: 'Fast and accurate model for text analysis'
+    name: 'gemini-2.0-flash',
+    displayName: 'Gemini 2.0 Flash',
+    description: 'Fastest Gemini model with improved performance'
   },
   {
-    name: 'gemini-pro-vision',
-    displayName: 'Gemini Pro Vision',
-    description: 'Supports both text and images'
+    name: 'gemini-1.5-flash',
+    displayName: 'Gemini 1.5 Flash',
+    description: 'Fast and cost-effective for most tasks'
+  },
+  {
+    name: 'gemini-1.5-pro',
+    displayName: 'Gemini 1.5 Pro',
+    description: 'Most powerful Gemini model for complex tasks'
   },
 ]
 
@@ -27,7 +32,7 @@ export const listGeminiModels = (): GeminiModel[] => {
 }
 
 export const getDefaultGeminiModel = (): string => {
-  return 'gemini-pro'
+  return 'gemini-2.0-flash'
 }
 
 export const validateGeminiModel = async (
