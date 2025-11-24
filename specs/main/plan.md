@@ -75,16 +75,22 @@ nvidia-docker - GPU passthrough
 
 ### Metas de Performance
 
-| Métrica | Alvo | Notas |
-|---------|------|-------|
-| Inferência Ollama (GPU) | 1-3s | Qwen2.5 RTX 3060+ |
-| Extração completa | < 1 min | Upload + AI + save |
-| Tabela (1000 artigos) | < 2s | Paginação client-side |
-| Filtro em tempo real | < 500ms | Debounce 300ms |
-| Validação taxonômica | < 100ms | Cache em memória |
-| Download MongoDB | < 3s | Backup ZIP streaming |
-| Acurácia | > 80% | Campos principais |
-| Offline operation | 100% | Após setup |
+| Métrica | Alvo (Produção) | Dev (GTX 1050 Ti) | Notas |
+|---------|-----------------|-------------------|-------|
+| Inferência Ollama (GPU) | 1-3s | 3-5s | Qwen2.5 RTX 3060+ vs GTX 1050 Ti |
+| Extração completa | < 1 min | < 2 min | Upload + AI + save |
+| Tabela (1000 artigos) | < 2s | < 2s | Paginação client-side (invariante) |
+| Filtro em tempo real | < 500ms | < 500ms | Debounce 300ms (invariante) |
+| Validação taxonômica | < 100ms | < 100ms | Cache em memória (invariante) |
+| Download MongoDB | < 3s | < 3s | Backup ZIP streaming (invariante) |
+| Acurácia | > 80% | > 80% | Campos principais (invariante) |
+| Offline operation | 100% | 100% | Após setup (invariante) |
+
+**Notas de Performance**:
+- **Desenvolvimento** (GTX 1050 Ti, 4 GB VRAM): Inferência 3-5s, adequado para testes e prototipagem
+- **Produção** (RTX 3060+, 6-8 GB VRAM): Inferência 1-3s, alvo de performance
+- Validação end-to-end deve rodar em ambos ambientes antes de release
+- Se GTX 1050 Ti ficar sem memória (CUDA OOM), implementar batch processing ou reduzir tamanho de modelo
 
 ### Dependências Externas (Opcionais)
 
@@ -150,6 +156,39 @@ NVIDIA_VISIBLE_DEVICES=all
 ```bash
 docker exec etnopapers nvidia-smi
 # Deve mostrar GPU NVIDIA (ex: RTX 3060)
+```
+
+### GPU NVIDIA em Ambiente de Desenvolvimento
+
+**Hardware do Dev**: Nvidia GeForce GTX 1050 Ti (4 GB VRAM)
+
+**Configuração**:
+- Mesma configuração UNRAID (`--runtime=nvidia`, `NVIDIA_VISIBLE_DEVICES=all`)
+- Ollama acesso direto à GPU para testes e prototipagem
+
+**Performance Esperada** (GTX 1050 Ti):
+- Inferência: 3-5 segundos por artigo (vs 1-3s em RTX 3060)
+- VRAM disponível: 4 GB (vs 6-8 GB recomendado)
+- Adequado para: Desenvolvimento, testes unitários, prototipagem
+- **Não recomendado para**: Produção em larga escala (usar RTX 3060+ em produção)
+
+**Implicações**:
+- Testes de performance local serão mais lentos que produção
+- Modelagem de capacidade deve considerar GPU mais potente em UNRAID
+- Validação de quality/latency deve rodar em ambos ambientes antes de release
+- Se GTX 1050 Ti ficar sem memória (CUDA OOM), reduzir batch size em produção
+
+**Verificação Dev**:
+```bash
+# Verificar GPU disponível localmente
+nvidia-smi
+
+# Esperado:
+# NVIDIA GeForce GTX 1050 Ti | 4 GB VRAM
+
+# Testar Ollama com GPU
+docker exec etnopapers ollama run qwen2.5:7b-instruct-q4_K_M "Teste rápido"
+# Tempo esperado: 3-5 segundos para resposta
 ```
 
 ---

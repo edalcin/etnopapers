@@ -167,6 +167,39 @@ MongoDB é conectado **externamente via MONGO_URI** (pode ser local ou cloud)
 3. Inicia FastAPI server
 4. Serve frontend React static files via FastAPI
 
+### Development Environment GPU
+
+**Hardware**: Nvidia GeForce GTX 1050 Ti (4 GB VRAM)
+
+**Configuration** (same as UNRAID):
+```bash
+# Docker run with GPU access (dev environment)
+docker run -d --name etnopapers \
+  -p 8000:8000 \
+  --gpus all \
+  --runtime=nvidia \
+  -e NVIDIA_VISIBLE_DEVICES=all \
+  -e MONGO_URI=mongodb://localhost:27017/etnopapers \
+  -e OLLAMA_URL=http://localhost:11434 \
+  etnopapers:latest
+```
+
+**Performance Notes**:
+- GTX 1050 Ti: 3-5 seconds per article inference (vs 1-3s on RTX 3060+)
+- 4 GB VRAM: Adequate for development/testing, watch for CUDA OOM errors
+- Dev performance is slower than production target, which is expected
+- For performance validation, test on both GTX 1050 Ti (dev) and RTX 3060+ (prod)
+
+**Verification**:
+```bash
+# Check GPU availability
+nvidia-smi
+
+# Test with Ollama (inside container)
+docker exec etnopapers ollama run qwen2.5:7b-instruct-q4_K_M "Teste"
+# Expected: 3-5 seconds response time
+```
+
 ## Development Commands
 
 ### Frontend
