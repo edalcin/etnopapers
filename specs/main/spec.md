@@ -92,7 +92,7 @@ Após a extração automática dos metadados, um pesquisador revisa os dados ext
 
 1. **Dado** que o sistema concluiu a extração de metadados, **Quando** os resultados são exibidos, **Então** o sistema apresenta uma interface de edição permitindo modificar todos os campos de metadados
 2. **Dado** que o PDF era escaneado ou de baixa qualidade, **Quando** os metadados são exibidos, **Então** o sistema exibe um aviso informando que a qualidade da extração pode estar reduzida e recomenda revisão manual
-3. **Dado** que o usuário está na tela de edição, **Quando** o usuário modifica um ou mais campos e salva as alterações, **Então** os metadados atualizados são armazenados no banco de dados SQLite
+3. **Dado** que o usuário está na tela de edição, **Quando** o usuário modifica um ou mais campos e salva as alterações, **Então** os metadados atualizados são armazenados no banco de dados **MongoDB**
 4. **Dado** que o usuário editou metadados, **Quando** o usuário visualiza o histórico posteriormente, **Então** os valores editados manualmente são exibidos (não os valores originais extraídos pela IA)
 
 ---
