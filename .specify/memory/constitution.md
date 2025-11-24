@@ -6,16 +6,26 @@
 **User API keys are stored ONLY in browser localStorage and never transmitted or persisted on the server.** The frontend makes direct HTTPS calls to AI provider APIs (Gemini, ChatGPT, Claude) using user-provided keys. Backend never handles, logs, or stores API keys under any circumstance.
 
 ### II. Data Portability & Locality
-**All persistent data lives in a single SQLite database file.** No external dependencies for data storage (no PostgreSQL, MongoDB, or cloud services required). System must operate completely offline except for optional API calls to external taxonomic and AI services. Users can backup, restore, and analyze the database using any standard SQLite tool.
+**All persistent data lives in a self-contained database with portable backup capability.** System supports MongoDB for scalability and document-centric storage, with automatic backup export functionality (ZIP format). Database connection configurable via MONGO_URI environment variable for local or cloud deployments. System must operate completely offline except for: (a) initial model download (Ollama Qwen2.5), (b) optional GBIF/Tropicos taxonomy validation, and (c) Ollama local inference service. Users can backup MongoDB via native export tools and restore to any MongoDB instance.
 
 ### III. Offline Tolerance & Graceful Degradation
-**System continues functioning when external APIs are unavailable.** If GBIF/Tropicos APIs are offline, system allows saving metadata but marks species validation as "não validado". If AI provider is unreachable, user sees clear error with retry option. No data loss or cascade failures from external service outages.
+**System continues functioning when external APIs are unavailable and provides clear feedback on service status.**
+
+*Local Services*: Ollama inference engine is co-deployed with application and expected to be highly available. If Ollama service fails, user sees clear error message: "Serviço de AI local indisponível. Verifique Ollama ou reinicie o container." Extraction operations gracefully reject with actionable feedback rather than hang or cascade failure.
+
+*External APIs*: If GBIF/Tropicos taxonomy APIs are offline, system allows saving metadata but marks species validation as "não validado" and shows warning: "Validação taxonômica temporariamente indisponível. Dados salvos sem validação."
+
+*No data loss* from service outages. Users can retry taxonomy validation or species correction later.
 
 ### IV. Simplicity & MVP-First
 **Start simple; implement only what's explicitly required in spec. Avoid premature abstraction, unnecessary complexity, or "future-proofing" for unspecified scenarios.** No authentication, multi-user, analytics, or advanced search until explicitly requested. Single container deployment; no microservices.
 
-### V. Portable Docker Deployment
-**System packages as single Docker container compatible with standard Docker installations (no GPU, nvidia-docker, or specialized hardware required).** Deployment target: UNRAID servers and standard Linux hosts. Database path configurable via environment variable. Container startup under 10 seconds.
+### V. Portable Docker Deployment with GPU Acceleration
+**System packages as Docker Compose deployment with GPU acceleration for production performance.** Deployment targets: UNRAID servers with NVIDIA GPU (6-8 GB VRAM minimum, e.g., RTX 3060+) and standard Linux hosts with docker-compose and nvidia-docker runtime.
+
+*Hardware requirements*: GPU mandatory for production (acceptable latency 1-3 seconds per article inference). CPU-only operation supported for testing/development (latency 30-60 seconds, not production-ready).
+
+*Configuration*: Database connection (MONGO_URI) and Ollama service URL (OLLAMA_URL) configurable via environment variables. Container startup under 30 seconds (including Ollama health check). Deployment via single `docker-compose up` command.
 
 ### VI. Portuguese-First Localization
 **All user-facing text, documentation, error messages, and UI labels are in Brazilian Portuguese.** Feature spec, implementation docs, and API contracts written in Portuguese. English used only for technical code comments and dependency names where unavoidable.
@@ -66,4 +76,4 @@ Development teams should consult `/CLAUDE.md` for implementation guidance and pa
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-20 | **Last Amended**: 2025-11-20
+**Version**: 2.0.0 | **Ratified**: 2025-11-20 | **Last Amended**: 2025-11-24 | **Status**: v2.0 (Local AI, MongoDB, GPU-Accelerated)

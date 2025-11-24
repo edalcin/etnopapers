@@ -1,304 +1,366 @@
-# Implementation Plan: Sistema de Extração de Metadados de Artigos Etnobotânicos (Etnopapers)
+# Implementation Plan: Etnopapers v2.0 (Local AI + MongoDB)
 
-**Branch**: `main` | **Data**: 2025-11-20 | **Especificação**: `specs/main/spec.md`
-**Entrada**: Especificação funcional completa em `/specs/main/spec.md` com 68 requisitos (RF-001 a RF-068)
+**Branch**: `main` | **Data**: 2025-11-24 | **Versão**: 2.0 | **Especificação**: `specs/main/spec.md`
+**Entrada**: Especificação funcional v2.0 em `/specs/main/spec.md` com 68 requisitos (RF-001 a RF-068)
 
-**Nota**: Este plano é gerado pelo comando `/speckit.plan` e segue fluxo em `.specify/templates/commands/plan.md`.
+**Status**: ✅ Plan actualizado para v2.0 (2025-11-24) - Ollama + MongoDB + GPU
+
+---
 
 ## Resumo Executivo
 
-**Etnopapers** é um sistema de código aberto para extração automática de metadados de artigos científicos em PDF sobre etnobotânica. O sistema processa PDFs em navegador, extrai metadados usando APIs de IA (Gemini, ChatGPT, Claude—escolha do usuário), valida nomes científicos de plantas via GBIF/Tropicos, e armazena tudo em banco SQLite portável.
+**Etnopapers v2.0** é um sistema de extração de metadados de artigos científicos sobre etnobotânica com **Inferência Local de AI** rodando no próprio servidor UNRAID.
 
-**Abordagem Técnica**:
-1. **Frontend React 18 + TypeScript**: Interface web responsiva com upload drag-and-drop, exibição de metadados extraídos, edição manual, tabela com filtros/ordenação
-2. **Backend FastAPI**: API REST para CRUD de artigos, duplicatas, validação taxonômica, download do banco
-3. **Banco de Dados SQLite**: 12 tabelas normalizadas com hierarquia geográfica (país/estado/município), territórios comunitários, espécies de plantas com nomes vernaculares N:M
-4. **Segurança por Design**: Chaves de API armazenadas APENAS no localStorage do navegador; backend nunca toca chaves do usuário
-5. **Docker Single-Container**: Deployment simplificado para UNRAID e servidores Linux; sem GPU ou dependências especializadas
+### Arquitetura Principal v2.0
 
-**Diferencial**: Combina simplicidade (MVP focado) com flexibilidade (3 provedores de IA, taxonomia plugável, dados portáveis em SQLite).
+- ✅ **AI Local**: Ollama + Qwen2.5-7B-Instruct em GPU NVIDIA (1-3s por artigo)
+- ✅ **Privacidade Total**: 100% dos dados permanecem no servidor, zero APIs externas
+- ✅ **Custo Zero**: $0 por artigo (vs $0.01-0.05 em v1.0)
+- ✅ **Offline-Capable**: Funciona completamente offline após download do modelo
+- ✅ **MongoDB**: Banco NoSQL document-centric com backup automático (ZIP)
+- ✅ **Sem API Keys**: Sem configuração de chaves no frontend
 
-## Contexto Técnico
+### Tecnologia
 
-### Stack & Versões
+| Camada | Tecnologia | Versão | Notas |
+|--------|-----------|--------|-------|
+| **AI** | Ollama + Qwen2.5 | Q4 (4.8GB) | GPU NVIDIA obrigatória |
+| **Backend** | FastAPI + PyMongo | 3.11 | `/api/extract/metadata` novo |
+| **Frontend** | React + TypeScript | 18/5 | Sem API key config |
+| **Database** | MongoDB | 5.0+ | 4 collections, 18 índices |
+| **Deployment** | Docker Compose | 3 services | MongoDB + Ollama + API |
+| **GPU Runtime** | nvidia-docker | latest | GPU passthrough |
 
-**Backend**:
-- **Linguagem**: Python 3.11+
-- **Framework**: FastAPI 0.104+ (async ASGI, validação Pydantic automática)
-- **Servidor**: Uvicorn (incluído no FastAPI)
-- **ORM/Queries**: SQLite3 direto com Alembic para migrações
+---
 
-**Frontend**:
-- **Framework**: React 18+ com TypeScript 5+
-- **Build**: Vite 5+ (dev server rápido, build otimizado)
-- **Gerenciamento de Estado**: Zustand 4+ (leve, sem boilerplate)
-- **Componentes**: TanStack React Table v8 (tabelas complexas), react-hook-form (formulários)
-- **PDF**: pdfjs-dist (extração de texto no navegador), Tesseract.js (OCR para PDFs escaneados)
+## Contexto Técnico Detalhado
 
-**Database**:
-- **Tipo**: SQLite 3.35+ com WAL (Write-Ahead Logging) para concorrência
-- **Tamanho Estimado**: ~100 MB para 10K artigos
-- **Migrações**: Alembic com versionamento automático
+### Stack & Dependências
 
-**Deployment**:
-- **Containerização**: Docker (multi-stage build, Alpine Linux, ~300 MB imagem final)
-- **Docker Compose**: Dev environment com volume montado em `/data`
-- **Alvo**: UNRAID (mnt/user/appdata) e servidores Linux padrão (sem GPU)
+**Backend Python**:
+```
+FastAPI 0.104+ - Web framework assíncrono
+PyMongo - Cliente MongoDB
+pdfplumber - Extração de texto de PDFs
+instructor - Structured outputs com Ollama
+openai - Cliente OpenAI-compatible para Ollama
+```
 
-### Dependências Críticas (Serviços Externos - Opcionais)
-- Google Gemini API (quota gratuita generosa)
-- OpenAI ChatGPT API (alta qualidade)
-- Anthropic Claude API (melhor CORS)
-- GBIF Species API (validação taxonômica)
-- Tropicos API (fallback taxonomia)
+**Frontend JavaScript**:
+```
+React 18+ - UI library
+TypeScript 5+ - Tipagem estática
+Zustand 4+ - State management
+TanStack Table v8 - Tabelas complexas
+react-hook-form - Validação de formulários
+pdfjs-dist - Extração de PDF no navegador
+```
+
+**Serviços**:
+```
+MongoDB 5.0+ - NoSQL document store
+Ollama latest - Local inference framework
+NVIDIA GPU Driver - GPU compute
+nvidia-docker - GPU passthrough
+```
+
+### Restrições de Projeto v2.0
+
+- **GPU obrigatória**: RTX 3060+ (6-8 GB VRAM) para produção
+- **Sem autenticação**: Sistema de rede local (UNRAID)
+- **Docker Compose**: 3 serviços coordenados
+- **MongoDB**: Portabilidade com backup ZIP
+- **PDFs < 50 MB**: Limite de upload
+- **Ollama local**: Sem fallback para APIs externas
 
 ### Metas de Performance
 
-| Métrica | Alvo |
-|---------|------|
-| Extração PDF (até 30 pgs) | < 2 min |
-| Tabela 1000 artigos | < 2 s |
-| Filtro em tempo real | < 500 ms |
-| Validação taxonômica (cached) | < 100 ms |
-| Download banco | < 3 s |
+| Métrica | Alvo | Notas |
+|---------|------|-------|
+| Inferência Ollama (GPU) | 1-3s | Qwen2.5 RTX 3060+ |
+| Extração completa | < 1 min | Upload + AI + save |
+| Tabela (1000 artigos) | < 2s | Paginação client-side |
+| Filtro em tempo real | < 500ms | Debounce 300ms |
+| Validação taxonômica | < 100ms | Cache em memória |
+| Download MongoDB | < 3s | Backup ZIP streaming |
+| Acurácia | > 80% | Campos principais |
+| Offline operation | 100% | Após setup |
 
-### Restrições
+### Dependências Externas (Opcionais)
 
-- Chaves de API NUNCA no servidor (privacidade)
-- Sem autenticação (rede local)
-- Um container Docker (simplicidade)
-- SQLite (portabilidade)
-- PDFs < 50 MB
+- **GBIF Species API**: Validação taxonômica (fallback: Tropicos)
+- **Internet**: Uma única vez para download modelo (~4.8 GB)
+- **Sem APIs de IA externas**: Ollama substitui Gemini/ChatGPT/Claude
 
-### Escopo
-
-- **Tipo**: Web application (React + FastAPI)
-- **Escala**: 1-100K artigos por instância
-- **Usuários**: Pesquisadores etnobotânicos individuais
-- **Complexidade**: 33 tarefas, 134 pontos = 268-536 horas
+---
 
 ## Verificação da Constituição
 
-*GATE: Deve passar antes de Phase 0. Re-verificar após Phase 1.*
-
-### Princípios da Constituição vs. Design Proposto
+**Constitution v2.0.0 (2025-11-24)** - ✅ PASS
 
 | Princípio | Status | Verificação |
 |-----------|--------|-------------|
-| **I. Privacidade em Primeiro Lugar** | ✅ PASS | Chaves de API APENAS em localStorage; backend nunca toca chaves do usuário. Claude API tem CORS completo. |
-| **II. Portabilidade de Dados** | ✅ PASS | SQLite como único banco; sem PostgreSQL, MongoDB, ou dependências externas. Usuários podem backup/restore com ferramentas padrão SQLite. |
-| **III. Tolerância Offline** | ✅ PASS | Sistema funciona sem GBIF/AI APIs. Marca dados como "não validado" em vez de falhar. |
-| **IV. Simplicidade MVP** | ✅ PASS | Sem autenticação, multi-usuário, analytics até serem explicitamente requisitados. Frontend + Backend em um container. |
-| **V. Docker Portável** | ✅ PASS | Container único, Alpine, sem GPU. Compatível com Docker padrão e UNRAID. |
-| **VI. Português Brasileiro** | ✅ PASS | Todos os strings de usuário, docs, e API em português. Código/comentários em inglês onde necessário. |
+| **I. Privacidade** | ✅ PASS | Sem APIs externas, dados locais |
+| **II. Portabilidade** | ✅ PASS | MongoDB com backup ZIP |
+| **III. Offline Tolerance** | ✅ PASS | Ollama local com fallback claro |
+| **IV. Simplicidade** | ✅ PASS | Docker Compose, sem auth |
+| **V. GPU Deploy** | ✅ PASS | GPU NVIDIA autorizada, nvidia-docker |
+| **VI. Português BR** | ✅ PASS | Todos strings em português |
 
-### Gatilhos de Qualidade - Fase 0 & 1
-
-**Fase 0 (Research)**:
-- [x] Todas as decisões técnicas documentadas (pdf.js, Claude API, SQLite WAL, etc.)
-- [x] Alternativas consideradas com rationale
-- [x] Riscos identificados e mitigações propostas
-
-**Fase 1 (Design)**:
-- [ ] Data model reflete todas as 12 tabelas com validações
-- [ ] Contratos API cobrem 100% dos requisitos (RF-001 a RF-068)
-- [ ] Sem ambiguidades não resolvidas na arquitetura
-- [ ] Diagrama ER e arquitetura de componentes criados
+---
 
 ## Estrutura do Projeto
 
-### Documentação (specs/)
+### Diretórios Principais
 
-```text
-specs/main/
-├── plan.md              # Este arquivo (output /speckit.plan)
-├── research.md          # Phase 0 output: decisões técnicas, rationale, alternativas
-├── data-model.md        # Phase 1 output: entidades, schemas, validações
-├── quickstart.md        # Phase 1 output: guia setup dev/prod
-├── spec.md              # Especificação funcional (INPUT)
-├── tasks.md             # Phase 2 output (/speckit.tasks)
-├── contracts/           # Phase 1 output
-│   ├── api-rest.yaml    # OpenAPI 3.0 com 29 endpoints
-│   └── ai-integration.md # Padrões integração Gemini/ChatGPT/Claude
-└── [outros docs]        # research.md (análise), data-model.md (SQL detalhado), etc.
 ```
-
-### Código Fonte (raiz do repositório)
-
-**Decisão de Estrutura**: Web application (Frontend React + Backend FastAPI) em estrutura separada mas unified em um container Docker.
-
-```text
 etnopapers/
 ├── frontend/                    # React 18 + TypeScript
 │   ├── src/
-│   │   ├── components/         # UI components (PDFUpload, MetadataDisplay, ArticlesTable, etc.)
-│   │   ├── pages/              # React Router pages (Upload, History, Settings, Drafts)
-│   │   ├── services/           # API clients, PDF extraction, AI integration
-│   │   │   ├── ai/             # geminiClient.ts, openaiClient.ts, claudeClient.ts
-│   │   │   ├── pdfExtractor.ts # pdf.js + Tesseract.js
-│   │   │   └── apiClient.ts    # Backend API calls
-│   │   ├── store/              # Zustand store (apiKeys, metadata, drafts)
-│   │   ├── types/              # TypeScript interfaces
-│   │   ├── utils/              # fileValidation, metadataParser, etc.
-│   │   ├── hooks/              # useAutoSave, useArticlesTable, etc.
-│   │   └── App.tsx, main.tsx    # Entry points
-│   ├── public/                  # Static assets, pdf.worker.js
-│   ├── package.json             # React + Vite + dependencies
-│   ├── tsconfig.json
+│   │   ├── components/         # UI components (sem APIConfiguration)
+│   │   ├── pages/              # Upload, History, Drafts, Settings
+│   │   ├── services/           # API client (backend calls)
+│   │   ├── store/              # Zustand (sem API keys)
+│   │   └── types/              # TypeScript interfaces
+│   ├── package.json
 │   ├── vite.config.ts
-│   └── tests/                   # Jest + React Testing Library
-
+│   └── tsconfig.json
+│
 ├── backend/                     # FastAPI + Python 3.11
-│   ├── main.py                  # FastAPI app, CORS, middleware
-│   ├── config.py                # Environment, logging, constants
-│   ├── models/                  # Pydantic schemas (ArticleRequest, SpeciesResponse, etc.)
-│   ├── routers/                 # API routes
+│   ├── main.py                  # FastAPI app
+│   ├── config.py                # Env config (MONGO_URI, OLLAMA_URL)
+│   ├── models/                  # Pydantic schemas
+│   ├── routers/                 # API endpoints
 │   │   ├── articles.py          # CRUD articles
+│   │   ├── extraction.py        # NEW: /api/extract/metadata
 │   │   ├── species.py           # CRUD species
-│   │   ├── regions.py           # Locations (countries/states/municipalities)
-│   │   ├── communities.py       # Traditional communities
-│   │   ├── database.py          # Download, info endpoints
-│   │   └── export.py            # CSV export
+│   │   ├── regions.py           # Geographic data
+│   │   ├── database.py          # Download backup
+│   │   └── communities.py       # Communities
 │   ├── services/                # Business logic
-│   │   ├── article_service.py   # CRUD + duplicate detection
-│   │   ├── taxonomy_service.py  # GBIF + Tropicos integration + cache
-│   │   ├── species_service.py   # Species queries
-│   │   └── export_service.py    # CSV generation
+│   │   ├── extraction_service.py # NEW: Ollama client
+│   │   ├── taxonomy_service.py  # GBIF + Tropicos
+│   │   ├── article_service.py   # CRUD + duplicates
+│   │   └── species_service.py   # Species queries
 │   ├── database/
-│   │   ├── connection.py        # SQLite3 + WAL config
-│   │   ├── schema.sql           # DDL (12 tables, triggers, indexes)
-│   │   └── migrations/          # Alembic versions
-│   └── tests/                   # pytest
-│       ├── test_articles.py
-│       ├── test_taxonomy.py
-│       ├── test_duplicates.py
-│       └── integration/
-
-├── data/                        # SQLite database (runtime)
-│   └── etnopapers.db           # Created on first run
-
+│   │   ├── connection.py        # MongoDB client
+│   │   └── schema.py            # Collection schemas + indexes
+│   └── requirements.txt
+│
+├── docker-compose.yml           # MongoDB + Ollama + API
 ├── Dockerfile                   # Multi-stage build
-├── docker-compose.yml          # Dev environment
 ├── .dockerignore
-├── requirements.txt            # Python dependencies
-├── .gitignore
-├── CLAUDE.md                   # Project guidance for Claude Code
-└── README.md                   # Portuguese setup guide
+├── requirements.txt             # Python deps
+├── CLAUDE.md                    # v2.0 guidelines
+└── README.md                    # v2.0 setup
+
+specs/main/
+├── spec.md                      # ✅ v2.0 specification
+├── plan.md                      # ✅ THIS FILE (v2.0)
+├── tasks.md                     # ✅ v2.0 tasks (regenerated)
+├── contracts/
+│   └── ai-integration.md        # ✅ v2.0 Ollama spec
+├── local-ai-integration.md      # Reference (technical deep-dive)
+├── plan-local-ai.md             # Reference (detailed roadmap)
+└── archive/v1.0/                # Archived v1.0 docs
+    ├── plan-v1.0.md
+    ├── tasks-v1.0.md
+    └── README.md
 ```
 
-## Rastreamento de Complexidade
+---
 
-**Status**: ✅ **Sem violações da Constituição**
+## Phases & Timeline
 
-Todas as decisões de design estão alinhadas com os 6 princípios e restrições da constituição. Nenhuma complexidade adicional necessária ou justificada.
+### Fase 0: Infrastructure Setup (1-2 days)
+
+**Objetivos**: Configurar Docker Compose com 3 serviços, GPU passthrough, e persistência.
+
+**Tarefas**:
+1. Atualizar docker-compose.yml:
+   - Ollama service com GPU passthrough (nvidia-docker)
+   - ollama_models volume (~4.8 GB)
+   - Qwen2.5 model download & healthcheck
+2. Configurar NVIDIA Container Toolkit
+3. Environment variables (MONGO_URI, OLLAMA_URL, OLLAMA_MODEL)
+4. Health checks para MongoDB e Ollama
+
+**Saída**: `docker-compose up` inicia 3 serviços com GPU
 
 ---
 
-## Roadmap de Implementação em Fases
+### Fase 1: Backend Extraction Service (2-3 days)
 
-### Fase 0: Pesquisa e Decisões Técnicas (CONCLUÍDA)
+**Objetivos**: Implementar AI local inference e novo endpoint de extração.
 
-**Objetivo**: Resolver todas as incertezas técnicas e documentar decisões com rationale.
+**Tarefas**:
+1. Create `backend/services/extraction_service.py`:
+   - OllamaClient (instructor + Pydantic)
+   - Structured output schemas (ReferenceMetadata, SpeciesData)
+   - Error handling & retries
+2. Create `backend/routers/extraction.py`:
+   - POST `/api/extract/metadata` endpoint
+   - Multipart/form-data (pdf_file, researcher_profile)
+   - PDF text extraction (pdfplumber)
+3. Update `backend/config.py`:
+   - OLLAMA_URL, OLLAMA_MODEL environment variables
+4. Tests:
+   - Unit tests para extraction_service
+   - Integration tests para endpoint
 
-**Tarefas Concluídas**:
-- [x] Análise pdf.js vs. Tesseract.js (pdf.js para texto nativo, Tesseract.js para OCR)
-- [x] Avaliação CORS de provedores IA (Claude > Gemini > ChatGPT para browser direto)
-- [x] SQLite WAL optimization research
-- [x] GBIF + Tropicos caching patterns
-- [x] Docker multi-stage build optimization
-- [x] Constituição do projeto criada
-
-**Saída**: `research.md` (já incluído via best-practices-research.md)
-
----
-
-### Fase 1: Design & Contratos (PRÓXIMA)
-
-**Objetivo**: Gerar modelos de dados, contratos API, e guias de início rápido.
-
-**Tarefas de Design**:
-1. **data-model.md**:
-   - Diagrama ER (12 tabelas)
-   - Schema SQL com validações e triggers
-   - Relacionamentos e constraints
-   - Índices de performance
-
-2. **contracts/api-rest.yaml**:
-   - 29 endpoints REST especificados em OpenAPI 3.0
-   - Request/response schemas
-   - Códigos de erro esperados
-   - Exemplos de uso
-
-3. **contracts/ai-integration.md**:
-   - Padrões Gemini, ChatGPT, Claude
-   - Prompts JSON estruturado
-   - Tratamento de erros e retry logic
-   - Validação de respostas
-
-4. **quickstart.md**:
-   - Setup dev: Node.js + Python venvs
-   - Setup prod: Docker Compose
-   - Variáveis de ambiente
-   - Testes manuais basic
-
-**Saída**: data-model.md, /contracts/*, quickstart.md
+**Saída**: `/api/extract/metadata` funcional, retorna metadados estruturados
 
 ---
 
-### Fase 2: Implementação por Sprints (APÓS PHASE 1)
+### Fase 2: Frontend Integration (1-2 days)
 
-**Sprint 0 (Setup - 2 semanas)**:
-- TASK-001: Estrutura diretórios
-- TASK-002: Docker Compose
-- TASK-003: Schema SQLite
+**Objetivos**: Atualizar frontend para chamar backend em vez de APIs externas.
 
-**Sprint 1 (Backend Core - 2 semanas)**:
-- TASK-004: FastAPI base
-- TASK-005: Endpoints CRUD
-- TASK-006: Detecção duplicatas
-- TASK-007: Validação taxonômica
+**Tarefas**:
+1. Remove `APIConfiguration` component (sem mais API key setup)
+2. Remove API key management from Zustand store
+3. Create `frontend/src/services/extractionService.ts`:
+   - POST to `/api/extract/metadata`
+   - Response parsing
+   - Error handling
+4. Update `PDFUpload` component:
+   - Call backend endpoint instead of external AI APIs
+5. Update error messages para português
+6. Remove external AI client files (geminiClient.ts, openaiClient.ts, claudeClient.ts)
 
-**Sprint 2 (Frontend Core - 2 semanas)**:
-- TASK-008: React + TypeScript setup
-- TASK-009: Zustand store
-- TASK-010: Configuração API key
-- TASK-011: Upload PDF
-- TASK-012: Extração texto PDF
-
-**Sprint 3 (IA Integration - 2 semanas)**:
-- TASK-013: Gemini
-- TASK-014: ChatGPT
-- TASK-015: Claude
-- TASK-016: Exibição metadados
-- TASK-017: Edição manual
-
-**Sprint 4 (Interface - 2 semanas)**:
-- TASK-018: Auto-save rascunhos
-- TASK-019: Tabela artigos
-- TASK-020: Download banco
-
-**Sprint 5+ (P2/P3 Melhorias)**:
-- TASK-021-029: Validações, PDFs escaneados, endpoints adicionais, etc.
-
-**Saída**: tasks.md com todos os 33 TASKs linkados a RF-xxxxx
+**Saída**: Frontend calls backend `/api/extract/metadata`, works end-to-end
 
 ---
 
-### Fase 3: Testes e Deploy (APÓS SPRINTS)
+### Fase 3: Testing & Refinement (2-3 days)
 
-**Objectives**:
-- Coverage > 80% (backend), E2E testes (frontend)
-- Documentação em português 100% completa
-- Compatibilidade UNRAID validada
+**Objetivos**: Validar qualidade de extração, performance, e casos extremos.
 
-**Saída**: Sistema pronto para produção em container Docker
+**Tarefas**:
+1. Create test dataset (20 PDFs com ground truth)
+2. Measure extraction accuracy by field
+3. Performance benchmarking across GPU models
+4. Optimize prompts para melhor qualidade
+5. Test edge cases:
+   - Scanned PDFs (aviso de qualidade)
+   - Artigos muito longos (> 20 páginas)
+   - PDFs com tabelas complexas
+6. Production readiness checks
+
+**Saída**: Quality metrics, performance baselines, prompt optimizations
+
+---
+
+### Fase 4: Documentation & Deploy (1 day)
+
+**Objetivos**: Documentação completa e preparação para produção.
+
+**Tarefas**:
+1. Update README:
+   - GPU setup instructions (NVIDIA driver, nvidia-docker)
+   - UNRAID-specific deployment guide
+   - Troubleshooting guide
+2. Create DEPLOYMENT.md:
+   - docker-compose.yml configuration
+   - Environment variables
+   - Backup strategy
+3. Update CLAUDE.md (already done)
+4. Release notes v2.0
+
+**Saída**: Production-ready system on UNRAID with GPU
+
+---
+
+## Roadmap Detalhado
+
+### Sprint 1: Infrastructure (Week 1, Day 1-2)
+
+- [ ] TASK-001: Update docker-compose.yml com Ollama service
+- [ ] TASK-002: Configure GPU passthrough (nvidia-docker)
+- [ ] TASK-003: Create MongoDB schema e índices
+- [ ] TASK-004: Test docker-compose up com healthchecks
+
+**Saída**: 3 serviços rodando (MongoDB, Ollama, API placeholder)
+
+---
+
+### Sprint 2: Backend Extraction (Week 1, Day 3-5)
+
+- [ ] TASK-005: Create extraction_service.py
+- [ ] TASK-006: Implement Ollama client com instructor
+- [ ] TASK-007: Create /api/extract/metadata endpoint
+- [ ] TASK-008: PDF text extraction (pdfplumber)
+- [ ] TASK-009: Error handling & structured validation
+- [ ] TASK-010: Unit + integration tests
+
+**Saída**: Backend API funcional, local AI working
+
+---
+
+### Sprint 3: Frontend (Week 2, Day 1-2)
+
+- [ ] TASK-011: Remove APIConfiguration component
+- [ ] TASK-012: Remove API key management
+- [ ] TASK-013: Create extractionService.ts
+- [ ] TASK-014: Update PDFUpload component
+- [ ] TASK-015: Update error messages (português)
+- [ ] TASK-016: Remove old AI client files
+
+**Saída**: Frontend integrado com backend
+
+---
+
+### Sprint 4: Testing & Refinement (Week 2, Day 3-5)
+
+- [ ] TASK-017: Create test dataset (20 PDFs)
+- [ ] TASK-018: Extraction accuracy measurement
+- [ ] TASK-019: Performance benchmarking
+- [ ] TASK-020: Prompt optimization
+- [ ] TASK-021: Edge case testing
+- [ ] TASK-022: Production readiness checklist
+
+**Saída**: Quality metrics, performance data, optimized prompts
+
+---
+
+### Sprint 5: Documentation (Week 3, Day 1)
+
+- [ ] TASK-023: Update README (GPU, UNRAID, troubleshooting)
+- [ ] TASK-024: Create DEPLOYMENT.md
+- [ ] TASK-025: Release notes v2.0
+- [ ] TASK-026: Final testing on UNRAID
+
+**Saída**: Production-ready v2.0 release
+
+---
+
+## Ordem de Execução (Caminho Crítico)
+
+Para MVP funcional:
+
+1. **Infrastructure** (TASK-001 a 004) → Bloqueia tudo
+2. **Backend Extraction** (TASK-005 a 010) → Bloqueia frontend
+3. **Frontend** (TASK-011 a 016) → Pode rodar em paralelo com testes
+4. **Testing** (TASK-017 a 022) → Valida qualidade
+5. **Docs** (TASK-023 a 026) → Final
+
+**Total estimado**: 7-10 dias (com team de 1 dev)
 
 ---
 
 ## Próximos Passos
 
-1. ✅ **Constitution criada** → Governa todas as decisões futuras
-2. ⏭️ **Phase 1 Design** → Gerar data-model.md, contracts/, quickstart.md
-3. ⏭️ **Phase 2 Tasks** → Executar `/speckit.tasks` para gerar tasks.md com 33 tarefas
-4. ⏭️ **Implementation** → Começar Sprint 0 com setup base
-5. ⏭️ **Testing & Deployment** → Validar com test data, deploy em UNRAID
+1. ✅ Constitution v2.0 aprovada
+2. ✅ Plan.md v2.0 finalizado
+3. ⏳ Tasks.md v2.0 regeneração
+4. ➡️ **Iniciar Fase 0: Infrastructure Setup**
+   - Atualizar docker-compose.yml
+   - Configurar NVIDIA Container Toolkit
+   - Testar Ollama container
+
+---
+
+**Última atualização**: 2025-11-24
+**Versão**: 2.0 (Local AI + MongoDB)
+**Status**: Pronto para implementação
+**Maintainer**: Etnopapers Team

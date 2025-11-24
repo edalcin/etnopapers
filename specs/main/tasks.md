@@ -1,1145 +1,848 @@
-# Tarefas de Implementação: Etnopapers
+# Tarefas de Implementação: Etnopapers v2.0
 
-**Funcionalidade**: Sistema de Extração de Metadados de Artigos Etnobotânicos
+**Funcionalidade**: Sistema de Extração de Metadados com AI Local
 **Branch**: main
-**Criado**: 2025-11-20
-**Status**: Planejamento Concluído
+**Versão**: 2.0 (Local AI + MongoDB)
+**Criado**: 2025-11-24
+**Status**: Pronto para implementação
 
-## Visão Geral
+---
 
-Este documento contém todas as tarefas necessárias para implementar o sistema Etnopapers, organizadas por fases e priorizadas conforme as histórias de usuário (P1, P2, P3).
+## Resumo Executivo
 
-**Metodologia de Estimativa**:
-- **Pontos**: Complexidade relativa (1, 2, 3, 5, 8, 13)
-- **1 ponto** ≈ 2-4 horas de desenvolvimento
-- **Total estimado**: 89 pontos ≈ 178-356 horas
+Este documento lista todas as tarefas necessárias para implementar o Etnopapers v2.0, organizado por fase de desenvolvimento.
+
+**Arquitetura**: Ollama + Qwen2.5-7B-Instruct (GPU) + MongoDB + FastAPI + React
+**Total Estimado**: 26 tarefas, ~7-10 dias com 1 dev
+**MVP Crítico**: Tarefas 1-16 (infraestrutura + backend + frontend core)
 
 ---
 
 ## Fase 0: Setup e Infraestrutura
 
-### TASK-001: Configurar Estrutura do Projeto
+### TASK-001: Atualizar docker-compose.yml com Ollama
 
 **Prioridade**: P0 (Crítica)
-**Pontos**: 2
+**Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Criar estrutura de diretórios e arquivos de configuração base para frontend e backend.
+**Descrição**: Adicionar serviço Ollama ao docker-compose.yml com GPU passthrough e persistência.
 
 **Critérios de Aceitação**:
-- [ ] Estrutura de diretórios criada: `/frontend`, `/backend`, `/data`
-- [ ] `package.json` do frontend configurado com React + TypeScript
-- [ ] `requirements.txt` do backend configurado com FastAPI
-- [ ] `.gitignore` configurado (node_modules, __pycache__, *.db, .env)
-- [ ] `README.md` na raiz com instruções básicas
-- [ ] `.env.example` com variáveis de ambiente documentadas
+- [ ] Service `ollama` adicionado (ollama/ollama:latest)
+- [ ] GPU passthrough configurado (nvidia.com/gpu: all)
+- [ ] Volume `ollama_models` criado para persistência (~4.8 GB)
+- [ ] Healthcheck implementado (curl /api/tags)
+- [ ] Qwen2.5-7B-Instruct-Q4 model setup
+- [ ] Dependency: etnopapers service depends_on ollama (healthy)
+- [ ] Environment variables: OLLAMA_URL=http://ollama:11434, OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
+- [ ] `docker-compose up` inicia 3 serviços (MongoDB, Ollama, Etnopapers)
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/package.json
-/frontend/tsconfig.json
-/backend/requirements.txt
-/backend/main.py (esqueleto)
-/.gitignore
-/.env.example
+/docker-compose.yml
 ```
 
 **Dependências**: Nenhuma
 
 ---
 
-### TASK-002: Configurar Docker e Docker Compose
+### TASK-002: Configurar NVIDIA Container Toolkit
+
+**Prioridade**: P0 (Crítica)
+**Pontos**: 2
+**Status**: Pendente
+
+**Descrição**: Documentar e validar NVIDIA Container Toolkit setup para GPU passthrough.
+
+**Critérios de Aceitação**:
+- [ ] NVIDIA driver instalado no host UNRAID
+- [ ] nvidia-docker runtime instalado
+- [ ] `/etc/docker/daemon.json` configurado com nvidia runtime
+- [ ] `docker run --gpus all nvidia/cuda:11.8.0 nvidia-smi` funciona
+- [ ] GPU visível dentro do container
+- [ ] Documentação em DEPLOYMENT.md
+
+**Arquivos**:
+```
+/DEPLOYMENT.md (new section)
+/README.md (GPU setup section)
+```
+
+**Dependências**: Nenhuma (pode rodar em paralelo com TASK-001)
+
+---
+
+### TASK-003: Criar MongoDB Schema e Índices
 
 **Prioridade**: P0 (Crítica)
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Criar Dockerfile multi-stage e docker-compose.yml para ambiente de desenvolvimento e produção.
+**Descrição**: Definir schema MongoDB com 4 collections (referencias, especies_plantas, comunidades_indígenas, localizacoes) e 18 índices.
 
 **Critérios de Aceitação**:
-- [ ] Dockerfile multi-stage (frontend builder + backend runtime)
-- [ ] Imagem base Alpine Linux
-- [ ] docker-compose.yml funcional
-- [ ] Volume `/data` mapeado para persistência SQLite
-- [ ] Variáveis de ambiente configuradas
-- [ ] `docker-compose up` inicia sistema com sucesso
-- [ ] Acesso via http://localhost:8000 funcionando
+- [ ] `backend/database/schema.py` criado com Pydantic models
+- [ ] 4 collections definidas com campos completos
+- [ ] 18 índices criados (doi unique, status, ano, text search, etc.)
+- [ ] Validações implementadas (year ranges, enum types, etc.)
+- [ ] Script de inicialização (`backend/database/init_db.py`)
+- [ ] Testes de integridade referencial
+- [ ] Documentação de estrutura de dados
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/Dockerfile
-/docker-compose.yml
-/.dockerignore
-```
-
-**Dependências**: TASK-001
-
-**Referência**: specs/main/research.md:170-217
-
----
-
-### TASK-003: Criar Schema do Banco SQLite
-
-**Prioridade**: P0 (Crítica)
-**Pontos**: 5
-**Status**: Pendente
-
-**Descrição**:
-Implementar schema completo do banco SQLite com 8 tabelas, triggers e índices.
-
-**Critérios de Aceitação**:
-- [ ] Script SQL com todas as 8 tabelas criado
-- [ ] Triggers para auditoria implementados (atualizar_modificacao_artigo, marcar_edicao_manual)
-- [ ] Todos os índices criados (18 índices incluindo idx_artigos_duplicatas)
-- [ ] View vw_artigos_completos criada
-- [ ] Script de migração com Alembic configurado
-- [ ] Testes de integridade referencial passando
-
-**Arquivos Criados**:
-```
-/backend/database/schema.sql
-/backend/database/migrations/001_initial_schema.py
+/backend/database/schema.py
 /backend/database/init_db.py
+/backend/database/indexes.py
 ```
 
-**Dependências**: TASK-002
-
-**Referência**: specs/main/data-model.md:56-520
+**Dependências**: TASK-001 (MongoDB precisa estar rodando)
 
 ---
 
-## Fase 1: MVP - Funcionalidades Essenciais (P1)
+### TASK-004: Validar Setup de Infraestrutura
 
-### TASK-004: Implementar Backend FastAPI Base
-
-**Prioridade**: P1
-**Pontos**: 3
+**Prioridade**: P0 (Crítica)
+**Pontos**: 2
 **Status**: Pendente
 
-**Descrição**:
-Criar aplicação FastAPI básica com conexão SQLite, CORS e estrutura de rotas.
+**Descrição**: Testar docker-compose com 3 serviços, healthchecks, e persistência.
 
 **Critérios de Aceitação**:
-- [ ] Aplicação FastAPI inicializada
-- [ ] Conexão com SQLite funcionando
-- [ ] CORS configurado para aceitar requests do frontend
-- [ ] Endpoint `/health` retornando status
-- [ ] SQLite em modo WAL (Write-Ahead Logging)
-- [ ] Logging configurado
-- [ ] Pydantic models para validação criados
+- [ ] `docker-compose up -d` inicia sem erros
+- [ ] MongoDB healthcheck passa (mongosh ping)
+- [ ] Ollama healthcheck passa (curl /api/tags)
+- [ ] Model Qwen2.5-7B-Instruct-Q4 carrega com sucesso
+- [ ] `docker exec etnopapers-ollama nvidia-smi` mostra GPU
+- [ ] Volumes persistem dados após container stop/start
+- [ ] Environment variables accessible dentro dos containers
+- [ ] Network connectivity entre serviços testada
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/backend/main.py
-/backend/database/connection.py
-/backend/models/article.py
-/backend/config.py
+/docker-compose.yml (validation)
+/tests/integration/docker_setup_test.sh
 ```
 
-**Dependências**: TASK-003
-
-**Referência**: specs/main/research.md:52-76
+**Dependências**: TASK-001, TASK-002, TASK-003
 
 ---
 
-### TASK-005: Implementar Endpoints CRUD de Artigos
+## Fase 1: Backend - Serviço de Extração
+
+### TASK-005: Criar extraction_service.py
 
 **Prioridade**: P1
 **Pontos**: 5
 **Status**: Pendente
 
-**Descrição**:
-Criar endpoints REST para criar, ler, atualizar e deletar artigos científicos.
+**Descrição**: Implementar serviço de AI local com Ollama + Instructor.
 
 **Critérios de Aceitação**:
-- [ ] POST /api/articles (criar artigo)
-- [ ] GET /api/articles (listar com paginação)
-- [ ] GET /api/articles/{id} (obter artigo específico)
-- [ ] PUT /api/articles/{id} (atualizar artigo)
-- [ ] DELETE /api/articles/{id} (excluir artigo)
-- [ ] Validação de dados com Pydantic
-- [ ] Retorno de erros apropriados (400, 404, 422)
-- [ ] Testes unitários com pytest
+- [ ] `backend/services/extraction_service.py` criado
+- [ ] Class `OllamaClient` com métodos:
+  - `__init__(url, model)`: Inicializa cliente
+  - `extract_metadata(pdf_text, researcher_profile=None)`: Extrai metadados
+  - `validate_response(response)`: Valida JSON estruturado
+- [ ] Pydantic schemas definidos:
+  - `SpeciesData`: Vernacular + scientific name
+  - `ReferenceMetadata`: Título, autores, ano, espécies, etc.
+- [ ] Instructor + OpenAI client configurado para Ollama
+- [ ] Error handling para timeouts, invalid JSON, etc.
+- [ ] Retry logic com backoff exponencial (max 3 attempts)
+- [ ] Temperature=0.1, top_p=0.9 configurados para determinism
+- [ ] Testes unitários implementados
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/backend/routers/articles.py
-/backend/services/article_service.py
-/backend/tests/test_articles.py
+/backend/services/extraction_service.py
+/backend/models/metadata.py
+/backend/tests/test_extraction_service.py
 ```
 
 **Dependências**: TASK-004
 
-**Referência**: specs/main/contracts/api-rest.yaml:51-235
-
 ---
 
-### TASK-006: Implementar Detecção de Duplicatas
+### TASK-006: Implementar Pydantic Schemas
 
 **Prioridade**: P1
-**Pontos**: 5
+**Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Implementar lógica de detecção de artigos duplicados usando DOI ou título+ano+autor.
+**Descrição**: Definir schemas Pydantic para validação de respostas da IA.
 
 **Critérios de Aceitação**:
-- [ ] Função de verificação de duplicatas implementada
-- [ ] Verificação por DOI (primária) funcional
-- [ ] Verificação por título+ano+autor (secundária) funcional
-- [ ] Query otimizada com índice idx_artigos_duplicatas
-- [ ] Endpoint retorna informações do artigo duplicado encontrado
-- [ ] Testes com casos de duplicatas reais
-- [ ] Testes com casos de não-duplicatas (falsos positivos)
+- [ ] `SpeciesData`: nome vernacular + científico
+- [ ] `ReferenceMetadata`: Todos os campos de artigo científico
+- [ ] Validações: ano (1900-2030), DOI format, minúsculas em campos de texto
+- [ ] Field descriptions em português
+- [ ] Examples para cada schema
+- [ ] Serialização/desserialização JSON testada
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/backend/services/duplicate_checker.py
-/backend/tests/test_duplicates.py
+/backend/models/metadata.py
+/backend/tests/test_metadata_models.py
 ```
 
 **Dependências**: TASK-005
 
-**Referência**: specs/main/spec.md:163-169, specs/main/data-model.md:124-156
-
 ---
 
-### TASK-007: Implementar Validação Taxonômica (GBIF/Tropicos)
+### TASK-007: Criar POST /api/extract/metadata Endpoint
 
 **Prioridade**: P1
 **Pontos**: 5
 **Status**: Pendente
 
-**Descrição**:
-Integrar APIs de taxonomia botânica (GBIF primária, Tropicos fallback) para validar nomes científicos.
+**Descrição**: Implementar endpoint principal de extração.
 
 **Critérios de Aceitação**:
-- [ ] Cliente HTTP para GBIF Species API implementado
-- [ ] Cliente HTTP para Tropicos API implementado (fallback)
-- [ ] Lógica de fallback funcional (GBIF → Tropicos)
-- [ ] Cache em memória implementado (dict Python)
-- [ ] Persistência do cache em JSON ao shutdown
-- [ ] Timeout de 5 segundos configurado
-- [ ] Tratamento de APIs offline (marca como "não validado")
-- [ ] Testes com espécies reais
+- [ ] `backend/routers/extraction.py` criado
+- [ ] POST `/api/extract/metadata` endpoint:
+  - Request: multipart/form-data (pdf_file, researcher_profile)
+  - Response: 200 OK com metadados estruturados
+  - Errors: 400 (invalid), 422 (extraction failed), 500 (ollama error)
+- [ ] File validation (PDF only, < 50 MB)
+- [ ] PDF text extraction com pdfplumber
+- [ ] Researcher profile parsing (JSON string → dict)
+- [ ] Extraction service integration
+- [ ] Response format: {metadata, extraction_time_ms, text_length, species_count}
+- [ ] Testes integrais com curl + real PDF
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/backend/services/taxonomy_service.py
-/backend/clients/gbif_client.py
-/backend/clients/tropicos_client.py
-/backend/tests/test_taxonomy.py
+/backend/routers/extraction.py
+/backend/tests/integration/test_extract_metadata.py
 ```
 
-**Dependências**: TASK-005
-
-**Referência**: specs/main/spec.md:144-147, specs/main/research.md:157-175
+**Dependências**: TASK-005, TASK-006
 
 ---
 
-### TASK-008: Configurar Frontend React + TypeScript
+### TASK-008: PDF Text Extraction com pdfplumber
 
 **Prioridade**: P1
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Inicializar aplicação React com TypeScript, configurar roteamento e estrutura de componentes.
+**Descrição**: Implementar extração robusta de texto de PDFs.
 
 **Critérios de Aceitação**:
-- [ ] Aplicação React criada com Vite
-- [ ] TypeScript configurado
-- [ ] React Router configurado
-- [ ] Estrutura de pastas organizada (components, pages, services, types)
-- [ ] ESLint e Prettier configurados
-- [ ] Tema básico/CSS global definido
-- [ ] Hot reload funcionando
+- [ ] `backend/services/pdf_service.py` criado
+- [ ] Função `extract_text_from_pdf(file_path)` retorna texto
+- [ ] Detecção de PDFs escaneados (confidence score)
+- [ ] Aviso de qualidade quando detectado scanned
+- [ ] Tratamento de PDFs corrompidos (exception handling)
+- [ ] Page merging com preservação de ordem
+- [ ] Limite: máximo 50 páginas (12500 caracteres por página)
+- [ ] Testes com PDFs reais (text + scanned)
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/App.tsx
-/frontend/src/main.tsx
-/frontend/src/router.tsx
-/frontend/vite.config.ts
-/frontend/.eslintrc.json
+/backend/services/pdf_service.py
+/backend/tests/test_pdf_service.py
 ```
 
-**Dependências**: TASK-001
-
-**Referência**: specs/main/research.md:14-50
+**Dependências**: Nenhuma
 
 ---
 
-### TASK-009: Implementar Gestão de Estado (Zustand)
+### TASK-009: Error Handling e Logging
 
 **Prioridade**: P1
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Criar store Zustand para gerenciar estado global da aplicação (API keys, metadados, drafts).
+**Descrição**: Implementar error handling robusto e logging estruturado.
 
 **Critérios de Aceitação**:
-- [ ] Store Zustand criado com interface AppState
-- [ ] State para API keys (provider, key, isValid)
-- [ ] State para upload e processamento
-- [ ] State para metadados extraídos e editados
-- [ ] State para rascunhos
-- [ ] Actions para todas as operações
-- [ ] TypeScript types completos
-- [ ] Persistência no localStorage (API keys)
+- [ ] `backend/exceptions.py` com custom exceptions:
+  - `InvalidPDFError`: Arquivo não é PDF
+  - `PDFTooLargeError`: > 50 MB
+  - `PDFCorruptedError`: Não consegue extrair texto
+  - `OllamaTimeoutError`: Inferência timeout (> 60s)
+  - `ExtractionValidationError`: JSON inválido
+- [ ] Logging com estrutura (timestamp, level, message, context)
+- [ ] Mensagens de erro em português
+- [ ] Sugestões de solução em mensagens de erro
+- [ ] Rate limiting (max 1 extraction/second per IP)
+- [ ] Request/response logging (não inclui PDFs)
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/store/useStore.ts
-/frontend/src/types/state.ts
+/backend/exceptions.py
+/backend/middleware/logging.py
+/backend/config.py (logging config)
 ```
 
-**Dependências**: TASK-008
-
-**Referência**: specs/main/research.md:291-319
+**Dependências**: TASK-007
 
 ---
 
-### TASK-010: Implementar Configuração de API Key
-
-**Prioridade**: P1
-**Pontos**: 3
-**Status**: Pendente
-
-**Descrição**:
-Criar interface para usuário selecionar provedor de IA e configurar API key.
-
-**Critérios de Aceitação**:
-- [ ] Componente de seleção de provedor (Gemini/ChatGPT/Claude)
-- [ ] Input de API key com validação
-- [ ] Botão "Validar e Salvar"
-- [ ] Validação assíncrona da chave (chamada de teste)
-- [ ] Feedback visual (loading, sucesso, erro)
-- [ ] Armazenamento no localStorage
-- [ ] Modal com instruções de como obter chave
-- [ ] Links para páginas de criação de chave
-
-**Arquivos Criados**:
-```
-/frontend/src/components/ApiKeySetup.tsx
-/frontend/src/services/apiKeyValidator.ts
-/frontend/src/components/ProviderSelector.tsx
-```
-
-**Dependências**: TASK-009
-
-**Referência**: specs/main/spec.md:31-33, specs/main/contracts/ai-integration.md:151-227
-
----
-
-### TASK-011: Implementar Upload de PDF
-
-**Prioridade**: P1
-**Pontos**: 3
-**Status**: Pendente
-
-**Descrição**:
-Criar componente de upload de PDF com drag-and-drop e validações.
-
-**Critérios de Aceitação**:
-- [ ] Área de drag-and-drop com react-dropzone
-- [ ] Botão "Selecionar PDF"
-- [ ] Validação de formato (.pdf apenas)
-- [ ] Validação de tamanho (máximo 50 MB)
-- [ ] Preview do arquivo selecionado
-- [ ] Barra de progresso durante processamento
-- [ ] Mensagens de erro claras
-- [ ] Cancelamento de upload
-
-**Arquivos Criados**:
-```
-/frontend/src/components/PdfUpload.tsx
-/frontend/src/utils/fileValidation.ts
-```
-
-**Dependências**: TASK-010
-
-**Referência**: specs/main/spec.md:34
-
----
-
-### TASK-012: Implementar Extração de Texto do PDF (pdf.js)
+### TASK-010: Testes Backend (Unit + Integration)
 
 **Prioridade**: P1
 **Pontos**: 5
 **Status**: Pendente
 
-**Descrição**:
-Usar pdf.js para extrair texto do PDF no navegador antes de enviar para API de IA.
+**Descrição**: Implementar suite completa de testes para backend.
 
 **Critérios de Aceitação**:
-- [ ] pdf.js integrado e configurado
-- [ ] Worker do pdf.js configurado
-- [ ] Função extractTextFromPDF implementada
-- [ ] Extração página por página funcionando
-- [ ] Tratamento de PDFs corrompidos
-- [ ] Tratamento de PDFs escaneados (aviso de qualidade)
-- [ ] Progress callback para barra de progresso
-- [ ] Testes com PDFs reais (texto e escaneados)
+- [ ] Unit tests para extraction_service (>90% coverage)
+- [ ] Unit tests para pdf_service
+- [ ] Unit tests para Pydantic models
+- [ ] Integration tests para /api/extract/metadata
+- [ ] Test fixtures: PDFs de exemplo, mock Ollama responses
+- [ ] Test dataset: 5 PDFs com ground truth
+- [ ] Testes de erro: invalid PDF, timeout, corrupt file
+- [ ] Coverage > 80%
+- [ ] `pytest` integrado na CI/CD
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/services/pdfExtractor.ts
-/frontend/public/pdf.worker.js
+/backend/tests/conftest.py
+/backend/tests/unit/test_*.py
+/backend/tests/integration/test_*.py
+/backend/tests/fixtures/sample_pdfs/
+```
+
+**Dependências**: TASK-007, TASK-008, TASK-009
+
+---
+
+## Fase 2: Frontend - Integração
+
+### TASK-011: Remover APIConfiguration Component
+
+**Prioridade**: P2
+**Pontos**: 2
+**Status**: Pendente
+
+**Descrição**: Eliminar seleção de provedor de IA e configuração de chave (v1.0 apenas).
+
+**Critérios de Aceitação**:
+- [ ] Componente `frontend/src/components/APIConfiguration.tsx` removido
+- [ ] Referências ao APIConfiguration removidas de Router
+- [ ] Zustand store limpo de `apiProvider` e `apiKey` states
+- [ ] Nenhuma tela de configuração inicial
+- [ ] Usuário acessa diretamente upload page
+
+**Arquivos**:
+```
+/frontend/src/components/APIConfiguration.tsx (DELETE)
+/frontend/src/router.tsx (update)
+/frontend/src/store/useStore.ts (clean API key state)
+```
+
+**Dependências**: Nenhuma
+
+---
+
+### TASK-012: Remover Gerenciamento de API Keys do Store
+
+**Prioridade**: P2
+**Pontos**: 2
+**Status**: Pendente
+
+**Descrição**: Limpar Zustand store de estados de API keys.
+
+**Critérios de Aceitação**:
+- [ ] `useStore.ts` removidos states:
+  - `apiProvider`
+  - `apiKey`
+  - `isApiKeyValid`
+  - `setApiKey`, `setApiProvider`, `validateApiKey`
+- [ ] localStorage limpeza de chaves antigas
+- [ ] Manter states para:
+  - `extractedMetadata`
+  - `drafts`
+  - `researcherProfile` (opcional)
+- [ ] TypeScript types atualizados
+
+**Arquivos**:
+```
+/frontend/src/store/useStore.ts (refactor)
+/frontend/src/types/state.ts (update)
 ```
 
 **Dependências**: TASK-011
 
-**Referência**: specs/main/contracts/ai-integration.md:571-591
-
 ---
 
-### TASK-013: Implementar Integração com Google Gemini
+### TASK-013: Criar extractionService.ts
 
-**Prioridade**: P1
-**Pontos**: 5
-**Status**: Pendente
-
-**Descrição**:
-Integrar Google Gemini API para extração de metadados do texto do PDF.
-
-**Critérios de Aceitação**:
-- [ ] Cliente HTTP para Gemini API implementado
-- [ ] Prompt template estruturado em português
-- [ ] Função extractWithGemini funcionando
-- [ ] Parsing de JSON da resposta
-- [ ] Tratamento de erros (401, 429, 500)
-- [ ] Retry logic com backoff exponencial
-- [ ] Timeout de 60 segundos
-- [ ] Validação do JSON retornado
-
-**Arquivos Criados**:
-```
-/frontend/src/services/ai/geminiClient.ts
-/frontend/src/services/ai/promptBuilder.ts
-/frontend/src/utils/metadataParser.ts
-```
-
-**Dependências**: TASK-012
-
-**Referência**: specs/main/contracts/ai-integration.md:19-105
-
----
-
-### TASK-014: Implementar Integração com OpenAI ChatGPT
-
-**Prioridade**: P1
+**Prioridade**: P2
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Integrar OpenAI ChatGPT API como opção alternativa de IA.
+**Descrição**: Implementar serviço frontend para chamar backend `/api/extract/metadata`.
 
 **Critérios de Aceitação**:
-- [ ] Cliente HTTP para OpenAI API implementado
-- [ ] Sistema de mensagens (system + user) configurado
-- [ ] Função extractWithChatGPT funcionando
-- [ ] Parsing de JSON da resposta
-- [ ] Compatível com mesmo prompt template do Gemini
-- [ ] Tratamento de erros OpenAI-specific
-- [ ] Testes com gpt-3.5-turbo
+- [ ] `frontend/src/services/extractionService.ts` criado
+- [ ] Função `extractMetadata(pdfFile, researcherProfile)`:
+  - POST multipart/form-data para `/api/extract/metadata`
+  - Retorna metadados estruturados
+  - Progress callback para barra de progresso
+- [ ] Error handling (400, 422, 500 errors)
+- [ ] Timeout handling (60s max)
+- [ ] Retry logic para transient failures
+- [ ] Request/response logging
+- [ ] Testes com mock server
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/services/ai/openaiClient.ts
+/frontend/src/services/extractionService.ts
+/frontend/src/tests/services/extractionService.test.ts
+```
+
+**Dependências**: TASK-007
+
+---
+
+### TASK-014: Atualizar PDFUpload Component
+
+**Prioridade**: P2
+**Pontos**: 3
+**Status**: Pendente
+
+**Descrição**: Integrar component upload com novo backend extraction.
+
+**Critérios de Aceitação**:
+- [ ] `frontend/src/components/PDFUpload.tsx` atualizado
+- [ ] Remove chamadas a externa AI APIs (Gemini/ChatGPT/Claude)
+- [ ] Chama `extractionService.extractMetadata()` em vez disso
+- [ ] Barra de progresso (upload + extraction)
+- [ ] Status messages em português
+- [ ] Error messages com sugestões (ex: "PDF corrompido. Tente outro arquivo")
+- [ ] Cancel upload button
+- [ ] Testes com mock extraction service
+
+**Arquivos**:
+```
+/frontend/src/components/PDFUpload.tsx (update)
+/frontend/src/tests/components/PDFUpload.test.tsx
 ```
 
 **Dependências**: TASK-013
 
-**Referência**: specs/main/contracts/ai-integration.md:107-179
+---
+
+### TASK-015: Atualizar Mensagens de Erro (Português)
+
+**Prioridade**: P2
+**Pontos**: 2
+**Status**: Pendente
+
+**Descrição**: Localizar todas mensagens de erro para português brasileiro.
+
+**Critérios de Aceitação**:
+- [ ] Todas mensagens de erro da UI em português
+- [ ] Mensagens backend retornam em português
+- [ ] Sugestões de solução incluídas (ex: "Arquivo muito grande. Máximo 50 MB")
+- [ ] Evitar jargão técnico ou explicar claramente
+- [ ] Testes de mensagens críticas
+
+**Arquivos**:
+```
+/frontend/src/constants/messages.ts (create)
+/backend/exceptions.py (update messages)
+/frontend/src/services/*.ts (update error handling)
+```
+
+**Dependências**: TASK-014
 
 ---
 
-### TASK-015: Implementar Integração com Anthropic Claude
+### TASK-016: Remover AI Client Files (v1.0)
 
-**Prioridade**: P1
+**Prioridade**: P2
+**Pontos**: 1
+**Status**: Pendente
+
+**Descrição**: Deletar arquivos legados de AI providers externos.
+
+**Critérios de Aceitação**:
+- [ ] `frontend/src/services/ai/geminiClient.ts` removido
+- [ ] `frontend/src/services/ai/openaiClient.ts` removido
+- [ ] `frontend/src/services/ai/claudeClient.ts` removido
+- [ ] `frontend/src/services/ai/promptBuilder.ts` removido
+- [ ] Referências removidas de package.json (axios se não usado)
+- [ ] Build sem erros
+
+**Arquivos**:
+```
+/frontend/src/services/ai/ (DELETE directory)
+/frontend/package.json (cleanup deps)
+```
+
+**Dependências**: TASK-014
+
+---
+
+## Fase 3: Testing & Refinement
+
+### TASK-017: Criar Test Dataset
+
+**Prioridade**: P3
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Integrar Anthropic Claude API como terceira opção de IA.
+**Descrição**: Preparar 20 PDFs com metadata ground truth para validação.
 
 **Critérios de Aceitação**:
-- [ ] Cliente HTTP para Claude API implementado
-- [ ] Sistema de mensagens + system prompt configurado
-- [ ] Função extractWithClaude funcionando
-- [ ] Header anthropic-version configurado
-- [ ] Compatível com mesmo prompt template
-- [ ] Testes com claude-3-haiku-20240307
+- [ ] 20 PDFs coletados (etnobotânica reais)
+- [ ] Ground truth JSON para cada PDF:
+  - titulo, autores, ano, DOI
+  - especies (vernacular + científico)
+  - país, estado, município
+  - tipo_de_uso, bioma
+- [ ] Distribuição de dificuldade:
+  - 5 Easy (clara estrutura, texto bem formatado)
+  - 10 Medium (algumas ambiguidades)
+  - 5 Hard (tabelas complexas, nomes ambíguos)
+- [ ] Armazenado em `/backend/tests/fixtures/test_pdfs/`
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/services/ai/claudeClient.ts
+/backend/tests/fixtures/test_pdfs/ (20 PDFs)
+/backend/tests/fixtures/ground_truth.json
 ```
 
-**Dependências**: TASK-013
-
-**Referência**: specs/main/contracts/ai-integration.md:181-253
+**Dependências**: TASK-010
 
 ---
 
-### TASK-016: Implementar Exibição de Metadados Extraídos
+### TASK-018: Medir Acurácia de Extração
 
-**Prioridade**: P1
+**Prioridade**: P3
 **Pontos**: 5
 **Status**: Pendente
 
-**Descrição**:
-Criar interface para exibir metadados extraídos pela IA com opções "Salvar", "Editar", "Descartar".
+**Descrição**: Avaliar qualidade de extração contra ground truth.
 
 **Critérios de Aceitação**:
-- [ ] Componente de exibição de metadados estruturado
-- [ ] Campos agrupados por categoria (bibliográficos, geográficos, botânicos, metodológicos)
-- [ ] Indicação visual de campos não extraídos (⚠️)
-- [ ] Botão "Salvar" (finaliza no BD)
-- [ ] Botão "Editar" (abre interface de edição)
-- [ ] Botão "Descartar" (com confirmação)
-- [ ] Exibição de lista de espécies de plantas
-- [ ] Exibição de regiões e comunidades
+- [ ] Script de avaliação: `backend/scripts/evaluate_extraction.py`
+- [ ] Métricas por campo:
+  - Título: exact match %
+  - Autores: nombre completo correto %
+  - Ano: exact match %
+  - Espécies: name matching (cientfico vs vernacular)
+  - Localização: geographic accuracy
+- [ ] Relatório HTML com detalhes por PDF
+- [ ] Target: > 80% overall accuracy
+- [ ] Identificar campos problemáticos para prompt tuning
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/components/MetadataDisplay.tsx
-/frontend/src/components/FieldGroup.tsx
-```
-
-**Dependências**: TASK-015
-
-**Referência**: specs/main/spec.md:35-39
-
----
-
-### TASK-017: Implementar Interface de Edição Manual
-
-**Prioridade**: P1
-**Pontos**: 8
-**Status**: Pendente
-
-**Descrição**:
-Criar formulário completo para edição manual de todos os metadados extraídos.
-
-**Critérios de Aceitação**:
-- [ ] Formulário com react-hook-form implementado
-- [ ] Todos os campos editáveis (texto, número, data, arrays)
-- [ ] Validações de campo (ano 1900-2100, formato DOI)
-- [ ] Campos de lista dinâmica (autores, espécies)
-- [ ] Botões "Adicionar" e "Remover" para listas
-- [ ] Auto-save com debounce de 2 segundos
-- [ ] Indicação visual de campos editados (📝)
-- [ ] Botão "Salvar Alterações"
-- [ ] Botão "Cancelar"
-
-**Arquivos Criados**:
-```
-/frontend/src/components/MetadataEditor.tsx
-/frontend/src/components/forms/DynamicListField.tsx
-/frontend/src/hooks/useAutoSave.ts
-```
-
-**Dependências**: TASK-016
-
-**Referência**: specs/main/spec.md:69-73
-
----
-
-### TASK-018: Implementar Auto-Save de Rascunhos
-
-**Prioridade**: P1
-**Pontos**: 3
-**Status**: Pendente
-
-**Descrição**:
-Implementar salvamento automático como rascunho quando usuário fecha janela sem salvar.
-
-**Critérios de Aceitação**:
-- [ ] Listener `beforeunload` configurado
-- [ ] POST para backend com status "rascunho"
-- [ ] Dados salvos no BD automaticamente
-- [ ] Rascunho recuperável na próxima sessão
-- [ ] Timeout de 7 dias para limpeza automática
-- [ ] Seção "Rascunhos Pendentes" na interface
-- [ ] Botão "Finalizar Rascunho"
-
-**Arquivos Criados**:
-```
-/frontend/src/hooks/useAutoSaveDraft.ts
-/frontend/src/components/DraftsList.tsx
+/backend/scripts/evaluate_extraction.py
+/backend/results/evaluation_report.html
 ```
 
 **Dependências**: TASK-017
 
-**Referência**: specs/main/spec.md:40, 161-162
-
 ---
 
-### TASK-019: Implementar Tabela de Artigos com TanStack Table
-
-**Prioridade**: P1
-**Pontos**: 8
-**Status**: Pendente
-
-**Descrição**:
-Criar tabela de artigos processados com ordenação, filtros e paginação usando TanStack Table.
-
-**Critérios de Aceitação**:
-- [ ] Tabela com 6 colunas implementada (título, ano, autores, status, data, espécies)
-- [ ] Ordenação por coluna (crescente/decrescente)
-- [ ] Filtro global com busca em tempo real
-- [ ] Debounce de 300ms no filtro
-- [ ] Paginação client-side (50 itens/página)
-- [ ] Navegação de páginas (primeira, anterior, próxima, última)
-- [ ] Indicador "Mostrando X-Y de Z artigos"
-- [ ] Mensagem quando vazio: "Nenhum artigo processado ainda"
-- [ ] Clique em linha abre detalhes do artigo
-- [ ] Performance < 2s para 1000 artigos
-
-**Arquivos Criados**:
-```
-/frontend/src/components/ArticlesTable.tsx
-/frontend/src/hooks/useArticlesTable.ts
-/frontend/src/types/article.ts
-```
-
-**Dependências**: TASK-009
-
-**Referência**: specs/main/spec.md:170-179, specs/main/research.md:348-415
-
----
-
-### TASK-020: Implementar Download do Banco de Dados
-
-**Prioridade**: P1
-**Pontos**: 5
-**Status**: Pendente
-
-**Descrição**:
-Implementar endpoint backend e botão frontend para download completo do arquivo SQLite.
-
-**Critérios de Aceitação**:
-- [ ] Endpoint GET /api/database/download implementado
-- [ ] PRAGMA integrity_check antes de envio
-- [ ] FileResponse com streaming
-- [ ] Nome do arquivo: etnopapers_YYYYMMDD.db
-- [ ] Headers Content-Disposition configurados
-- [ ] Botão "Download Base de Dados" no frontend
-- [ ] Download via fetch + blob + createElement('a')
-- [ ] Feedback visual (toast/notificação)
-- [ ] Tratamento de erros (500 se integridade falhar)
-- [ ] Endpoint GET /api/database/info com estatísticas
-
-**Arquivos Criados**:
-```
-/backend/routers/database.py
-/frontend/src/components/DatabaseDownload.tsx
-/frontend/src/services/databaseService.ts
-```
-
-**Dependências**: TASK-005
-
-**Referência**: specs/main/spec.md:175-179, specs/main/research.md:417-511
-
----
-
-## Fase 2: Melhorias e Validações (P2)
-
-### TASK-021: Implementar Validação de Uploads
-
-**Prioridade**: P2
-**Pontos**: 3
-**Status**: Pendente
-
-**Descrição**:
-Adicionar validações robustas para arquivos não-PDF, PDFs corrompidos e mensagens de erro claras.
-
-**Critérios de Aceitação**:
-- [ ] Rejeição de arquivos não-PDF com mensagem clara
-- [ ] Detecção de PDFs corrompidos
-- [ ] Mensagem de erro em português
-- [ ] Sugestões de solução nos erros
-- [ ] Validação de tamanho (50 MB) com mensagem clara
-- [ ] Testes com diversos formatos inválidos
-
-**Arquivos Criados/Modificados**:
-```
-/frontend/src/utils/fileValidation.ts (modificar)
-/frontend/src/components/ErrorMessage.tsx (criar)
-```
-
-**Dependências**: TASK-011
-
-**Referência**: specs/main/spec.md:54-56
-
----
-
-### TASK-022: Implementar Detecção de PDFs Escaneados
-
-**Prioridade**: P2
-**Pontos**: 3
-**Status**: Pendente
-
-**Descrição**:
-Detectar PDFs escaneados (imagem) e exibir aviso de qualidade reduzida.
-
-**Critérios de Aceitação**:
-- [ ] Heurística para detectar PDFs escaneados (baixo ratio de texto)
-- [ ] Aviso visual: "PDF escaneado detectado - qualidade de extração pode estar reduzida"
-- [ ] Redirecionamento automático para interface de edição após extração
-- [ ] Recomendação de revisão manual
-- [ ] Testes com PDFs escaneados reais
-
-**Arquivos Criados/Modificados**:
-```
-/frontend/src/utils/pdfQualityDetector.ts (criar)
-/frontend/src/services/pdfExtractor.ts (modificar)
-```
-
-**Dependências**: TASK-012
-
-**Referência**: specs/main/spec.md:131-132
-
----
-
-### TASK-023: Implementar Interface de Detecção de Duplicatas
-
-**Prioridade**: P2
-**Pontos**: 5
-**Status**: Pendente
-
-**Descrição**:
-Criar modal/interface para exibir duplicata detectada e permitir escolha (Descartar/Sobrescrever).
-
-**Critérios de Aceitação**:
-- [ ] Modal de duplicata com informações do artigo existente
-- [ ] Exibir: título, data de processamento, status
-- [ ] Botão "Descartar" (fecha modal, descarta novos dados)
-- [ ] Botão "Sobrescrever" (substitui registro existente)
-- [ ] Confirmação antes de sobrescrever
-- [ ] Integração com detecção backend (TASK-006)
-- [ ] Mensagem clara e amigável
-
-**Arquivos Criados**:
-```
-/frontend/src/components/DuplicateModal.tsx
-```
-
-**Dependências**: TASK-006, TASK-016
-
-**Referência**: specs/main/spec.md:57-61, 166-169
-
----
-
-### TASK-024: Implementar Endpoints de Espécies
-
-**Prioridade**: P2
-**Pontos**: 3
-**Status**: Pendente
-
-**Descrição**:
-Criar endpoints REST para consulta de espécies de plantas.
-
-**Critérios de Aceitação**:
-- [ ] GET /api/species (listar com filtros)
-- [ ] GET /api/species/{id} (obter espécie específica com artigos)
-- [ ] Filtros: família, status de validação, busca por nome
-- [ ] Paginação implementada
-- [ ] Response inclui artigos que mencionam a espécie
-
-**Arquivos Criados**:
-```
-/backend/routers/species.py
-/backend/services/species_service.py
-```
-
-**Dependências**: TASK-005
-
-**Referência**: specs/main/contracts/api-rest.yaml:271-323
-
----
-
-### TASK-025: Implementar Endpoints de Regiões e Comunidades
-
-**Prioridade**: P2
-**Pontos**: 3
-**Status**: Pendente
-
-**Descrição**:
-Criar endpoints REST para consulta de regiões de estudo e comunidades tradicionais.
-
-**Critérios de Aceitação**:
-- [ ] GET /api/regions (listar regiões)
-- [ ] GET /api/regions/{id} (obter região com artigos e comunidades)
-- [ ] GET /api/communities (listar comunidades)
-- [ ] GET /api/communities/{id} (obter comunidade com artigos)
-- [ ] Filtros por país, estado, tipo de comunidade
-
-**Arquivos Criados**:
-```
-/backend/routers/regions.py
-/backend/routers/communities.py
-/backend/services/region_service.py
-/backend/services/community_service.py
-```
-
-**Dependências**: TASK-005
-
-**Referência**: specs/main/contracts/api-rest.yaml:371-465
-
----
-
-## Fase 3: Funcionalidades Avançadas (P3)
-
-### TASK-026: Implementar Histórico e Detalhes de Artigos
-
-**Prioridade**: P3
-**Pontos**: 5
-**Status**: Pendente
-
-**Descrição**:
-Criar página de histórico com filtros avançados e visualização detalhada de artigos.
-
-**Critérios de Aceitação**:
-- [ ] Página /history com lista de artigos
-- [ ] Filtros: ano (slider), status, busca textual
-- [ ] Modal de detalhes ao clicar em artigo
-- [ ] Exibição completa de metadados
-- [ ] Botões "Editar" e "Excluir" com confirmação
-- [ ] Navegação de volta para lista
-
-**Arquivos Criados**:
-```
-/frontend/src/pages/History.tsx
-/frontend/src/components/ArticleDetails.tsx
-/frontend/src/components/FilterPanel.tsx
-```
-
-**Dependências**: TASK-019
-
-**Referência**: specs/main/spec.md:85-88
-
----
-
-### TASK-027: Implementar Página de Rascunhos
+### TASK-019: Performance Benchmarking
 
 **Prioridade**: P3
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Criar página dedicada para gerenciar rascunhos pendentes.
+**Descrição**: Medir velocidade de inferência em diferentes GPUs.
 
 **Critérios de Aceitação**:
-- [ ] Página /drafts com lista de rascunhos
-- [ ] Indicação de tempo desde criação
-- [ ] Botão "Finalizar" para cada rascunho
-- [ ] Botão "Limpar Rascunhos Antigos" (>7 dias)
-- [ ] Contador de rascunhos pendentes
+- [ ] Benchmark script testa 5-10 PDFs em loop
+- [ ] Métricas:
+  - Tempo de inferência Ollama
+  - Tempo de extração PDF
+  - Tempo total end-to-end
+- [ ] Testes em:
+  - RTX 3060 (target GPU)
+  - RTX 4070 (ideal)
+  - CPU-only (reference)
+- [ ] Resultados documentados em performance_benchmark.md
+- [ ] Target: < 3s no RTX 3060+
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/pages/Drafts.tsx
+/backend/scripts/benchmark_extraction.py
+/docs/performance_benchmark.md
+```
+
+**Dependências**: TASK-004
+
+---
+
+### TASK-020: Otimização de Prompts
+
+**Prioridade**: P3
+**Pontos**: 5
+**Status**: Pendente
+
+**Descrição**: Iterar prompts para melhorar qualidade de extração.
+
+**Critérios de Aceitação**:
+- [ ] System prompt refinado (campo descriptions, exemplos)
+- [ ] User prompt melhorado (estrutura, hints para campos problemáticos)
+- [ ] Testes de variações (5+ versões)
+- [ ] Medição de impacto (antes/depois acurácia)
+- [ ] Documentação das mudanças em `/backend/prompts/`
+- [ ] Target: 85%+ accuracy (vs 80% baseline)
+
+**Arquivos**:
+```
+/backend/prompts/system_prompt.txt
+/backend/prompts/user_prompt_template.txt
+/backend/tests/test_prompt_variations.py
 ```
 
 **Dependências**: TASK-018
 
-**Referência**: specs/main/quickstart.md:589-605
-
 ---
 
-### TASK-028: Implementar Configurações e Gerenciamento de API Keys
+### TASK-021: Testes de Casos Extremos
 
 **Prioridade**: P3
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Criar página de configurações para gerenciar API keys e preferências.
+**Descrição**: Validar comportamento em cenários desafiadores.
 
 **Critérios de Aceitação**:
-- [ ] Página /settings
-- [ ] Visualizar chave armazenada (mascarada)
-- [ ] Trocar de provedor de IA
-- [ ] Atualizar chave de API
-- [ ] Remover chave do localStorage
-- [ ] Botão "Testar Chave"
-- [ ] Seção "Info do Banco" com estatísticas
+- [ ] PDFs escaneados:
+  - Detectados corretamente
+  - Aviso de qualidade exibido
+  - Ainda extraem algum texto
+- [ ] PDFs muito longos (50+ páginas):
+  - Truncamento inteligente
+  - Sem crash ou timeout
+- [ ] PDFs corrompidos:
+  - Erro claro ao usuário
+  - Não causa problema no server
+- [ ] Tabelas complexas:
+  - Extração ragioável
+  - Nomes científicos identificados mesmo em tabelas
+- [ ] Múltiplos idiomas:
+  - Português, inglês, espanhol todas processadas
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/frontend/src/pages/Settings.tsx
-/frontend/src/components/ApiKeyManager.tsx
-/frontend/src/components/DatabaseInfo.tsx
+/backend/tests/test_edge_cases.py
+/backend/tests/fixtures/edge_case_pdfs/
 ```
 
 **Dependências**: TASK-010
 
-**Referência**: specs/main/quickstart.md:639-671
-
 ---
 
-### TASK-029: Implementar Exportação para CSV
+### TASK-022: Production Readiness Checklist
 
 **Prioridade**: P3
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Adicionar funcionalidade de exportar dados para CSV (artigos, espécies, regiões, comunidades).
+**Descrição**: Validação final antes do deploy.
 
 **Critérios de Aceitação**:
-- [ ] Botão "Exportar para CSV" no histórico
-- [ ] Seleção de tabela a exportar
-- [ ] Geração de CSV no backend
-- [ ] Download automático
-- [ ] Headers em português
-- [ ] Encoding UTF-8 com BOM (compatibilidade Excel)
+- [ ] All P0/P1 tasks completed
+- [ ] Test coverage > 80%
+- [ ] No security vulnerabilities (no plaintext secrets, SQL injection, etc.)
+- [ ] Performance: < 3s extraction on RTX 3060+
+- [ ] Accuracy: > 80% on test dataset
+- [ ] Error messages: 100% português
+- [ ] Docker build: < 5 min, image < 1 GB
+- [ ] `docker-compose up` works end-to-end
+- [ ] Healthchecks pass (MongoDB, Ollama, API)
+- [ ] Database backup/restore tested
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/backend/routers/export.py
-/backend/services/csv_exporter.py
-/frontend/src/components/ExportButton.tsx
+/docs/PRODUCTION_CHECKLIST.md
 ```
 
-**Dependências**: TASK-024, TASK-025
+**Dependências**: Todas tarefas anteriores
 
 ---
 
-## Fase 4: Testes, Documentação e Deploy
+## Fase 4: Documentação & Deploy
 
-### TASK-030: Implementar Testes de Integração
+### TASK-023: Atualizar README (GPU, UNRAID, Troubleshooting)
 
-**Prioridade**: P2
-**Pontos**: 8
+**Prioridade**: P3
+**Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Criar suite completa de testes de integração para backend e frontend.
+**Descrição**: Documentação de setup e uso.
 
 **Critérios de Aceitação**:
-- [ ] Testes de integração backend com pytest
-- [ ] Testes E2E frontend com Playwright/Cypress
-- [ ] Testes de fluxo completo (upload → extração → salvamento)
-- [ ] Testes de detecção de duplicatas
-- [ ] Testes de validação taxonômica
-- [ ] Coverage > 80%
-- [ ] CI/CD configurado (GitHub Actions)
+- [ ] GPU requirements (RTX 3060+, 6-8 GB VRAM)
+- [ ] UNRAID installation steps
+- [ ] NVIDIA driver & nvidia-docker setup
+- [ ] `docker-compose up` instructions
+- [ ] Troubleshooting section:
+  - GPU não detectada
+  - Modelo não carrega
+  - Inferência muito lenta
+  - Erro de memória (OOM)
+- [ ] Quick start example
+- [ ] FAQ português
 
-**Arquivos Criados**:
+**Arquivos**:
 ```
-/backend/tests/integration/
-/frontend/tests/e2e/
-/.github/workflows/ci.yml
+/README.md (rewrite)
 ```
 
-**Dependências**: Todas as tarefas P1
+**Dependências**: TASK-004
 
 ---
 
-### TASK-031: Documentar API com Swagger/OpenAPI
+### TASK-024: Criar DEPLOYMENT.md
 
 **Prioridade**: P3
 **Pontos**: 2
 **Status**: Pendente
 
-**Descrição**:
-Garantir que documentação automática do FastAPI está completa e acessível.
+**Descrição**: Guia detalhado de deployment em produção.
 
 **Critérios de Aceitação**:
-- [ ] Todos os endpoints documentados com docstrings
-- [ ] Swagger UI acessível em /docs
-- [ ] ReDoc acessível em /redoc
-- [ ] Exemplos de request/response
-- [ ] Descrições em português
+- [ ] docker-compose.yml explicado (cada serviço)
+- [ ] Environment variables documentadas
+- [ ] Backup strategy (MongoDB export)
+- [ ] Update strategy (git pull + docker-compose rebuild)
+- [ ] Monitoring (healthchecks, logs)
+- [ ] Scaling (single instance vs multi-instance)
+- [ ] Security hardening (CORS, rate limits)
 
-**Arquivos Modificados**:
+**Arquivos**:
 ```
-/backend/routers/*.py (adicionar docstrings)
+/docs/DEPLOYMENT.md (new)
 ```
 
-**Dependências**: TASK-005, TASK-024, TASK-025
+**Dependências**: TASK-004
 
 ---
 
-### TASK-032: Otimizar Performance Frontend
+### TASK-025: Release Notes v2.0
 
 **Prioridade**: P3
-**Pontos**: 5
+**Pontos**: 2
 **Status**: Pendente
 
-**Descrição**:
-Implementar otimizações de performance para tabela e interface.
+**Descrição**: Documentar mudanças v1.0 → v2.0.
 
 **Critérios de Aceitação**:
-- [ ] Code splitting com lazy loading
-- [ ] Memoização de componentes com React.memo
-- [ ] Debounce em filtros (implementado)
-- [ ] Virtualização de listas se necessário
-- [ ] Bundle size < 500 KB
-- [ ] Lighthouse score > 90
+- [ ] O que é novo em v2.0:
+  - AI local (Ollama + Qwen2.5)
+  - MongoDB (NoSQL)
+  - GPU requirement
+  - Sem API keys
+- [ ] O que mudou (breaking changes)
+- [ ] O que foi removido (v1.0 features)
+- [ ] Performance improvements
+- [ ] Known limitations
 
-**Arquivos Modificados**:
+**Arquivos**:
 ```
-/frontend/src/router.tsx (lazy loading)
-/frontend/src/components/*.tsx (React.memo)
+/docs/RELEASE_NOTES_v2.0.md (new)
 ```
 
-**Dependências**: TASK-019
-
-**Referência**: specs/main/research.md:329-346
+**Dependências**: TASK-023, TASK-024
 
 ---
 
-### TASK-033: Preparar para Produção
+### TASK-026: Teste Final em UNRAID
 
-**Prioridade**: P0 (antes de deploy)
-**Pontos**: 5
+**Prioridade**: P3
+**Pontos**: 3
 **Status**: Pendente
 
-**Descrição**:
-Configurar variáveis de ambiente, segurança e preparar para deploy.
+**Descrição**: Validação end-to-end em servidor UNRAID com GPU.
 
 **Critérios de Aceitação**:
-- [ ] Variáveis de ambiente em produção configuradas
-- [ ] HTTPS configurado
-- [ ] Rate limiting implementado
-- [ ] Logs estruturados
-- [ ] Backup automático do SQLite configurado
-- [ ] Documentação de deploy atualizada
-- [ ] Health checks configurados
+- [ ] `docker-compose up` inicia sem erros no UNRAID
+- [ ] GPU visível e utilizada (nvidia-smi)
+- [ ] MongoDB persiste dados após reboot
+- [ ] Ollama model carrega corretamente
+- [ ] Upload PDF → Extração → Salvamento funciona end-to-end
+- [ ] Metadados salvos corretamente no MongoDB
+- [ ] Performance aceitável (< 3s inferência)
+- [ ] Mensagens de erro em português aparecem corretamente
+- [ ] Teardown/cleanup funciona (docker-compose down -v)
 
-**Arquivos Criados/Modificados**:
+**Arquivos**:
 ```
-/backend/middleware/rate_limiter.py
-/backend/config.py (prod settings)
-/docs/deployment.md
+/tests/integration/e2e_unraid_test.sh
 ```
 
-**Dependências**: Todas as tarefas P1
+**Dependências**: Todas tarefas P0, P1
 
 ---
 
 ## Resumo de Estimativas
 
-### Por Prioridade
-
-| Prioridade | Tarefas | Pontos | Horas Estimadas |
-|------------|---------|--------|-----------------|
-| P0         | 3       | 10     | 20-40h          |
-| P1         | 17      | 76     | 152-304h        |
-| P2         | 5       | 17     | 34-68h          |
-| P3         | 8       | 31     | 62-124h         |
-| **Total**  | **33**  | **134**| **268-536h**    |
-
 ### Por Fase
 
-| Fase              | Tarefas | Pontos | Horas Estimadas |
-|-------------------|---------|--------|-----------------|
-| 0: Setup          | 3       | 10     | 20-40h          |
-| 1: MVP (P1)       | 17      | 76     | 152-304h        |
-| 2: Melhorias (P2) | 5       | 17     | 34-68h          |
-| 3: Avançado (P3)  | 5       | 21     | 42-84h          |
-| 4: Testes/Deploy  | 3       | 15     | 30-60h          |
-| **Total**         | **33**  | **139**| **278-556h**    |
+| Fase | Tarefas | Pontos | Horas Estimadas |
+|------|---------|--------|-----------------|
+| **0: Setup** | 4 | 10 | 20-40h |
+| **1: Backend** | 6 | 19 | 38-76h |
+| **2: Frontend** | 6 | 13 | 26-52h |
+| **3: Testing** | 6 | 22 | 44-88h |
+| **4: Docs** | 4 | 10 | 20-40h |
+| **Total** | **26** | **74** | **148-296h** |
 
 ### Caminho Crítico (MVP)
 
-Para ter um MVP funcional, as seguintes tarefas são críticas:
+1. TASK-001 → TASK-002 → TASK-003 → TASK-004 (Setup: 10 pontos)
+2. TASK-005 → TASK-006 → TASK-007 → TASK-008 → TASK-009 (Backend: 19 pontos)
+3. TASK-011 → TASK-013 → TASK-014 (Frontend: 8 pontos)
 
-1. TASK-001 → TASK-002 → TASK-003 (Setup: 10 pontos)
-2. TASK-004 → TASK-005 → TASK-006 → TASK-007 (Backend: 18 pontos)
-3. TASK-008 → TASK-009 → TASK-010 (Frontend Base: 9 pontos)
-4. TASK-011 → TASK-012 → TASK-013 (Upload e IA: 13 pontos)
-5. TASK-016 → TASK-017 → TASK-018 (Interface: 16 pontos)
-6. TASK-019 → TASK-020 (Tabela e Download: 13 pontos)
-
-**Total MVP**: 79 pontos ≈ 158-316 horas
+**MVP Total**: 37 pontos ≈ 74-148 horas (4-7 dias)
 
 ---
 
-## Ordem Recomendada de Execução
+## Dependências Visuais
 
-### Sprint 1 (Setup - 2 semanas)
-1. TASK-001: Estrutura do projeto
-2. TASK-002: Docker
-3. TASK-003: Schema SQLite
-4. TASK-004: Backend FastAPI base
-5. TASK-008: Frontend React base
+```
+TASK-001, TASK-002 (paralelo)
+  ↓
+TASK-003, TASK-004 (paralelo, bloqueia tudo)
+  ├→ TASK-005 → TASK-006 → TASK-007 → TASK-010 (backend)
+  │                          ↓
+  │                        TASK-008, TASK-009 (paralelo)
+  │
+  ├→ TASK-011 → TASK-012 → TASK-013 → TASK-014 → TASK-016 (frontend, pode start depois TASK-007)
+  │                                       ↓
+  │                                     TASK-015
+  │
+  └→ TASK-017 → TASK-018 → TASK-020 (testing, paralelo com frontend)
+                   ↓
+                 TASK-019 (paralelo)
+                 TASK-021 (paralelo)
 
-### Sprint 2 (Backend Core - 2 semanas)
-6. TASK-005: Endpoints CRUD
-7. TASK-006: Detecção de duplicatas
-8. TASK-007: Validação taxonômica
-9. TASK-009: Zustand store
-
-### Sprint 3 (Upload e IA - 2 semanas)
-10. TASK-010: Configuração API key
-11. TASK-011: Upload PDF
-12. TASK-012: Extração texto PDF
-13. TASK-013: Integração Gemini
-14. TASK-014: Integração ChatGPT
-15. TASK-015: Integração Claude
-
-### Sprint 4 (Interface - 2 semanas)
-16. TASK-016: Exibição metadados
-17. TASK-017: Edição manual
-18. TASK-018: Auto-save rascunhos
-19. TASK-019: Tabela artigos
-
-### Sprint 5 (Melhorias - 1-2 semanas)
-20. TASK-020: Download banco
-21. TASK-021: Validação uploads
-22. TASK-022: PDFs escaneados
-23. TASK-023: Interface duplicatas
-
-### Sprint 6+ (Funcionalidades Avançadas)
-24-33: Tarefas P2 e P3 conforme necessidade
-
----
-
-## Notas de Implementação
-
-### Dependências Externas
-- APIs de IA: Chaves fornecidas pelo usuário
-- GBIF API: Sem autenticação
-- Tropicos API: Requer registro gratuito
-
-### Tecnologias Principais
-- **Frontend**: React 18, TypeScript 5, TanStack Table 8, Zustand 4
-- **Backend**: Python 3.11, FastAPI 0.104, SQLite 3.35+
-- **Docker**: Alpine Linux, multi-stage build
-- **Testes**: Pytest (backend), Playwright (frontend)
-
-### Considerações de Performance
-- Tabela: Paginação client-side (50 itens)
-- Filtro: Debounce de 300ms
-- Download: Streaming com FileResponse
-- Cache: Taxonomia em memória (10K espécies ≈ 5MB)
-
-### Segurança
-- API keys: Apenas localStorage (nunca servidor)
-- CORS: Configurado para frontend
-- Rate limiting: 1 download/minuto por IP
-- Validação: Pydantic models no backend
+TASK-010, TASK-016, TASK-021 → TASK-022 (production checklist)
+  ↓
+TASK-023 → TASK-024 → TASK-025 (docs, paralelo)
+  ↓
+TASK-026 (final validation)
+```
 
 ---
 
 ## Próximos Passos
 
-1. Revisar estimativas com equipe
-2. Priorizar tarefas conforme necessidades
-3. Começar pelo Sprint 1 (Setup)
-4. Realizar reuniões de retrospectiva ao final de cada sprint
-5. Ajustar prioridades conforme feedback do usuário
+1. ✅ Especificação v2.0 (spec.md)
+2. ✅ Plan v2.0 (plan.md)
+3. ✅ Tasks v2.0 (tasks.md - THIS FILE)
+4. ✅ Constitution v2.0 (.specify/memory/constitution.md)
+5. ➡️ **Iniciar TASK-001: Update docker-compose.yml**
 
 ---
 
-**Documentação gerada em**: 2025-11-20
-**Baseado em**: specs/main/spec.md, research.md, data-model.md, contracts/, quickstart.md
+**Documento gerado**: 2025-11-24
+**Versão**: 2.0 (Local AI + MongoDB + GPU)
+**Status**: Pronto para implementação
+**Estimativa total**: 7-10 dias com 1 desenvolvedor
