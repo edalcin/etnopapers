@@ -105,22 +105,32 @@ docker exec etnopapers nvidia-smi
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**: Definir schema MongoDB com 4 collections (referencias, especies_plantas, comunidades_indígenas, localizacoes) e 18 índices.
+**Descrição**: Definir schema MongoDB denormalizado com 1 collection única (`referencias`) contendo todos dados de artigos em documentos auto-contidos, conforme exemplo em `docs/estrutura.json`.
 
 **Critérios de Aceitação**:
 - [ ] `backend/database/schema.py` criado com Pydantic models
-- [ ] 4 collections definidas com campos completos
-- [ ] 18 índices criados (doi unique, status, ano, text search, etc.)
-- [ ] Validações implementadas (year ranges, enum types, etc.)
-- [ ] Script de inicialização (`backend/database/init_db.py`)
-- [ ] Testes de integridade referencial
-- [ ] Documentação de estrutura de dados
+- [ ] 1 collection `referencias` definida com campos:
+  - Artigo: `_id`, `ano`, `titulo`, `publicacao`, `autores[]`, `resumo`, `doi`, `data_processamento`, `status`
+  - Espécies: `especies[]` com sub-documentos (vernacular, nomeCientifico, familia, nomeAceitoValidado, statusValidacao, confianca)
+  - Contexto: `tipoUso`, `metodologia`, `pais`, `estado`, `municipio`, `local`, `bioma`
+  - Comunidades: `comunidades[]` com sub-documentos (nome, tipo)
+  - Período: `periodoEstudo` (dataInicio, dataFim) opcional
+- [ ] 5 índices criados:
+  - `{doi: 1}` (unique) → evita duplicação
+  - `{ano: 1}` → filtro ano
+  - `{status: 1}` → separar finalizado/rascunho
+  - `{titulo: "text"}` → busca full-text
+  - `{pais: 1, estado: 1, municipio: 1}` → filtro geográfico
+- [ ] Validações implementadas (year ranges, enum types: status, tipoUso, metodologia, tipo comunidade)
+- [ ] Script de inicialização (`backend/database/init_db.py`) que cria collection com índices
+- [ ] Testes de schema validation com Pydantic
+- [ ] Documentação de estrutura (referencia a `docs/estrutura.json`)
 
 **Arquivos**:
 ```
-/backend/database/schema.py
-/backend/database/init_db.py
-/backend/database/indexes.py
+/backend/database/schema.py (ReferenceMetadata Pydantic model)
+/backend/database/init_db.py (cria collection + índices)
+/backend/models/metadata.py (SpeciesData, CommunityData, StudyPeriod sub-models)
 ```
 
 **Dependências**: TASK-001, TASK-001b (MongoDB precisa estar rodando externamente)

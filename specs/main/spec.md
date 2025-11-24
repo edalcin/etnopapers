@@ -200,7 +200,7 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-048**: O sistema DEVE fornecer botão "Download Base de Dados" visível na página principal
 - **RF-049**: Ao clicar em "Download Base de Dados", o sistema DEVE gerar e baixar um **arquivo ZIP** contendo backup completo do banco MongoDB (formato BSON/JSON) com todos os dados **[ATUALIZADO v2.0]**
 - **RF-050**: O arquivo de download DEVE ter nome descritivo incluindo data no formato: etnopapers_backup_YYYYMMDD.zip (ex: etnopapers_backup_20251120.zip) **[ATUALIZADO v2.0]**
-- **RF-051**: O download do banco de dados DEVE incluir todas as **coleções MongoDB** e dados: referencias (artigos), especies_plantas, comunidades_indígenas, localizacoes **[ATUALIZADO v2.0]**
+- **RF-051**: O download do banco de dados DEVE incluir todos os dados da **collection MongoDB `referencias`** (artigos com dados denormalizados: espécies, comunidades, localização) em formato BSON/JSON **[ATUALIZADO v2.0]**
 - **RF-052**: A tabela de artigos DEVE exibir mensagem apropriada quando não houver artigos processados (ex: "Nenhum artigo processado ainda. Faça upload do primeiro PDF!")
 - **RF-053**: O sistema DEVE armazenar localizações geográficas usando hierarquia administrativa de três níveis: País → Estado/Província → Município/Cidade
 - **RF-054**: O sistema DEVE armazenar territórios comunitários como entidades separadas, independentes da hierarquia geográfica administrativa
@@ -237,42 +237,86 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 
 ### MongoDB Collection Structure **[NOVO v2.0]**
 
-O sistema usa **4 collections MongoDB** com relacionamentos para permitir reutilização de dados e evitar duplicação:
+O sistema usa **denormalization pattern** com **1 collection única** (`referencias`) contendo todos os dados de artigos em documentos auto-contidos, seguindo o exemplo em `docs/estrutura.json`:
 
-1. **referencias** (Artigos científicos)
-   - Armazena todos os metadados de artigos científicos processados
-   - Campos: _id (ObjectId), titulo, autores (array), ano, resumo, doi (unique index), publicacao, status (finalizado/rascunho), data_processamento, especies_ids (array de ObjectIds referenciando collection especies_plantas), localizacoes_ids (array), comunidades_ids (array), metadata extraída (textura raw do PDF)
-   - Índices: doi (unique), ano, status, titulo (text search)
+**Collection: `referencias`** (Artigos científicos com dados embutidos)
 
-2. **especies_plantas** (Plantas identificadas)
-   - Armazena informações de espécies únicas (nome científico é chave primária)
-   - Campos: _id (ObjectId), nome_cientifico (unique index), autores_nome, familia, nome_aceito_validado, sinonimos (array), status_validacao, usos_reportados (agregado), vernaculares (array de sub-documentos: {nome, idioma, regiao, confianca})
-   - Reutilizada por múltiplos artigos para evitar duplicação
-   - Índices: nome_cientifico (unique), familia, status_validacao
+Estrutura de documento exemplo:
+```json
+{
+  "_id": "ObjectId",
+  "ano": 2010,
+  "titulo": "Uso e conhecimento tradicional de plantas medicinais...",
+  "publicacao": "Acta bot. bras. 24(2): 395-406",
+  "autores": ["Giraldi, M.", "Hanazaki, N."],
+  "resumo": "O objetivo desta pesquisa...",
+  "doi": "10.1590/...",
+  "data_processamento": "2025-11-24T10:30:00Z",
+  "status": "finalizado|rascunho",
+  "especies": [
+    {
+      "vernacular": "maçanilha",
+      "nomeCientifico": "Chamomilla recutita",
+      "familia": "Asteraceae",
+      "nomeAceitoValidado": "Chamomilla recutita (L.) Rydb.",
+      "statusValidacao": "validado|naoValidado",
+      "confianca": "alta|media|baixa"
+    },
+    {
+      "vernacular": "hortelã-branca",
+      "nomeCientifico": "Mentha sp.",
+      "familia": "Lamiaceae",
+      "nomeAceitoValidado": "Mentha spicata L.",
+      "statusValidacao": "validado|naoValidado",
+      "confianca": "alta|media|baixa"
+    }
+  ],
+  "tipoUso": "medicinal|alimentar|ritual|outro",
+  "metodologia": "entrevistas|observacao|outro",
+  "pais": "Brasil",
+  "estado": "SC",
+  "municipio": "Florianópolis",
+  "local": "Sertão do Ribeirão",
+  "bioma": "Mata Atlântica",
+  "comunidades": [
+    {
+      "nome": "Comunidade Açoriana",
+      "tipo": "indígena|quilombola|ribeirinha|caiçara|tradicional"
+    }
+  ],
+  "periodoEstudo": {
+    "dataInicio": "2009-01-01",
+    "dataFim": "2010-12-31"
+  }
+}
+```
 
-3. **comunidades_indígenas** (Comunidades tradicionais)
-   - Armazena informações de comunidades mencionadas em artigos
-   - Campos: _id (ObjectId), nome, tipo (indígena/quilombola/ribeirinha/caiçara/outro), territorio_id (ref, opcional), descricao
-   - Reutilizada por múltiplos artigos
-   - Índices: nome, tipo
+**Campos principais**:
+- `_id`: ObjectId único (MongoDB auto-gerado)
+- `ano`, `titulo`, `publicacao`, `autores`: Metadados básicos do artigo
+- `resumo`: Abstract/resumo do artigo
+- `doi`: Digital Object Identifier (unique index para evitar duplicação)
+- `data_processamento`: ISO 8601 timestamp de quando foi extraído
+- `status`: "finalizado" (salvo pelo usuário) ou "rascunho" (auto-saved)
+- `especies[]`: Array de objetos com nome vernacular, científico, família, validação
+- `tipoUso`, `metodologia`, `pais`, `estado`, `municipio`, `local`, `bioma`: Contexto geográfico/temático
+- `comunidades[]`: Array de comunidades mencionadas
+- `periodoEstudo`: Período do estudo (opcional)
 
-4. **localizacoes** (Localizações geográficas)
-   - Armazena hierarquia geográfica (países, estados, municípios) e territórios
-   - Tipo "administrativo": {_id, nome, tipo (pais/estado/municipio), nivel, parent_id (ref ao estado/país acima), codigo_iso, coordenadas (opcional)}
-   - Tipo "territorio": {_id, nome, tipo=territorio, descricao, coordenadas_aproximadas (opcional), comunidade_id (ref, opcional)}
-   - Índices: tipo, parent_id, nome
+**Índices para Performance**:
+- `{doi: 1}` (unique) → evita duplicação exata
+- `{ano: 1}` → filtro por ano de publicação
+- `{status: 1}` → separar finalizado de rascunho
+- `{titulo: "text"}` → busca full-text no título
+- `{pais: 1, estado: 1, municipio: 1}` → filtro geográfico
 
-**Relacionamentos**:
-- referencias.especies_ids → especies_plantas._id (many-to-many)
-- referencias.localizacoes_ids → localizacoes._id (many-to-many)
-- referencias.comunidades_ids → comunidades_indígenas._id (many-to-many)
-- comunidades_indígenas.territorio_id → localizacoes._id (one-to-many, opcional)
-
-**Vantagens**:
-- ✅ Eliminação de duplicação de espécies (mesma planta em múltiplos artigos = 1 registro)
-- ✅ Reutilização de dados geográficos (mesmo município em múltiplos artigos = 1 registro)
-- ✅ Queries eficientes (busca por espécie retorna todos artigos que a mencionam)
-- ✅ Escalabilidade (adicionar novo artigo = apenas novo documento em referencias + referências a collections existentes)
+**Vantagens da Denormalização**:
+- ✅ **Simplicidade**: Um documento = uma referência. Sem JOINs, sem relacionamentos complexos
+- ✅ **Queries rápidas**: Tudo em um document — `find({doi: "..."})` retorna artigo completo
+- ✅ **Flexibilidade schema**: Novos campos podem ser adicionados sem migrações
+- ✅ **Offline-friendly**: Backup/restore de um único documento é simples
+- ✅ **Adequado para volume**: 1000-10000 artigos é manageable em single collection
+- ✅ **Escalabilidade futura**: Se crescer muito, pode-se normalizaralém, mas não é necessário agora
 
 ## Critérios de Sucesso *(obrigatório)*
 
