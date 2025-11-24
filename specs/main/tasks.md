@@ -20,60 +20,86 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ## Fase 0: Setup e Infraestrutura
 
-### TASK-001: Atualizar docker-compose.yml com Ollama
+### TASK-001: Configurar Dockerfile para Single Container (Frontend + Backend + Ollama)
 
 **Prioridade**: P0 (Crítica)
 **Pontos**: 3
 **Status**: Pendente
 
-**Descrição**: Adicionar serviço Ollama ao docker-compose.yml com GPU passthrough e persistência.
+**Descrição**: Criar Dockerfile que executa frontend React, backend FastAPI e Ollama em UM ÚNICO container, com MongoDB conectado externamente via MONGO_URI.
 
 **Critérios de Aceitação**:
-- [ ] Service `ollama` adicionado (ollama/ollama:latest)
-- [ ] GPU passthrough configurado (nvidia.com/gpu: all)
-- [ ] Volume `ollama_models` criado para persistência (~4.8 GB)
-- [ ] Healthcheck implementado (curl /api/tags)
-- [ ] Qwen2.5-7B-Instruct-Q4 model setup
-- [ ] Dependency: etnopapers service depends_on ollama (healthy)
-- [ ] Environment variables: OLLAMA_URL=http://ollama:11434, OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
-- [ ] `docker-compose up` inicia 3 serviços (MongoDB, Ollama, Etnopapers)
+- [ ] **Dockerfile multi-stage** criado:
+  - Stage 1: Build frontend React (npm build)
+  - Stage 2: Runtime Python com FastAPI
+  - Stage 3: Copy built frontend para FastAPI static folder
+  - Stage 4: Ollama setup (download model Qwen2.5-7B-Instruct-Q4)
+- [ ] FastAPI serve frontend static files (/)
+- [ ] Backend API disponível em /api/* routes
+- [ ] Ollama disponível localmente no container (localhost:11434)
+- [ ] Environment variables configuráveis:
+  - `MONGO_URI` (para conectar MongoDB externo)
+  - `OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M`
+  - `OLLAMA_URL=http://localhost:11434` (interno)
+- [ ] Healthcheck validando frontend, backend, e Ollama
+- [ ] Container startup script que:
+  1. Inicia Ollama em background
+  2. Aguarda Ollama healthcheck (max 60s)
+  3. Inicia FastAPI server
+- [ ] Total image size: ~6.8 GB (Ollama + model + dependencies)
+- [ ] `docker run` inicia sistema completo (sem docker-compose)
 
 **Arquivos**:
 ```
-/docker-compose.yml
+/Dockerfile (completely rewritten for single container)
+/entrypoint.sh (container startup script)
+/docker-compose.yml (simplified: just for local dev with MongoDB)
 ```
 
 **Dependências**: Nenhuma
 
 ---
 
-### TASK-002: Configurar NVIDIA Container Toolkit
+### TASK-001b: Configurar UNRAID GPU Passthrough
 
 **Prioridade**: P0 (Crítica)
 **Pontos**: 2
 **Status**: Pendente
 
-**Descrição**: Documentar e validar NVIDIA Container Toolkit setup para GPU passthrough.
+**Descrição**: Documentar e validar configuração de GPU NVIDIA no UNRAID para o container Etnopapers.
 
 **Critérios de Aceitação**:
+- [ ] **UNRAID UI Configuration** (no container settings):
+  - [ ] Extra Parameters: `--runtime=nvidia`
+  - [ ] Environment Variable: `NVIDIA_VISIBLE_DEVICES=all`
 - [ ] NVIDIA driver instalado no host UNRAID
-- [ ] nvidia-docker runtime instalado
-- [ ] `/etc/docker/daemon.json` configurado com nvidia runtime
-- [ ] `docker run --gpus all nvidia/cuda:11.8.0 nvidia-smi` funciona
-- [ ] GPU visível dentro do container
-- [ ] Documentação em DEPLOYMENT.md
+- [ ] NVIDIA Container Toolkit instalado no UNRAID
+- [ ] `docker exec etnopapers nvidia-smi` funciona dentro do container
+- [ ] GPU visível com modelo correto (ex: RTX 3060, 12 GB)
+- [ ] Documentação em README.md e DEPLOYMENT.md
+
+**Verificação**:
+```bash
+# No UNRAID host:
+docker exec etnopapers nvidia-smi
+
+# Esperado:
+# +----------+----------+----------+
+# | NVIDIA GPU: RTX 3060 | 12GB VRAM
+# +----------+----------+----------+
+```
 
 **Arquivos**:
 ```
-/DEPLOYMENT.md (new section)
-/README.md (GPU setup section)
+/README.md (UNRAID GPU setup section)
+/docs/DEPLOYMENT.md (GPU configuration)
 ```
 
-**Dependências**: Nenhuma (pode rodar em paralelo com TASK-001)
+**Dependências**: TASK-001 (container deve estar rodando)
 
 ---
 
-### TASK-003: Criar MongoDB Schema e Índices
+### TASK-002: Criar MongoDB Schema e Índices
 
 **Prioridade**: P0 (Crítica)
 **Pontos**: 3
@@ -97,41 +123,49 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 /backend/database/indexes.py
 ```
 
-**Dependências**: TASK-001 (MongoDB precisa estar rodando)
+**Dependências**: TASK-001, TASK-001b (MongoDB precisa estar rodando externamente)
 
 ---
 
-### TASK-004: Validar Setup de Infraestrutura
+### TASK-003: Validar Setup de Infraestrutura
 
 **Prioridade**: P0 (Crítica)
 **Pontos**: 2
 **Status**: Pendente
 
-**Descrição**: Testar docker-compose com 3 serviços, healthchecks, e persistência.
+**Descrição**: Testar container Etnopapers single-container com Ollama, frontend, backend, e conexão MongoDB.
 
 **Critérios de Aceitação**:
-- [ ] `docker-compose up -d` inicia sem erros
-- [ ] MongoDB healthcheck passa (mongosh ping)
-- [ ] Ollama healthcheck passa (curl /api/tags)
+- [ ] `docker build` completa sem erros (image ~6.8 GB)
+- [ ] `docker run` com MONGO_URI e NVIDIA_VISIBLE_DEVICES funciona
+- [ ] Ollama healthcheck passa dentro do container (curl localhost:11434/api/tags)
 - [ ] Model Qwen2.5-7B-Instruct-Q4 carrega com sucesso
-- [ ] `docker exec etnopapers-ollama nvidia-smi` mostra GPU
-- [ ] Volumes persistem dados após container stop/start
-- [ ] Environment variables accessible dentro dos containers
-- [ ] Network connectivity entre serviços testada
+- [ ] `docker exec etnopapers nvidia-smi` mostra GPU NVIDIA
+- [ ] FastAPI backend disponível em http://localhost:8000
+- [ ] Frontend React servido em http://localhost:8000 (index page)
+- [ ] Backend API em http://localhost:8000/api/* routes
+- [ ] MongoDB conecta via MONGO_URI (testa com curl + auth se necessário)
+- [ ] Container healthcheck inclui frontend, backend, e Ollama
+- [ ] Container startup script funciona corretamente:
+  - Inicia Ollama em background
+  - Aguarda Ollama healthcheck (max 60s)
+  - Inicia FastAPI server
+  - Serve frontend static files
 
 **Arquivos**:
 ```
-/docker-compose.yml (validation)
-/tests/integration/docker_setup_test.sh
+/Dockerfile (validation)
+/entrypoint.sh (validation)
+/tests/integration/container_setup_test.sh
 ```
 
-**Dependências**: TASK-001, TASK-002, TASK-003
+**Dependências**: TASK-001, TASK-001b, TASK-002
 
 ---
 
 ## Fase 1: Backend - Serviço de Extração
 
-### TASK-005: Criar extraction_service.py
+### TASK-004: Criar extraction_service.py
 
 **Prioridade**: P1
 **Pontos**: 5
@@ -165,7 +199,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-006: Implementar Pydantic Schemas
+### TASK-005: Implementar Pydantic Schemas
 
 **Prioridade**: P1
 **Pontos**: 3
@@ -191,7 +225,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-007: Criar POST /api/extract/metadata Endpoint
+### TASK-006: Criar POST /api/extract/metadata Endpoint
 
 **Prioridade**: P1
 **Pontos**: 5
@@ -222,7 +256,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-008: PDF Text Extraction com pdfplumber
+### TASK-007: PDF Text Extraction com pdfplumber
 
 **Prioridade**: P1
 **Pontos**: 3
@@ -250,7 +284,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-009: Error Handling e Logging
+### TASK-008: Error Handling e Logging
 
 **Prioridade**: P1
 **Pontos**: 3
@@ -282,7 +316,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-010: Testes Backend (Unit + Integration)
+### TASK-009: Testes Backend (Unit + Integration)
 
 **Prioridade**: P1
 **Pontos**: 5
@@ -315,7 +349,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ## Fase 2: Frontend - Integração
 
-### TASK-011: Remover APIConfiguration Component
+### TASK-010: Remover APIConfiguration Component
 
 **Prioridade**: P2
 **Pontos**: 2
@@ -341,7 +375,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-012: Remover Gerenciamento de API Keys do Store
+### TASK-011: Remover Gerenciamento de API Keys do Store
 
 **Prioridade**: P2
 **Pontos**: 2
@@ -372,7 +406,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-013: Criar extractionService.ts
+### TASK-012: Criar extractionService.ts
 
 **Prioridade**: P2
 **Pontos**: 3
@@ -402,7 +436,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-014: Atualizar PDFUpload Component
+### TASK-013: Atualizar PDFUpload Component
 
 **Prioridade**: P2
 **Pontos**: 3
@@ -430,7 +464,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-015: Atualizar Mensagens de Erro (Português)
+### TASK-014: Atualizar Mensagens de Erro (Português)
 
 **Prioridade**: P2
 **Pontos**: 2
@@ -456,7 +490,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-016: Remover AI Client Files (v1.0)
+### TASK-015: Remover AI Client Files (v1.0)
 
 **Prioridade**: P2
 **Pontos**: 1
@@ -484,7 +518,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ## Fase 3: Testing & Refinement
 
-### TASK-017: Criar Test Dataset
+### TASK-016: Criar Test Dataset
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -515,7 +549,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-018: Medir Acurácia de Extração
+### TASK-017: Medir Acurácia de Extração
 
 **Prioridade**: P3
 **Pontos**: 5
@@ -545,7 +579,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-019: Performance Benchmarking
+### TASK-018: Performance Benchmarking
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -576,7 +610,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-020: Otimização de Prompts
+### TASK-019: Otimização de Prompts
 
 **Prioridade**: P3
 **Pontos**: 5
@@ -603,7 +637,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-021: Testes de Casos Extremos
+### TASK-020: Testes de Casos Extremos
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -638,7 +672,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-022: Production Readiness Checklist
+### TASK-021: Production Readiness Checklist
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -669,7 +703,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ## Fase 4: Documentação & Deploy
 
-### TASK-023: Atualizar README (GPU, UNRAID, Troubleshooting)
+### TASK-022: Atualizar README (GPU, UNRAID, Troubleshooting)
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -699,7 +733,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-024: Criar DEPLOYMENT.md
+### TASK-023: Criar DEPLOYMENT.md
 
 **Prioridade**: P3
 **Pontos**: 2
@@ -725,7 +759,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-025: Release Notes v2.0
+### TASK-024: Release Notes v2.0
 
 **Prioridade**: P3
 **Pontos**: 2
@@ -753,7 +787,7 @@ Este documento lista todas as tarefas necessárias para implementar o Etnopapers
 
 ---
 
-### TASK-026: Teste Final em UNRAID
+### TASK-025: Teste Final em UNRAID
 
 **Prioridade**: P3
 **Pontos**: 3

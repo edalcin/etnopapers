@@ -28,7 +28,7 @@
 | **Backend** | FastAPI + PyMongo | 3.11 | `/api/extract/metadata` novo |
 | **Frontend** | React + TypeScript | 18/5 | Sem API key config |
 | **Database** | MongoDB | 5.0+ | 4 collections, 18 índices |
-| **Deployment** | Docker Compose | 3 services | MongoDB + Ollama + API |
+| **Deployment** | Single Docker Container | Frontend + Backend + Ollama (MongoDB via MONGO_URI) | UNRAID + GPU |
 | **GPU Runtime** | nvidia-docker | latest | GPU passthrough |
 
 ---
@@ -106,6 +106,51 @@ nvidia-docker - GPU passthrough
 | **IV. Simplicidade** | ✅ PASS | Docker Compose, sem auth |
 | **V. GPU Deploy** | ✅ PASS | GPU NVIDIA autorizada, nvidia-docker |
 | **VI. Português BR** | ✅ PASS | Todos strings em português |
+
+---
+
+## Arquitetura de Deployment
+
+### Single Container Design
+
+**Importante**: O sistema executa em **UM ÚNICO container Docker** que contém:
+- ✅ **Frontend**: React 18 + TypeScript (servido via FastAPI static files)
+- ✅ **Backend**: FastAPI + Python 3.11 (API + static serving)
+- ✅ **AI Local**: Ollama + Qwen2.5-7B-Instruct (GPU inference)
+
+**Externo** (via variáveis de ambiente):
+- 🔌 **MongoDB**: Conectado via `MONGO_URI` (pode ser local ou cloud)
+
+**Vantagens**:
+- Deployment simplificado (um único container para build/run)
+- Menos overhead de orquestração (vs Docker Compose multi-service)
+- Fácil de gerenciar em UNRAID
+- Performance melhor (menos latência entre frontend/backend/Ollama)
+
+### GPU NVIDIA no UNRAID
+
+Para ativar GPU NVIDIA no container Etnopapers no UNRAID, configure:
+
+**1. Extra Parameters** (na UI do UNRAID):
+```
+--runtime=nvidia
+```
+
+**2. Environment Variables** (na UI do UNRAID):
+```
+NVIDIA_VISIBLE_DEVICES=all
+```
+
+**Resultado**:
+- GPU será visível dentro do container via `nvidia-smi`
+- Ollama terá acesso direto à GPU para inferência
+- Inferência local: 1-3 segundos por artigo
+
+**Verificação**:
+```bash
+docker exec etnopapers nvidia-smi
+# Deve mostrar GPU NVIDIA (ex: RTX 3060)
+```
 
 ---
 

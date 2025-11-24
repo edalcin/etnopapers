@@ -159,6 +159,10 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-012**: O sistema DEVE ser empacotado e executado em um container Docker
 - **RF-013**: O sistema DEVE ser compatível com instalação em servidor UNRAID **com GPU NVIDIA (6-8 GB VRAM mínimo)** **[ATUALIZADO v2.0]**
 - **RF-014**: O sistema DEVE aceitar **URI de conexão MongoDB (MONGO_URI)** e **URL do serviço Ollama (OLLAMA_URL)** como variáveis de ambiente durante a criação do container Docker **[ATUALIZADO v2.0]**
+- **RF-014a**: **[NOVO v2.0]** O sistema DEVE executar **frontend React + backend FastAPI + Ollama em um único container Docker** (exceto MongoDB, que será conectado via variável de ambiente MONGO_URI como serviço externo)
+- **RF-014b**: **[NOVO v2.0]** Para GPU NVIDIA no UNRAID, o container Docker DEVE:
+  - Configurar `--runtime=nvidia` nos parâmetros extras do container
+  - Definir variável de ambiente `NVIDIA_VISIBLE_DEVICES=all` para exposição de GPU
 - **RF-015**: Toda a documentação do sistema DEVE ser gerada e mantida em português brasileiro
 - **RF-016**: O sistema DEVE operar exclusivamente na branch main, sem branches de desenvolvimento separadas
 - **RF-017**: O sistema DEVE rejeitar arquivos PDF maiores que 50 MB com mensagem de erro clara informando o limite de tamanho

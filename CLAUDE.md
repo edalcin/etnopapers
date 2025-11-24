@@ -121,42 +121,51 @@ A single `referencias` collection stores complete reference documents with all m
 - 100,000 references: ~100-200 MB
 
 ### Docker Setup **[UPDATED v2.0]**
+
+**IMPORTANT: Single Container Architecture**
+
+Etnopapers v2.0 executa em **UM ÚNICO container Docker** que contém:
+- ✅ Frontend React 18 + TypeScript
+- ✅ Backend FastAPI + Python 3.11
+- ✅ Ollama + Qwen2.5-7B-Instruct (AI Local)
+
+MongoDB é conectado **externamente via MONGO_URI** (pode ser local ou cloud)
+
 ```yaml
-# Three services: MongoDB + Ollama + Etnopapers API
-# MongoDB Service:
-- Port: 27017 (MongoDB server)
-- Volume: mongodb_data:/data/db (persistent MongoDB database)
-- Image: mongo:7.0
-- Health Check: mongosh ping command
+# Single Container: Etnopapers (Frontend + Backend + Ollama)
+# Ports:
+- Port: 8000 (HTTP: Frontend + API)
+- Port: 11434 (Internal: Ollama API, acessado via localhost)
 
-# Ollama Service **[NEW v2.0]**:
-- Port: 11434 (Ollama API)
-- Volume: ollama_models:/root/.ollama (persistent AI models ~4.8 GB)
-- Image: ollama/ollama:latest (~2 GB)
-- GPU: NVIDIA GPU passthrough (requires nvidia-docker runtime)
-- Model: qwen2.5:7b-instruct-q4_K_M (auto-downloaded on first use)
-- Health Check: curl /api/tags
+# Build:
+- Base Image: Multi-stage build
+  - Stage 1: Node.js (build frontend React)
+  - Stage 2: Python 3.11 (build backend + runtime)
+  - Stage 3: Copy built frontend para FastAPI static folder
+  - Stage 4: Ollama setup (download Qwen2.5 model)
+- Total Image Size: ~6.8 GB (Ollama + model + dependencies)
 
-# Etnopapers Service **[UPDATED v2.0]**:
-- Port: 8000 (web app + API)
-- Depends on: MongoDB + Ollama (both healthy)
-- Base Image: python:3.11-slim (minimal, ~150MB)
-- Dependencies: FastAPI, PyMongo, instructor, pdfplumber, openai client
-- Estimated Docker Image Size: ~800 MB
-- GPU: NVIDIA GPU passthrough (for potential future optimizations)
-- Environment (defaults):
-  - MONGO_URI=mongodb://mongo:27017/etnopapers
-  - OLLAMA_URL=http://ollama:11434
+# GPU: NVIDIA GPU passthrough required
+- UNRAID configuration:
+  - Extra Parameters: --runtime=nvidia
+  - Environment: NVIDIA_VISIBLE_DEVICES=all
+
+# Environment Variables (obrigatórias):
+  - MONGO_URI=mongodb://localhost:27017/etnopapers (local)
+            ou mongodb+srv://user:pass@cluster.mongodb.net/etnopapers (cloud)
   - OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
-  - PORT=8000
-  - LOG_LEVEL=info
-  - ENVIRONMENT=development
-  - TAXONOMY_API_TIMEOUT=5
-  - CACHE_TTL_DAYS=30
-  - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 
-# Total Docker Size: ~8.5 GB (MongoDB ~700 MB + Ollama ~2 GB + Model ~4.8 GB + Etnopapers ~800 MB + overhead)
+# Health Check:
+  - Frontend: curl http://localhost:8000 (should return HTML)
+  - Backend: curl http://localhost:8000/api/health
+  - Ollama: curl http://localhost:11434/api/tags (internal)
 ```
+
+**Container Startup Flow:**
+1. Inicia Ollama em background
+2. Aguarda Ollama healthcheck (max 60s)
+3. Inicia FastAPI server
+4. Serve frontend React static files via FastAPI
 
 ## Development Commands
 
