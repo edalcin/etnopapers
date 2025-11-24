@@ -1,7 +1,8 @@
 # Implementation Plan: Etnopapers v2.0 (Local AI + MongoDB)
 
 **Branch**: `main` | **Data**: 2025-11-24 | **Versão**: 2.0 | **Especificação**: `specs/main/spec.md`
-**Entrada**: Especificação funcional v2.0 em `/specs/main/spec.md` com 68 requisitos (RF-001 a RF-068)
+**Entrada**: Especificação funcional v2.0 em `/specs/main/spec.md` com 72 requisitos (RF-001 a RF-072)
+**Foco adicional**: Captura detalhada de uso de plantas por comunidades tradicionais (forma, tipo, propósito)
 
 **Status**: ✅ Plan actualizado para v2.0 (2025-11-24) - Ollama + MongoDB + GPU
 

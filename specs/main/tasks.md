@@ -214,6 +214,48 @@ docker exec etnopapers nvidia-smi
 
 ---
 
+### TASK-004a: Criar Prompt de Extração para Uso Detalhado de Plantas
+
+**Prioridade**: P1
+**Pontos**: 3
+**Status**: Pendente
+
+**Descrição**: Desenvolver e testar um prompt em português que instrui explicitamente o Ollama a capturar informações detalhadas e estruturadas sobre o uso de plantas por comunidades tradicionais.
+
+**Critérios de Aceitação**:
+- [ ] `backend/prompts/usage_extraction_prompt.py` criado com:
+  - Instruções explícitas em português para capturar uso detalhado
+  - Exemplos de estrutura esperada (comunidade, forma, tipo, propósito)
+  - Instruções para evitar consolidação incorreta de diferentes comunidades/usos
+- [ ] Prompt inclui JSON schema esperado para array `usosPorComunidade`
+- [ ] Prompt especifica campos obrigatórios vs opcionais (dosagem é opcional)
+- [ ] Prompt enfatiza:
+  - Uma espécie pode ter múltiplos usos (mesma comunidade, diferentes propósitos)
+  - Uma espécie pode ser usada por múltiplas comunidades
+  - Capturar forma (pó, chá, infusão, etc.), tipo (medicinal, alimentar, etc.), propósito específico
+  - Capturar partes utilizadas, dosagem (se disponível), método de preparação
+  - Guardar origem/fonte da informação
+- [ ] Testes com 5 PDFs exemplo para validar qualidade de extração:
+  - Verifica estrutura de usosPorComunidade
+  - Verifica se comunidades diferentes não são consolidadas
+  - Verifica se múltiplos usos são capturados
+  - Verifica completitude dos campos esperados
+- [ ] Integração com OllamaClient: prompt passa para sistema de extração
+- [ ] Documentação dos ajustes feitos ao prompt para melhorar qualidade
+
+**Arquivos**:
+```
+/backend/prompts/usage_extraction_prompt.py
+/backend/prompts/examples/usage_extraction_examples.json
+/backend/tests/unit/test_usage_extraction_prompt.py
+```
+
+**Dependências**: TASK-005 (Pydantic models devem estar prontos)
+
+**Mapeia**: RF-069, RF-070, RF-072
+
+---
+
 ### TASK-005: Implementar Pydantic Schemas
 
 **Prioridade**: P1
