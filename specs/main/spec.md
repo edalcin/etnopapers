@@ -2,9 +2,10 @@
 
 **Branch da Funcionalidade**: `main`
 **Criado**: 2025-11-20
-**Atualizado**: 2025-01-23 (v2.0 - AI Local)
+**Atualizado**: 2025-11-24 (v2.0 - AI Local + Uso Detalhado de Plantas por Comunidades)
 **Status**: Em Planejamento
-**Arquitetura**: Sistema de extração de metadados de artigos científicos em PDF sobre etnobotânica usando **modelo de AI local** (Ollama + Qwen2.5-7B-Instruct) com inferência em GPU, rodando em Docker com banco MongoDB
+**Requisitos**: 72 Requisitos Funcionais (RF-001 a RF-072)
+**Arquitetura**: Sistema de extração de metadados de artigos científicos em PDF sobre etnobotânica usando **modelo de AI local** (Ollama + Qwen2.5-7B-Instruct) com inferência em GPU, rodando em Docker com banco MongoDB. Captura detalhada de **uso de plantas por comunidades tradicionais** com estrutura de forma, tipo e propósito de uso
 
 ## Clarifications
 
@@ -218,6 +219,23 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-066**: Ao extrair metadados de um PDF, o sistema DEVE incluir o perfil do pesquisador (se configurado) como contexto adicional no prompt enviado ao Ollama. Formato: JSON block de max 500 tokens contendo especialização, regiões de interesse, idiomas/línguas indígenas e tipos de comunidades. Exemplo: `"Pesquisador: especialização em etnobotânica amazônica, interesse em comunidades indígenas do Alto Rio Negro, conhece Yanomami e Baniwa. Procure especialmente por plantas medicinais e alimentares usadas nessas comunidades."`
 - **RF-067**: O sistema DEVE permitir que o usuário edite, visualize ou desabilite temporariamente seu perfil de pesquisador a qualquer momento
 - **RF-068**: Se o perfil estiver desabilitado, o sistema DEVE fazer extração genérica sem contexto personalizado
+- **RF-069**: **[NOVO v2.0]** O sistema DEVE capturar e estruturar informações detalhadas sobre o **uso de plantas por comunidades tradicionais**, incluindo para cada espécie: comunidade utilizadora, forma de uso, tipo de uso, e propósito específico
+- **RF-070**: **[NOVO v2.0]** Para cada espécie mencionada no artigo, o sistema DEVE extrair e armazenar uma lista de **contextos de uso por comunidade**, onde cada contexto inclui:
+  - Comunidade tradicional utilizadora (nome e tipo: indígena, quilombola, ribeirinha, etc.)
+  - Forma de uso (pó, chá, infusão, decocção, cataplasma, óleo, tinctura, etc.)
+  - Tipo de uso (medicinal, alimentar, ritual, cosmético, construção, etc.)
+  - Propósito específico (febre, tosse, digestão, analgésico, afrodisíaco, etc.)
+  - Partes da planta utilizadas (folhas, raízes, cascas, flores, sementes, etc.)
+  - Dosagem/quantidade (se mencionado no artigo)
+  - Método de preparação detalhado (se disponível)
+  - Origem/fonte da informação (se indicado)
+- **RF-071**: **[NOVO v2.0]** O sistema DEVE permitir busca e filtro por comunidade tradicional, tipo de uso (medicinal, alimentar, etc.) e propósito específico, permitindo pesquisadores localizar rapidamente plantas e conhecimento relevante para comunidades ou usos específicos
+- **RF-072**: **[NOVO v2.0]** O prompt de extração enviado ao Ollama DEVE instruir explicitamente o modelo de IA a extrair e estruturar informações detalhadas de uso de plantas, incluindo:
+  - Identificação precisa da comunidade tradicional utilizadora (nome, tipo, localização)
+  - Para cada espécie, todos os contextos de uso relatados no artigo (uma planta pode ter múltiplos usos em mesma comunidade ou diferentes comunidades)
+  - Forma de uso, tipo de uso, propósito específico, partes utilizadas, dosagem, método de preparação
+  - Origem/fonte da informação etnobotânica relatada
+  - Garantir que informações de diferentes comunidades ou usos não sejam consolidadas incorretamente
 
 ### Entidades Principais
 
@@ -227,7 +245,7 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
   - **Estado/Província**: Divisão administrativa de primeiro nível dentro de um país (ex: Amazonas, Acre). Atributos: identificador único, nome, sigla, referência ao país
   - **Município/Cidade**: Divisão administrativa de segundo nível dentro de um estado (ex: Manaus, São Gabriel da Cachoeira). Atributos: identificador único, nome, coordenadas geográficas (opcional), referência ao estado
 - **Território**: Representa espaços comunitários tradicionais sem definição espacial precisa ou relação com hierarquia geográfica administrativa. Territórios podem sobrepor ou transcender limites administrativos formais. Atributos incluem: identificador único, nome do território (ex: "Terra Indígena Yanomami", "Território Quilombola Ivaporunduva"), descrição detalhada, descrição textual da localização, coordenadas aproximadas (opcional), referência à comunidade associada (opcional), relacionamento com múltiplos artigos
-- **Comunidade Tradicional**: Representa grupos comunitários estudados nos artigos. Atributos incluem: identificador único, nome ou descrição da comunidade, tipo de comunidade (indígena, quilombola, ribeirinha, caiçara, seringueira, pantaneira, outro), relacionamento com territórios, data de criação
+- **Comunidade Tradicional**: Representa grupos comunitários estudados nos artigos e suas práticas de uso de plantas. Atributos incluem: identificador único, nome ou descrição da comunidade, tipo de comunidade (indígena, quilombola, ribeirinha, caiçara, seringueira, pantaneira, outro), localização geográfica (país, estado, município, território), idioma/língua falada (ex: Yanomami, Guarani, português), relacionamento com territórios específicos, histórico de relacionamento com pesquisa etnobotânica (data de criação de registro, estudos mencionados), conhecimento tradicional de plantas associado (agregado de todos os usos de plantas documentados para essa comunidade)
 - **Localização de Artigo**: Tabela de associação que vincula artigos a localizações, permitindo que um artigo esteja associado a municípios (hierarquia geográfica) OU a territórios comunitários. Um artigo pode ter múltiplas localizações de ambos os tipos. Atributos: identificador único, referência ao artigo, referência ao município (exclusivo com território), referência ao território (exclusivo com município)
 - **Espécie de Planta**: Representa plantas identificadas nos estudos. Atributos incluem: identificador único, nome científico (binomial) como chave de unicidade, autores do nome científico, família botânica, nome aceito atual validado via API, sinônimo (referência a outra espécie se aplicável), status de validação taxonômica, usos reportados (agregado de todos os artigos), relacionamento N:M com nomes vernaculares, relacionamento com artigos onde foi mencionada
 - **Nome Vernacular**: Representa nomes populares de plantas utilizados por comunidades tradicionais. Uma espécie pode ter múltiplos nomes vernaculares, e um nome vernacular pode referir-se a múltiplas espécies (homonímia). Atributos incluem: identificador único, nome popular (ex: "unha-de-gato", "ipê-roxo", "yãpinã"), idioma ou língua (ex: "português", "Yanomami", "Guarani"), descrição da região onde o nome é usado, relacionamento N:M com espécies de plantas
@@ -260,7 +278,41 @@ Estrutura de documento exemplo:
       "familia": "Asteraceae",
       "nomeAceitoValidado": "Chamomilla recutita (L.) Rydb.",
       "statusValidacao": "validado|naoValidado",
-      "confianca": "alta|media|baixa"
+      "confianca": "alta|media|baixa",
+      "usosPorComunidade": [
+        {
+          "comunidade": {
+            "nome": "Comunidade Açoriana do Sertão do Ribeirão",
+            "tipo": "tradicional",
+            "pais": "Brasil",
+            "estado": "SC",
+            "municipio": "Florianópolis"
+          },
+          "formaDeUso": "chá",
+          "tipoDeUso": "medicinal",
+          "propositoEspecifico": "digestão, anti-inflamação",
+          "partesUtilizadas": ["flores", "folhas"],
+          "dosagem": "1 xícara 2-3 vezes ao dia",
+          "metodoPreparacao": "infusão em água quente por 5-10 minutos",
+          "origem": "conhecimento tradicional passado oralmente"
+        },
+        {
+          "comunidade": {
+            "nome": "Comunidade Açoriana do Sertão do Ribeirão",
+            "tipo": "tradicional",
+            "pais": "Brasil",
+            "estado": "SC",
+            "municipio": "Florianópolis"
+          },
+          "formaDeUso": "banho",
+          "tipoDeUso": "medicinal",
+          "propositoEspecifico": "inflamação de pele",
+          "partesUtilizadas": ["flores"],
+          "dosagem": "conforme necessário",
+          "metodoPreparacao": "decocção de flores em água, aplicação tópica",
+          "origem": "conhecimento tradicional"
+        }
+      ]
     },
     {
       "vernacular": "hortelã-branca",
@@ -268,7 +320,25 @@ Estrutura de documento exemplo:
       "familia": "Lamiaceae",
       "nomeAceitoValidado": "Mentha spicata L.",
       "statusValidacao": "validado|naoValidado",
-      "confianca": "alta|media|baixa"
+      "confianca": "alta|media|baixa",
+      "usosPorComunidade": [
+        {
+          "comunidade": {
+            "nome": "Comunidade Açoriana do Sertão do Ribeirão",
+            "tipo": "tradicional",
+            "pais": "Brasil",
+            "estado": "SC",
+            "municipio": "Florianópolis"
+          },
+          "formaDeUso": "chá",
+          "tipoDeUso": "medicinal",
+          "propositoEspecifico": "digestão, gases intestinais",
+          "partesUtilizadas": ["folhas", "ramos"],
+          "dosagem": "1 xícara após refeições",
+          "metodoPreparacao": "infusão de folhas frescas em água quente",
+          "origem": "uso comum entre moradores da comunidade"
+        }
+      ]
     }
   ],
   "tipoUso": "medicinal|alimentar|ritual|outro",
@@ -298,10 +368,20 @@ Estrutura de documento exemplo:
 - `doi`: Digital Object Identifier (unique index para evitar duplicação)
 - `data_processamento`: ISO 8601 timestamp de quando foi extraído
 - `status`: "finalizado" (salvo pelo usuário) ou "rascunho" (auto-saved)
-- `especies[]`: Array de objetos com nome vernacular, científico, família, validação
-- `tipoUso`, `metodologia`, `pais`, `estado`, `municipio`, `local`, `bioma`: Contexto geográfico/temático
-- `comunidades[]`: Array de comunidades mencionadas
-- `periodoEstudo`: Período do estudo (opcional)
+- `especies[]`: Array de objetos com:
+  - Identificação: `vernacular`, `nomeCientifico`, `familia`, `nomeAceitoValidado`, `statusValidacao`, `confianca`
+  - **Uso detalhado por comunidade** (`usosPorComunidade[]`): Para cada comunidade tradicional que usa a planta, array com:
+    - `comunidade`: {nome, tipo, país, estado, município} - Comunidade utilizadora
+    - `formaDeUso`: Forma (chá, pó, óleo, infusão, decocção, cataplasma, tinctura, banho, etc.)
+    - `tipoDeUso`: Tipo (medicinal, alimentar, ritual, cosmético, construção, etc.)
+    - `propositoEspecifico`: Propósito (febre, tosse, digestão, analgésico, etc.)
+    - `partesUtilizadas`: Partes da planta (folhas, raízes, cascas, flores, sementes, etc.)
+    - `dosagem`: Quantidade/dosagem (se mencionado)
+    - `metodoPreparacao`: Como é preparada detalhadamente
+    - `origem`: Origem da informação
+- `tipoUso`, `metodologia`, `pais`, `estado`, `municipio`, `local`, `bioma`: Contexto geográfico/temático do artigo
+- `comunidades[]`: Array de comunidades tradicionais mencionadas no artigo (nome, tipo, localização)
+- `periodoEstudo`: Período do estudo (dataInicio, dataFim) - opcional
 
 **Índices para Performance**:
 - `{doi: 1}` (unique) → evita duplicação exata
@@ -309,6 +389,9 @@ Estrutura de documento exemplo:
 - `{status: 1}` → separar finalizado de rascunho
 - `{titulo: "text"}` → busca full-text no título
 - `{pais: 1, estado: 1, municipio: 1}` → filtro geográfico
+- `{"especies.usosPorComunidade.comunidade.nome": 1}` → busca por comunidade tradicional
+- `{"especies.usosPorComunidade.tipoDeUso": 1}` → filtro por tipo de uso (medicinal, alimentar, etc.)
+- `{"especies.usosPorComunidade.propositoEspecifico": 1}` → busca por propósito específico (febre, tosse, etc.)
 
 **Vantagens da Denormalização**:
 - ✅ **Simplicidade**: Um documento = uma referência. Sem JOINs, sem relacionamentos complexos

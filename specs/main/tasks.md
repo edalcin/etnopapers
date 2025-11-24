@@ -111,16 +111,21 @@ docker exec etnopapers nvidia-smi
 - [ ] `backend/database/schema.py` criado com Pydantic models
 - [ ] 1 collection `referencias` definida com campos:
   - Artigo: `_id`, `ano`, `titulo`, `publicacao`, `autores[]`, `resumo`, `doi`, `data_processamento`, `status`
-  - Espécies: `especies[]` com sub-documentos (vernacular, nomeCientifico, familia, nomeAceitoValidado, statusValidacao, confianca)
+  - Espécies: `especies[]` com sub-documentos:
+    - Identificação: vernacular, nomeCientifico, familia, nomeAceitoValidado, statusValidacao, confianca
+    - **Uso detalhado por comunidade** `usosPorComunidade[]`: comunidade (nome, tipo, país, estado, município), formaDeUso, tipoDeUso, propositoEspecifico, partesUtilizadas[], dosagem, metodoPreparacao, origem
   - Contexto: `tipoUso`, `metodologia`, `pais`, `estado`, `municipio`, `local`, `bioma`
-  - Comunidades: `comunidades[]` com sub-documentos (nome, tipo)
+  - Comunidades: `comunidades[]` com sub-documentos (nome, tipo, país, estado, município)
   - Período: `periodoEstudo` (dataInicio, dataFim) opcional
-- [ ] 5 índices criados:
+- [ ] 8 índices criados:
   - `{doi: 1}` (unique) → evita duplicação
   - `{ano: 1}` → filtro ano
   - `{status: 1}` → separar finalizado/rascunho
   - `{titulo: "text"}` → busca full-text
   - `{pais: 1, estado: 1, municipio: 1}` → filtro geográfico
+  - `{"especies.usosPorComunidade.comunidade.nome": 1}` → busca por comunidade
+  - `{"especies.usosPorComunidade.tipoDeUso": 1}` → filtro tipo de uso
+  - `{"especies.usosPorComunidade.propositoEspecifico": 1}` → busca propósito
 - [ ] Validações implementadas (year ranges, enum types: status, tipoUso, metodologia, tipo comunidade)
 - [ ] Script de inicialização (`backend/database/init_db.py`) que cria collection com índices
 - [ ] Testes de schema validation com Pydantic
