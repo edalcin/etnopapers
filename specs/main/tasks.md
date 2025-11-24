@@ -316,6 +316,95 @@ docker exec etnopapers nvidia-smi
 
 ---
 
+### TASK-008b: Implementar Taxonomy Service (GBIF + Tropicos + Cache)
+
+**Prioridade**: P1
+**Pontos**: 5
+**Status**: Pendente
+
+**Descrição**: Criar serviço de validação de nomes científicos de plantas usando GBIF API (primária) com fallback para Tropicos, incluindo cache em memória.
+
+**Critérios de Aceitação**:
+- [ ] `backend/services/taxonomy_service.py` criado
+- [ ] Class `TaxonomyService` com métodos:
+  - `validate_species(name)`: Consulta GBIF/Tropicos, retorna resultado com confiança
+  - `get_family(scientific_name)`: Retorna família botânica validada
+  - `get_accepted_name(name)`: Retorna nome aceito atual
+- [ ] GBIF Species API integration (timeout 5s):
+  - GET `/v1/species/search?q={name}`
+  - Parse response: exactMatch priority, retorna nome aceito + família
+- [ ] Tropicos fallback API (timeout 5s):
+  - Se GBIF falhar/timeout, tenta Tropicos
+  - Tropicos response parsing e normalização
+- [ ] In-memory cache com TTL 30 dias:
+  - `{query_name: {accepted_name, family, confidence, timestamp}}`
+  - Implementado com dict + threading.Lock (thread-safe)
+  - Cache limpa ao startup
+- [ ] Confidence levels (alta=100% match, média=fuzzy, baixa=no match):
+  - Retorna JSON: `{nome_aceito, familia, autores, confianca, validacao_status}`
+- [ ] Error handling:
+  - Timeout/Connection error → retorna `{confianca: 'baixa', status: 'nao_validado', error: msg}`
+  - Invalid name format → retorna confiança baixa
+- [ ] Logging de consultas (sem PII)
+- [ ] Testes unitários com mock GBIF/Tropicos responses
+
+**Arquivos**:
+```
+/backend/services/taxonomy_service.py
+/backend/tests/unit/test_taxonomy_service.py
+/backend/tests/fixtures/gbif_responses.json
+```
+
+**Dependências**: TASK-005 (Pydantic models)
+
+**Mapeia**: RF-025, RF-025a, RF-026, RF-028, RF-029
+
+---
+
+### TASK-008c: Implementar Duplicate Detection Service
+
+**Prioridade**: P1
+**Pontos**: 3
+**Status**: Pendente
+
+**Descrição**: Criar serviço de detecção de artigos duplicados (DOI primário, título+ano+autor fallback).
+
+**Critérios de Aceitação**:
+- [ ] `backend/services/duplicate_service.py` criado
+- [ ] Class `DuplicateDetector` com métodos:
+  - `find_duplicate(metadata_dict)`: Retorna documento duplicado ou None
+  - `check_by_doi(doi)`: Busca exata por DOI se presente
+  - `check_by_title_year_author(title, year, first_author)`: Fuzzy match
+- [ ] DOI check (se DOI disponível):
+  - Query MongoDB: `{doi: extracted_doi}` (unique index)
+  - Retorna match se encontrado
+- [ ] Title+year+author fallback:
+  - Normaliza strings (lowercase, remove acentos)
+  - Compara título (95%+ similarity via Levenshtein ou similar)
+  - Compara ano (exact match)
+  - Compara primeiro autor (95%+ similarity)
+  - Retorna match se todos 3 criterios atendem
+- [ ] Check against both "finalizado" e "rascunho" status:
+  - Busca em toda collection, não filtra por status
+  - Retorna documento completo se duplicata encontrada
+- [ ] Confidence scoring:
+  - DOI match = 100% confidence
+  - Title+year+author match = 95% confidence
+  - Return: `{duplicata_id, titulo_duplicata, status, data_processamento, confianca}`
+- [ ] Testes com duplicatas exatas e fuzzy
+
+**Arquivos**:
+```
+/backend/services/duplicate_service.py
+/backend/tests/unit/test_duplicate_service.py
+```
+
+**Dependências**: TASK-002 (MongoDB schema)
+
+**Mapeia**: RF-036, RF-037, RF-038, RF-039, RF-040, RF-041, RF-042
+
+---
+
 ### TASK-009: Testes Backend (Unit + Integration)
 
 **Prioridade**: P1
@@ -461,6 +550,80 @@ docker exec etnopapers nvidia-smi
 ```
 
 **Dependências**: TASK-013
+
+---
+
+### TASK-013b: Implementar ResearcherProfile Component & localStorage
+
+**Prioridade**: P2
+**Pontos**: 4
+**Status**: Pendente
+
+**Descrição**: Criar componente de configuração de perfil de pesquisador com armazenamento em localStorage (nunca no servidor).
+
+**Critérios de Aceitação**:
+- [ ] `frontend/src/components/ResearcherProfile.tsx` criado
+- [ ] Form com campos:
+  - Área de especialização (text input, ex: "etnobotânica amazônica")
+  - Região geográfica de foco (text input, ex: "Alto Rio Negro")
+  - Idiomas/línguas indígenas (multi-select ou tag input, ex: ["Yanomami", "Baniwa"])
+  - Tipos de comunidades (checkbox: indígena, quilombola, ribeirinha, caiçara, outro)
+- [ ] Armazenamento em localStorage:
+  - Key: `etnopapers_researcher_profile`
+  - Format: JSON stringify
+  - NUNCA enviado para servidor, apenas usado localmente
+- [ ] Botões: Salvar, Editar, Limpar, Toggle (Ativar/Desativar)
+- [ ] Toggle enable/disable sem perder dados
+- [ ] Integração com Zustand store:
+  - `useStore.researcherProfile` state
+  - `useStore.setResearcherProfile()` action
+  - `useStore.clearResearcherProfile()` action
+- [ ] UI mensagem: "Perfil salvo localmente no seu navegador" (não sincroniza com servidor)
+- [ ] Component acessível via Settings page ou modal
+- [ ] Testes: localStorage persistence, toggle, form validation
+
+**Arquivos**:
+```
+/frontend/src/components/ResearcherProfile.tsx
+/frontend/src/hooks/useResearcherProfile.ts (custom hook)
+/frontend/src/tests/components/ResearcherProfile.test.tsx
+```
+
+**Dependências**: TASK-011 (Zustand store refactored)
+
+**Mapeia**: RF-064, RF-065, RF-067, RF-068
+
+---
+
+### TASK-013c: Integrar ResearcherProfile no ExtractionService
+
+**Prioridade**: P2
+**Pontos**: 2
+**Status**: Pendente
+
+**Descrição**: Passar perfil do pesquisador para backend ao chamar extraction endpoint.
+
+**Critérios de Aceitação**:
+- [ ] `frontend/src/services/extractionService.ts` atualizado
+- [ ] Função `extractMetadata()` agora recebe `researcherProfile` parameter
+- [ ] Serializa profile como JSON (max 500 tokens) no multipart request:
+  - `researcher_profile` field contém JSON stringificado
+  - Se profile desabilitado, envia campo vazio ou null
+  - Se profile vazio, não inclui field
+- [ ] Backend recebe `researcher_profile` form field
+- [ ] Integration test: POST `/api/extract/metadata` com `researcher_profile` field
+
+**Arquivos**:
+```
+/frontend/src/services/extractionService.ts (update)
+/frontend/src/components/PDFUpload.tsx (update to pass profile)
+/backend/routers/extraction.py (update to accept researcher_profile)
+/backend/tests/integration/test_extraction_with_profile.py
+```
+
+**Dependências**: TASK-013b, TASK-006
+
+**Mapeia**: RF-066, RF-067, RF-068
 
 ---
 

@@ -2,8 +2,8 @@
 
 ## Core Principles
 
-### I. Privacy-First Architecture
-**User API keys are stored ONLY in browser localStorage and never transmitted or persisted on the server.** The frontend makes direct HTTPS calls to AI provider APIs (Gemini, ChatGPT, Claude) using user-provided keys. Backend never handles, logs, or stores API keys under any circumstance.
+### I. Privacy-First Architecture & Local AI Inference
+**All data processing happens server-side with zero external API calls.** Backend runs Ollama (local AI inference) in container; frontend sends PDFs to backend `/api/extract/metadata` endpoint for processing. Users never provide API keys—system is self-contained. No AI keys, credentials, or sensitive data leave the server. All user data stays on server (UNRAID or local network) and never transmitted to external services.
 
 ### II. Data Portability & Locality
 **All persistent data lives in a self-contained database with portable backup capability.** System supports MongoDB for scalability and document-centric storage, with automatic backup export functionality (ZIP format). Database connection configurable via MONGO_URI environment variable for local or cloud deployments. System must operate completely offline except for: (a) initial model download (Ollama Qwen2.5), (b) optional GBIF/Tropicos taxonomy validation, and (c) Ollama local inference service. Users can backup MongoDB via native export tools and restore to any MongoDB instance.
@@ -34,7 +34,7 @@
 
 - **Transport Security**: All API calls to external services use HTTPS with certificate validation
 - **Input Validation**: Pydantic models validate all backend inputs; reject oversized requests (PDFs > 50 MB)
-- **Database Integrity**: SQLite PRAGMA integrity_check required before database downloads; triggers maintain audit trail
+- **Database Integrity**: MongoDB collection validation (`db.collection.validate()`) and index verification performed before database downloads; backup ZIP integrity verified via checksum
 - **No Secrets in Logs**: API keys, user data never logged or exposed in error messages
 - **CORS Configuration**: Backend accepts requests only from configured frontend origin
 

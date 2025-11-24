@@ -159,7 +159,7 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-012**: O sistema DEVE ser empacotado e executado em um container Docker
 - **RF-013**: O sistema DEVE ser compatível com instalação em servidor UNRAID **com GPU NVIDIA (6-8 GB VRAM mínimo)** **[ATUALIZADO v2.0]**
 - **RF-014**: O sistema DEVE aceitar **URI de conexão MongoDB (MONGO_URI)** e **URL do serviço Ollama (OLLAMA_URL)** como variáveis de ambiente durante a criação do container Docker **[ATUALIZADO v2.0]**
-- **RF-014a**: **[NOVO v2.0]** O sistema DEVE executar **frontend React + backend FastAPI + Ollama em um único container Docker** (exceto MongoDB, que será conectado via variável de ambiente MONGO_URI como serviço externo)
+- **RF-014a**: **[NOVO v2.0]** O sistema DEVE executar **frontend React + backend FastAPI + Ollama em um único container Docker** (exceto MongoDB, que será conectado via variável de ambiente MONGO_URI como serviço externo). MongoDB pode estar em 3 configurações suportadas: (1) container MongoDB separado no mesmo host UNRAID (hostname `mongo`), (2) MongoDB em máquina diferente na rede local (IP/hostname configurável), ou (3) MongoDB Atlas (cloud) com connection string mongodb+srv://. O sistema DEVE funcionar identicamente em qualquer dessas 3 configurações—não há preferência de implementação
 - **RF-014b**: **[NOVO v2.0]** Para GPU NVIDIA no UNRAID, o container Docker DEVE:
   - Configurar `--runtime=nvidia` nos parâmetros extras do container
   - Definir variável de ambiente `NVIDIA_VISIBLE_DEVICES=all` para exposição de GPU
@@ -173,11 +173,12 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - ~~**RF-022**: O sistema DEVE validar a chave de API fornecida~~ **[REMOVIDO v2.0 - Sem API keys]**
 - ~~**RF-023**: O sistema DEVE exibir mensagens de erro claras quando a chave de API for inválida~~ **[REMOVIDO v2.0 - Sem API keys]**
 - ~~**RF-024**: O sistema DEVE permitir ao usuário visualizar, editar ou remover a chave de API~~ **[REMOVIDO v2.0 - Sem API keys]**
-- **RF-025**: O sistema DEVE validar nomes científicos de plantas extraídos consultando API de taxonomia botânica para obter o nome aceito atual
+- **RF-025**: O sistema DEVE validar nomes científicos de plantas extraídos consultando API de taxonomia botânica (GBIF Species API primária, Tropicos API como fallback) para obter o nome aceito atual
+- **RF-025a**: **[NOVO v2.0]** O sistema DEVE implementar `TaxonomyService` (backend) que: (a) Consulta GBIF Species API com timeout 5s; (b) Se GBIF timeout/indisponível, tenta Tropicos API; (c) Retorna resultado com nome aceito, família, autores, e confiança (alta=100% match, média=fuzzy match, baixa=nenhuma match); (d) Registra "não validado" se ambas APIs falharem
 - **RF-026**: O sistema DEVE armazenar automaticamente família botânica e autores do nome científico obtidos da API de taxonomia
 - **RF-027**: Quando múltiplos artigos mencionam a mesma espécie (mesmo nome científico), o sistema DEVE reutilizar o registro existente ao invés de criar duplicata
 - **RF-028**: Se a API de taxonomia estiver indisponível, o sistema DEVE permitir salvamento dos metadados mas DEVE marcar o status de validação como "não validado"
-- **RF-029**: O sistema DEVE implementar cache local de consultas à API de taxonomia para reduzir requisições repetidas e melhorar performance
+- **RF-029**: O sistema DEVE implementar cache local de consultas à API de taxonomia (em memória, TTL 30 dias) para reduzir requisições repetidas e melhorar performance offline
 - **RF-030**: Após extração de metadados, o sistema DEVE apresentar interface com três botões de ação claramente visíveis: "Salvar", "Editar" e "Descartar"
 - **RF-031**: Ao clicar em "Salvar", o sistema DEVE armazenar os metadados com status "finalizado" no banco de dados
 - **RF-032**: Ao clicar em "Editar", o sistema DEVE abrir interface de edição manual com todos os campos editáveis
@@ -214,7 +215,7 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-063**: O sistema DEVE permitir associação de coordenadas geográficas a municípios e territórios de forma opcional
 - **RF-064**: O sistema DEVE permitir que o usuário configure opcionalmente um perfil de pesquisador contendo: área de especialização, região geográfica de foco, idiomas/línguas indígenas relevantes e tipos de comunidades estudadas
 - **RF-065**: O perfil do pesquisador DEVE ser armazenado apenas no navegador (localStorage), nunca no servidor
-- **RF-066**: Ao extrair metadados de um PDF, o sistema DEVE incluir o perfil do pesquisador (se configurado) como contexto adicional no prompt enviado à API de IA
+- **RF-066**: Ao extrair metadados de um PDF, o sistema DEVE incluir o perfil do pesquisador (se configurado) como contexto adicional no prompt enviado ao Ollama. Formato: JSON block de max 500 tokens contendo especialização, regiões de interesse, idiomas/línguas indígenas e tipos de comunidades. Exemplo: `"Pesquisador: especialização em etnobotânica amazônica, interesse em comunidades indígenas do Alto Rio Negro, conhece Yanomami e Baniwa. Procure especialmente por plantas medicinais e alimentares usadas nessas comunidades."`
 - **RF-067**: O sistema DEVE permitir que o usuário edite, visualize ou desabilite temporariamente seu perfil de pesquisador a qualquer momento
 - **RF-068**: Se o perfil estiver desabilitado, o sistema DEVE fazer extração genérica sem contexto personalizado
 
@@ -233,6 +234,45 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **Associação Espécie-Nome Vernacular**: Tabela que conecta espécies a nomes vernaculares. Atributos incluem: referência à espécie, referência ao nome vernacular, fonte da informação, nível de confiança da associação (alta/média/baixa)
 - **Dados de Estudo**: Representa informações metodológicas do estudo. Atributos incluem: identificador único, período do estudo (data de início e fim), métodos de coleta de dados, tipo de amostragem, tamanho da amostra, relacionamento 1:1 com o artigo correspondente
 - **Perfil do Pesquisador**: Configuração opcional armazenada no navegador para personalizar extração de metadados. Atributos incluem: área de especialização/foco (ex: "etnobotânica amazônica", "plantas medicinais"), região geográfica de interesse (ex: "Amazônia brasileira", "Alto Rio Negro"), idiomas e línguas indígenas relevantes (lista, ex: ["Yanomami", "Baniwa", "Tukano"]), tipos de comunidades estudadas (lista, ex: ["indígena", "ribeirinha"]), estado do perfil (ativo/desabilitado)
+
+### MongoDB Collection Structure **[NOVO v2.0]**
+
+O sistema usa **4 collections MongoDB** com relacionamentos para permitir reutilização de dados e evitar duplicação:
+
+1. **referencias** (Artigos científicos)
+   - Armazena todos os metadados de artigos científicos processados
+   - Campos: _id (ObjectId), titulo, autores (array), ano, resumo, doi (unique index), publicacao, status (finalizado/rascunho), data_processamento, especies_ids (array de ObjectIds referenciando collection especies_plantas), localizacoes_ids (array), comunidades_ids (array), metadata extraída (textura raw do PDF)
+   - Índices: doi (unique), ano, status, titulo (text search)
+
+2. **especies_plantas** (Plantas identificadas)
+   - Armazena informações de espécies únicas (nome científico é chave primária)
+   - Campos: _id (ObjectId), nome_cientifico (unique index), autores_nome, familia, nome_aceito_validado, sinonimos (array), status_validacao, usos_reportados (agregado), vernaculares (array de sub-documentos: {nome, idioma, regiao, confianca})
+   - Reutilizada por múltiplos artigos para evitar duplicação
+   - Índices: nome_cientifico (unique), familia, status_validacao
+
+3. **comunidades_indígenas** (Comunidades tradicionais)
+   - Armazena informações de comunidades mencionadas em artigos
+   - Campos: _id (ObjectId), nome, tipo (indígena/quilombola/ribeirinha/caiçara/outro), territorio_id (ref, opcional), descricao
+   - Reutilizada por múltiplos artigos
+   - Índices: nome, tipo
+
+4. **localizacoes** (Localizações geográficas)
+   - Armazena hierarquia geográfica (países, estados, municípios) e territórios
+   - Tipo "administrativo": {_id, nome, tipo (pais/estado/municipio), nivel, parent_id (ref ao estado/país acima), codigo_iso, coordenadas (opcional)}
+   - Tipo "territorio": {_id, nome, tipo=territorio, descricao, coordenadas_aproximadas (opcional), comunidade_id (ref, opcional)}
+   - Índices: tipo, parent_id, nome
+
+**Relacionamentos**:
+- referencias.especies_ids → especies_plantas._id (many-to-many)
+- referencias.localizacoes_ids → localizacoes._id (many-to-many)
+- referencias.comunidades_ids → comunidades_indígenas._id (many-to-many)
+- comunidades_indígenas.territorio_id → localizacoes._id (one-to-many, opcional)
+
+**Vantagens**:
+- ✅ Eliminação de duplicação de espécies (mesma planta em múltiplos artigos = 1 registro)
+- ✅ Reutilização de dados geográficos (mesmo município em múltiplos artigos = 1 registro)
+- ✅ Queries eficientes (busca por espécie retorna todos artigos que a mencionam)
+- ✅ Escalabilidade (adicionar novo artigo = apenas novo documento em referencias + referências a collections existentes)
 
 ## Critérios de Sucesso *(obrigatório)*
 
