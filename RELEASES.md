@@ -169,28 +169,6 @@ https://github.com/edalcin/etnopapers/releases
 - Artifacts auto-clean after release creation
 - If persistent, increase timeout in workflow
 
-## Legacy Docker Releases
-
-Old Docker-based releases are no longer needed. To clean them up:
-
-### Option 1: Manual Deletion
-
-1. Go to: https://github.com/edalcin/etnopapers/releases
-2. Click the release
-3. Click "Delete this release" (red button)
-
-### Option 2: Automated Deletion (bash)
-
-```bash
-# Requirements: curl, grep, awk
-# Linux/macOS only
-
-export GITHUB_TOKEN=your_personal_access_token
-bash .github/scripts/delete-docker-releases.sh
-```
-
-**Important**: The script identifies Docker releases by checking release notes for "docker" keywords.
-
 ## Best Practices
 
 ### Version Numbering

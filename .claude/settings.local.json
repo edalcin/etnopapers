@@ -27,7 +27,10 @@
       "Bash(git -C \"H:\\git\\etnopapers\" log --oneline -3)",
       "Bash(git -C \"H:\\git\\etnopapers\" commit -m \"$(cat <<''EOF''\nchore: Add Claude Code settings and local model documentation\n\nChanges:\n- Update .claude/settings.local.json with additional git commands allowlist\n- Add .specify/ directory with scripts and templates for local deployment\n- Add docs/qwen3.8bLocal.md with Qwen 3.8B local model documentation\n\nThese additions support the development and local AI inference setup for Etnopapers.\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(del Dockerfile docker-compose.yml entrypoint.sh)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(git tag:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(xargs ls:*)"
     ],
     "deny": [],
     "ask": []

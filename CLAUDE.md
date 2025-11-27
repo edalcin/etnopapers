@@ -7,13 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Etnopapers** is a specialized ethnobotany metadata extraction system designed to automatically extract and catalog information from scientific articles about traditional plant use in indigenous and traditional communities.
 
 **Key Facts:**
-- **Current Status**: Design & specification phase (v2.0 - AI Local architecture planned)
-- **Frontend**: React 18 + TypeScript (not implemented)
-- **Backend**: Python FastAPI (not implemented)
+- **Current Status**: Stable Release (v2.0 - Standalone native application with local AI)
+- **Frontend**: React 18 + TypeScript
+- **Backend**: Python FastAPI
 - **Database**: MongoDB (NoSQL with JSON/BSON documents, via MONGO_URI environment variable)
 - **Data Model**: Document-centric (references as root documents with aggregated metadata)
-- **Deployment**: Docker + Docker Compose for UNRAID servers with GPU (~8.5 GB)
-- **AI Integration**: **LOCAL AI** using Ollama + Qwen2.5-7B-Instruct (GPU inference, 1-3s latency, 100% private)
+- **Distribution**: Standalone native executables for Windows, macOS, and Linux (PyInstaller)
+- **AI Integration**: **LOCAL AI** using Ollama desktop app + Qwen2.5-7B-Instruct (GPU inference, 1-3s latency, 100% private)
 
 ## Architecture Overview
 
@@ -120,85 +120,54 @@ A single `referencias` collection stores complete reference documents with all m
 - 10,000 references: ~10-20 MB
 - 100,000 references: ~100-200 MB
 
-### Docker Setup **[UPDATED v2.0]**
+### Standalone Application Distribution **[v2.0]**
 
-**IMPORTANT: Single Container Architecture**
+**Architecture**: PyInstaller bundles frontend + backend into standalone native executables
 
-Etnopapers v2.0 executa em **UM ÚNICO container Docker** que contém:
-- ✅ Frontend React 18 + TypeScript
-- ✅ Backend FastAPI + Python 3.11
-- ✅ Ollama + Qwen2.5-7B-Instruct (AI Local)
+**Key Characteristics**:
+- ✅ **No Docker required** - Single executable file
+- ✅ **Ollama separate** - Desktop app from https://ollama.com/download
+- ✅ **Cross-platform** - Windows (.exe), macOS (.app), Linux (binary)
+- ✅ **Built on release** - GitHub Actions auto-builds on version tags
+- ✅ **Zero dependencies** - Python runtime bundled with executable
 
-MongoDB é conectado **externamente via MONGO_URI** (pode ser local ou cloud)
+**Build Process**:
+1. Frontend React compiles to `frontend/dist/` (Vite)
+2. Backend dependencies installed via pip
+3. PyInstaller bundles everything:
+   - Python 3.11 runtime
+   - All Python packages from requirements.txt
+   - Frontend static files (React SPA)
+   - Backend entry point (launcher.py)
+4. Output: Platform-specific executable (~150 MB each)
 
-```yaml
-# Single Container: Etnopapers (Frontend + Backend + Ollama)
-# Ports:
-- Port: 8000 (HTTP: Frontend + API)
-- Port: 11434 (Internal: Ollama API, acessado via localhost)
-
-# Build:
-- Base Image: Multi-stage build
-  - Stage 1: Node.js (build frontend React)
-  - Stage 2: Python 3.11 (build backend + runtime)
-  - Stage 3: Copy built frontend para FastAPI static folder
-  - Stage 4: Ollama setup (download Qwen2.5 model)
-- Total Image Size: ~6.8 GB (Ollama + model + dependencies)
-
-# GPU: NVIDIA GPU passthrough required
-- UNRAID configuration:
-  - Extra Parameters: --runtime=nvidia
-  - Environment: NVIDIA_VISIBLE_DEVICES=all
-
-# Environment Variables (obrigatórias):
-  - MONGO_URI=mongodb://localhost:27017/etnopapers (local)
-            ou mongodb+srv://user:pass@cluster.mongodb.net/etnopapers (cloud)
-  - OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
-
-# Health Check:
-  - Frontend: curl http://localhost:8000 (should return HTML)
-  - Backend: curl http://localhost:8000/api/health
-  - Ollama: curl http://localhost:11434/api/tags (internal)
+**Startup Flow**:
+```
+User runs executable (etnopapers.exe / etnopapers / Etnopapers.app)
+  ↓
+launcher.py validates Ollama is running (http://localhost:11434)
+  ↓
+If no .env file: Show GUI dialog for MongoDB configuration
+  ↓
+Start FastAPI server (port 8000)
+  ↓
+Auto-open browser to http://localhost:8000
+  ↓
+Application ready for use
 ```
 
-**Container Startup Flow:**
-1. Inicia Ollama em background
-2. Aguarda Ollama healthcheck (max 60s)
-3. Inicia FastAPI server
-4. Serve frontend React static files via FastAPI
+**Environment Configuration**:
+- **MONGO_URI**: MongoDB connection (local or cloud)
+  - Local: `mongodb://localhost:27017/etnopapers`
+  - Cloud: `mongodb+srv://user:pass@cluster.mongodb.net/etnopapers`
+- **OLLAMA_URL**: Local Ollama endpoint (default: `http://localhost:11434`)
+- **OLLAMA_MODEL**: Model name (default: `qwen2.5:7b-instruct-q4_K_M`)
 
-### Development Environment GPU
-
-**Hardware**: Nvidia GeForce GTX 1050 Ti (4 GB VRAM)
-
-**Configuration** (same as UNRAID):
-```bash
-# Docker run with GPU access (dev environment)
-docker run -d --name etnopapers \
-  -p 8000:8000 \
-  --gpus all \
-  --runtime=nvidia \
-  -e NVIDIA_VISIBLE_DEVICES=all \
-  -e MONGO_URI=mongodb://localhost:27017/etnopapers \
-  -e OLLAMA_URL=http://localhost:11434 \
-  etnopapers:latest
-```
-
-**Performance Notes**:
-- GTX 1050 Ti: 3-5 seconds per article inference (vs 1-3s on RTX 3060+)
-- 4 GB VRAM: Adequate for development/testing, watch for CUDA OOM errors
-- Dev performance is slower than production target, which is expected
-- For performance validation, test on both GTX 1050 Ti (dev) and RTX 3060+ (prod)
-
-**Verification**:
-```bash
-# Check GPU availability
-nvidia-smi
-
-# Test with Ollama (inside container)
-docker exec etnopapers ollama run qwen2.5:7b-instruct-q4_K_M "Teste"
-# Expected: 3-5 seconds response time
-```
+**Release Distribution**:
+- **Linux**: `etnopapers-linux-vX.Y.Z` (150 MB)
+- **Windows**: `etnopapers-windows-vX.Y.Z.exe` (150 MB)
+- **macOS**: `Etnopapers-macos-vX.Y.Z.zip` (150 MB)
+- Download from: https://github.com/edalcin/etnopapers/releases
 
 ## Development Commands
 
@@ -270,41 +239,33 @@ print(f'References with Chamomilla recutita: {len(refs_with_species)}')
 # - Docker service: mongodb://mongo:27017/etnopapers
 ```
 
-### Docker **[UPDATED v2.0]**
+### Building Standalone Executables
+
+Use the platform-specific build scripts to create standalone executables:
+
 ```bash
-# Prerequisites: Install NVIDIA Container Toolkit on UNRAID
-# Apps → Search "nvidia" → Install "Nvidia-Driver"
+# Linux
+bash build-linux.sh
+# Output: dist/etnopapers (~150 MB)
 
-docker-compose build                   # Build image
-docker-compose up -d                   # Start services (detached)
-docker-compose logs -f                 # Follow logs
-docker-compose logs -f ollama          # Follow Ollama logs specifically
-docker-compose down                    # Stop services
-docker-compose down -v                 # Stop services and remove volumes
+# macOS
+bash build-macos.sh
+# Output: dist/Etnopapers.app (~150 MB)
 
-# Verify GPU is available
-docker exec etnopapers-ollama nvidia-smi
-
-# Download model manually (recommended before first use)
-docker exec etnopapers-ollama ollama pull qwen2.5:7b-instruct-q4_K_M
-
-# List downloaded models
-docker exec etnopapers-ollama ollama list
-
-# Test AI extraction endpoint
-curl -X POST http://localhost:8000/api/extract/metadata \
-  -F "pdf_file=@sample.pdf" \
-  -F 'researcher_profile={"name":"Dr. Silva","institution":"UFSC"}'
-
-# Build for production
-docker build -t etnopapers:latest .
-docker run -d --name etnopapers \
-  -p 8000:8000 \
-  --gpus all \
-  -e MONGO_URI=mongodb://mongo:27017/etnopapers \
-  -e OLLAMA_URL=http://ollama:11434 \
-  etnopapers:latest
+# Windows
+.\build-windows.bat
+# Output: dist\etnopapers.exe (~150 MB)
 ```
+
+**Build Requirements**:
+- Node.js 18+ (with npm)
+- Python 3.11+ (with pip)
+- Git
+
+**Automated Release Builds**:
+- Push version tag: `git tag -a v2.0.0 && git push origin v2.0.0`
+- GitHub Actions builds all 3 platforms automatically
+- Releases available at: https://github.com/edalcin/etnopapers/releases
 
 ## Testing Strategy
 
@@ -321,10 +282,10 @@ docker run -d --name etnopapers \
 ## Implementation Checklist (Priority Order)
 
 ### Phase 0: Infrastructure (P0)
-- [ ] Create directory structure (frontend/, backend/, data/, migrations/)
-- [ ] Setup Dockerfile with multi-stage build
-- [ ] Setup docker-compose.yml
-- [ ] Configure backend requirements.txt and frontend package.json
+- [x] Create directory structure (frontend/, backend/, data/, migrations/)
+- [x] Configure backend requirements.txt and frontend package.json
+- [x] Setup PyInstaller build.spec for cross-platform bundling
+- [x] Create GitHub Actions workflow for automated releases
 
 ### Phase 1: Core API & Database (P0-P1)
 - [ ] Setup MongoDB client initialization in backend (MongoClient with MONGO_URI)
@@ -508,10 +469,6 @@ npm run dev
 # For local MongoDB:
 mongosh # Connect to local MongoDB
 
-# For Docker Compose:
-docker-compose logs mongo # Check MongoDB service logs
-docker-compose ps         # Check if mongo service is running
-
 # Test connection from Python
 python -c "
 from pymongo import MongoClient
@@ -528,14 +485,11 @@ except Exception as e:
 # Verify MONGO_URI environment variable is set:
 echo $MONGO_URI
 
-# For Docker, verify the environment variable in docker-compose.yml:
-# - MONGO_URI=mongodb://mongo:27017/etnopapers
-
-# Test MongoDB connection from the app container:
-docker-compose exec etnopapers python -c "
+# Verify connection directly:
+python -c "
 from pymongo import MongoClient
 import os
-uri = os.getenv('MONGO_URI')
+uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017/etnopapers')
 print(f'MONGO_URI: {uri}')
 client = MongoClient(uri)
 client.admin.command('ping')
@@ -549,11 +503,14 @@ print('Connected!')
 - Verify network connectivity to provider's API
 - Check browser localStorage for key storage issues
 
-### Docker Build Fails
-- Ensure Node.js version matches `frontend/package.json` engines
-- Ensure Python version matches `backend/requirements.txt`
-- Check Docker build output for dependency resolution errors
-- Try `docker-compose build --no-cache` to skip cached layers
+### Build Fails: PyInstaller Error
+
+- Ensure Node.js version is 18+ (`node --version`)
+- Ensure Python version is 3.11+ (`python --version`)
+- Ensure npm dependencies installed: `npm ci` in frontend/
+- Ensure pip dependencies installed: `pip install -r backend/requirements.txt`
+- Check PyInstaller spec file (`build.spec`) for syntax errors
+- Try deleting `build/` and `dist/` directories and rebuild
 
 ### Slow Taxonomy Validation
 - Check if GBIF API is responding: `curl https://api.gbif.org/v1/species/search?q=Areca`
