@@ -17,7 +17,13 @@
       "Bash(powershell -Command \".specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks\")",
       "Bash(dir:*)",
       "Bash(powershell -Command:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git -C \"H:\\git\\etnopapers\" log --oneline -15)",
+      "Bash(git -C \"H:\\git\\etnopapers\" status)",
+      "Bash(git -C \"H:\\git\\etnopapers\" diff .claude/settings.local.json)",
+      "Bash(git -C \"H:\\git\\etnopapers\" add .claude/settings.local.json)",
+      "Bash(git -C \"H:\\git\\etnopapers\" commit -m \"$(cat <<''EOF''\nchore: Update Claude Code settings allowlist\n\nAdd git commands to safely allow without prompting during subsequent sessions.\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
