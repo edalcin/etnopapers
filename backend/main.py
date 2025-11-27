@@ -15,6 +15,7 @@ from backend.config import settings
 from backend.routers import articles_router
 from backend.routers import database_router
 from backend.routers import species_router
+from backend.routers.extraction import router as extraction_router
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ app.add_middleware(
 app.include_router(articles_router)
 app.include_router(species_router)
 app.include_router(database_router)
+app.include_router(extraction_router)
 
 # Serve frontend static files
 frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
