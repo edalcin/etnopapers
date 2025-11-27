@@ -1,0 +1,201 @@
+name: Build Cross-Platform Releases
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v1.0.0, v2.1.0)
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os-name: linux
+            artifact-name: etnopapers
+            artifact-path: dist/etnopapers
+
+          - os: macos-latest
+            os-name: macos
+            artifact-name: etnopapers
+            artifact-path: dist/Etnopapers.app
+
+          - os: windows-latest
+            os-name: windows
+            artifact-name: etnopapers.exe
+            artifact-path: dist/etnopapers.exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements.txt'
+
+      - name: Build on Linux
+        if: runner.os == 'Linux'
+        run: bash build-linux.sh
+        shell: bash
+
+      - name: Build on macOS
+        if: runner.os == 'macOS'
+        run: bash build-macos.sh
+        shell: bash
+
+      - name: Build on Windows
+        if: runner.os == 'Windows'
+        run: .\build-windows.bat
+        shell: cmd
+
+      - name: Verify build artifact exists
+        run: |
+          if [ ! -f "${{ matrix.artifact-path }}" ]; then
+            echo "Error: Build artifact not found at ${{ matrix.artifact-path }}"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Create macOS App Bundle Archive (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          cd dist
+          zip -r Etnopapers-macos-${{ github.ref_name }}.zip Etnopapers.app
+          ls -lh Etnopapers-macos-*.zip
+        shell: bash
+
+      - name: Rename Linux artifact
+        if: runner.os == 'Linux'
+        run: |
+          mv dist/etnopapers dist/etnopapers-linux-${{ github.ref_name }}
+          ls -lh dist/etnopapers-linux-*
+        shell: bash
+
+      - name: Rename Windows artifact
+        if: runner.os == 'Windows'
+        run: |
+          move dist\etnopapers.exe dist\etnopapers-windows-${{ github.ref_name }}.exe
+          dir dist\etnopapers-windows-*.exe
+        shell: cmd
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os-name }}-build
+          path: |
+            dist/etnopapers-linux-*
+            dist/etnopapers-windows-*.exe
+            dist/Etnopapers-macos-*.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: release-artifacts
+
+      - name: Flatten artifact directory
+        run: |
+          mkdir -p final-artifacts
+          find release-artifacts -type f -exec cp {} final-artifacts/ \;
+          ls -lh final-artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            final-artifacts/etnopapers-linux-*
+            final-artifacts/etnopapers-windows-*.exe
+            final-artifacts/Etnopapers-macos-*.zip
+          body: |
+            # Etnopapers ${{ github.ref_name }}
+
+            ## Downloads
+
+            - **Linux**: `etnopapers-linux-${{ github.ref_name }}`
+            - **Windows**: `etnopapers-windows-${{ github.ref_name }}.exe`
+            - **macOS**: `Etnopapers-macos-${{ github.ref_name }}.zip`
+
+            ## Prerequisites
+
+            Before running Etnopapers, ensure you have installed:
+
+            1. **Ollama** (GUI version): https://ollama.com/download
+               - Download and install from the official website
+               - The app should be running locally for metadata extraction
+               - Model: `qwen2.5:7b-instruct-q4_K_M` (will be pulled automatically by Ollama)
+
+            2. **MongoDB** (local or cloud)
+               - Local: Install MongoDB Community Edition
+               - Cloud: Get connection string from MongoDB Atlas
+               - Required for storing extracted metadata
+
+            ## Getting Started
+
+            1. Download the executable for your operating system
+            2. Install Ollama from https://ollama.com/download
+            3. Configure MongoDB connection (local or MongoDB Atlas)
+            4. Run the executable
+            5. A configuration dialog will appear on first run
+            6. Enter your MongoDB URI and complete the setup
+            7. Application will open in your browser at http://localhost:8000
+
+            ## System Requirements
+
+            - **RAM**: 4 GB minimum (8 GB recommended)
+            - **GPU**: NVIDIA GPU with CUDA support recommended (CPU mode slower)
+            - **Disk**: 10 GB free (for Ollama model + MongoDB)
+            - **Network**: Internet required (initial Ollama model download)
+
+            ## Troubleshooting
+
+            ### Ollama not detected
+            - Ensure Ollama is downloaded from https://ollama.com/download
+            - Ensure Ollama is running (check system tray)
+            - Verify Ollama is accessible at http://localhost:11434
+
+            ### MongoDB connection error
+            - Verify MongoDB is running
+            - Check MongoDB URI format:
+              - Local: `mongodb://localhost:27017/etnopapers`
+              - Cloud: `mongodb+srv://username:password@cluster.mongodb.net/etnopapers`
+
+            ### Port already in use
+            - Etnopapers uses port 8000 (HTTP server)
+            - Close other applications using port 8000
+
+            ## Documentation
+
+            - Project repository: https://github.com/edalcin/etnopapers
+            - Documentation: https://github.com/edalcin/etnopapers#readme
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up artifacts
+        if: always()
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: |
+            linux-build
+            windows-build
+            macos-build
