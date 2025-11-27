@@ -30,6 +30,7 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
+      - "11434:11434"  # Ollama API port (internal)
     environment:
       # MongoDB configuration
       - MONGO_URI=mongodb://mongo:27017/etnopapers
@@ -37,6 +38,9 @@ services:
       - PORT=8000
       - ENVIRONMENT=development
       - LOG_LEVEL=info
+      # Ollama configuration
+      - OLLAMA_URL=http://localhost:11434
+      - OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
       # Feature configuration
       - TAXONOMY_API_TIMEOUT=5
       - CACHE_TTL_DAYS=30
@@ -44,12 +48,24 @@ services:
     networks:
       - etnopapers-net
     restart: unless-stopped
+    # GPU support - uncomment the following lines for NVIDIA GPU passthrough:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    # OR use older Docker runtime for UNRAID:
+    # runtime: nvidia
+    # environment (add to the above):
+    #   - NVIDIA_VISIBLE_DEVICES=all
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 60s  # Increased for Ollama model loading
 
 volumes:
   mongodb_data:
