@@ -22,14 +22,16 @@ echo   Etnopapers - Build for Windows
 echo ============================================================================
 echo.
 
-REM Check Python
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: Python not found. Please install Python 3.11+
+REM Check Python 3.12
+set PYTHON_PATH=C:\Users\EDalcin\AppData\Local\Programs\Python\Python312\python.exe
+if not exist "%PYTHON_PATH%" (
+    echo ERROR: Python 3.12 not found at %PYTHON_PATH%
+    echo Please install Python 3.12 from https://www.python.org/downloads/
     pause
     exit /b 1
 )
-echo [OK] Python installed
+"%PYTHON_PATH%" --version
+echo [OK] Python 3.12 installed
 
 REM Check Node.js
 node --version >nul 2>&1
@@ -40,14 +42,14 @@ if errorlevel 1 (
 )
 echo [OK] Node.js installed
 
-REM Check pip
-pip --version >nul 2>&1
+REM Check npm
+npm --version >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: pip not found
+    echo ERROR: npm not found
     pause
     exit /b 1
 )
-echo [OK] pip installed
+echo [OK] npm installed
 
 echo.
 echo ============================================================================
@@ -90,7 +92,7 @@ echo ===========================================================================
 echo.
 
 echo Installing Python dependencies...
-pip install -r backend\requirements.txt
+"%PYTHON_PATH%" -m pip install -r backend\requirements.txt
 if errorlevel 1 (
     echo ERROR: pip install failed
     pause
@@ -106,7 +108,7 @@ echo ===========================================================================
 echo.
 
 echo Building etnopapers.exe...
-pyinstaller build.spec --clean
+"%PYTHON_PATH%" -m PyInstaller build.spec --clean
 if errorlevel 1 (
     echo ERROR: PyInstaller build failed
     pause

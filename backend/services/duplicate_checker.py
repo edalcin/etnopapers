@@ -9,16 +9,29 @@ Updated 2025-11-27: Enhanced with Levenshtein distance for fuzzy matching
 """
 
 import logging
+from difflib import SequenceMatcher
 from typing import Any
 from typing import Dict
 from typing import Optional
-
-from Levenshtein import ratio as levenshtein_ratio
 
 from backend.database.connection import get_db
 from backend.exceptions import DuplicateDetectionError
 
 logger = logging.getLogger(__name__)
+
+
+def calculate_string_similarity(s1: str, s2: str) -> float:
+    """
+    Calculate similarity ratio between two strings using difflib
+
+    Args:
+        s1: First string
+        s2: Second string
+
+    Returns:
+        Similarity ratio between 0.0 and 1.0
+    """
+    return SequenceMatcher(None, s1, s2).ratio()
 
 
 class DuplicateChecker:
@@ -174,7 +187,7 @@ class DuplicateChecker:
                 norm_doc_titulo = self._normalize_string(doc_titulo)
 
                 # Calculate title similarity
-                title_similarity = levenshtein_ratio(norm_titulo, norm_doc_titulo)
+                title_similarity = calculate_string_similarity(norm_titulo, norm_doc_titulo)
 
                 if title_similarity >= self.TITLE_SIMILARITY_THRESHOLD:
                     # Check author match if we have one
@@ -182,7 +195,7 @@ class DuplicateChecker:
                     doc_first_author = self._extract_first_author(doc_autores)
 
                     if first_author and doc_first_author:
-                        author_similarity = levenshtein_ratio(
+                        author_similarity = calculate_string_similarity(
                             self._normalize_string(first_author),
                             self._normalize_string(doc_first_author),
                         )
