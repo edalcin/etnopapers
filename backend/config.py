@@ -1,10 +1,26 @@
 """
 Configuration management for Etnopapers backend
+
+Suporta configuração via:
+1. Arquivo .env (recomendado para standalone)
+2. Variáveis de ambiente do sistema
 """
 
 import logging
 import os
 from typing import Optional
+from pathlib import Path
+
+# Carregar .env se existir (standalone mode)
+try:
+    from dotenv import load_dotenv
+    env_file = Path('.env')
+    if env_file.exists():
+        load_dotenv(dotenv_path=env_file)
+        logging.info(f"Loaded configuration from {env_file.absolute()}")
+except ImportError:
+    # python-dotenv não instalado - usar apenas env vars do sistema
+    pass
 
 logger = logging.getLogger(__name__)
 

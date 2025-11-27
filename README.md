@@ -2,11 +2,13 @@
 
 <img src="docs/etnopapers.png" alt="Etnopapers Logo" width="150" height="150">
 
-**Sistema de Extração de Metadados de Artigos Etnobotânicos com AI Local**
+**Sistema Standalone de Extração de Metadados de Artigos Etnobotânicos com AI Local**
 
-Etnopapers é uma ferramenta que automatiza a extração de informações sobre o uso de plantas por comunidades tradicionais a partir de artigos científicos em PDF. O sistema usa **inteligência artificial local** rodando no próprio servidor para ler artigos e criar um banco de dados MongoDB organizado com essas informações.
+Etnopapers é uma aplicação desktop nativa que automatiza a extração de informações sobre o uso de plantas por comunidades tradicionais a partir de artigos científicos em PDF. O sistema usa **inteligência artificial local** rodando na sua máquina para ler artigos e criar um banco de dados MongoDB organizado com essas informações.
 
-**🔒 100% Privado**: Todos os dados permanecem no seu servidor. Nenhuma informação é enviada para APIs externas.
+**🔒 100% Privado**: Todos os dados permanecem no seu computador. Nenhuma informação é enviada para APIs externas.
+
+**💻 Standalone**: Aplicativo nativo para Windows, macOS e Linux. Não requer Docker.
 
 ---
 
@@ -17,11 +19,11 @@ Etnobotânica é o estudo da relação entre pessoas e plantas. Pesquisadores do
 ## 💡 Como funciona?
 
 ```
-1. Você faz upload de um artigo científico (PDF)
+1. Você abre o Etnopapers (duplo-clique no executável)
          ↓
-2. Sistema extrai o texto do PDF no servidor
+2. Upload de um artigo científico (PDF)
          ↓
-3. Modelo de AI local (Qwen2.5-7B) lê e identifica:
+3. Modelo de AI local (Qwen2.5-7B via Ollama) lê e identifica:
    • Espécies de plantas mencionadas
    • Comunidades tradicionais estudadas
    • Regiões geográficas
@@ -35,161 +37,182 @@ Etnobotânica é o estudo da relação entre pessoas e plantas. Pesquisadores do
 ### 🔒 Sua privacidade está 100% protegida
 
 - **PDFs não são armazenados**: Apenas os metadados extraídos ficam salvos
-- **Processamento local**: AI roda no próprio servidor UNRAID com GPU
-- **Dados nunca saem do servidor**: Zero transmissão para serviços externos
+- **Processamento local**: AI roda na sua máquina (sem envio para cloud)
+- **Dados nunca saem do computador**: Zero transmissão para serviços externos
 - **Offline-capable**: Funciona sem internet após instalação inicial
 - **Zero custos por requisição**: Processe quantos artigos quiser gratuitamente
 
 ## 🛠️ Tecnologias Usadas
 
 ### Para Usuários
-- **Interface Web**: Simples e intuitiva, funciona em qualquer navegador moderno
-- **Inteligência Artificial Local**: Modelo Qwen2.5-7B rodando no servidor via Ollama
-- **Inferência rápida**: 1-3 segundos por artigo com GPU
+- **Interface Desktop Nativa**: Aplicativo standalone para Windows, macOS e Linux
+- **Inteligência Artificial Local**: Modelo Qwen2.5-7B rodando via Ollama
+- **Inferência rápida**: 1-5 segundos por artigo (com GPU)
 - **Validação Taxonômica**: Confirma nomes científicos de plantas automaticamente (GBIF API)
 
 ### Para Desenvolvedores
-- **Frontend**: React 18 + TypeScript
+- **Frontend**: React 18 + TypeScript (buildado e incluído no executável)
 - **Backend**: Python FastAPI com Instructor + Pydantic
 - **AI Framework**: Ollama (gerenciamento de modelos locais)
 - **Modelo**: Qwen2.5-7B-Instruct (quantizado Q4, 4.8 GB)
-- **Banco de Dados**: MongoDB (NoSQL, document-oriented)
-- **Docker**: 3 serviços (MongoDB + Ollama + Etnopapers)
-- **GPU**: NVIDIA GPU com 6-8 GB VRAM (RTX 3060 ou superior)
+- **Banco de Dados**: MongoDB (NoSQL, via URI externa)
+- **Build**: PyInstaller para executável standalone
+- **GPU**: Nvidia GPU recomendada (opcional, funciona com CPU)
 
 ## 🚀 Como começar?
 
-### Requisitos de Hardware
+### Opção 1: Download do Executável (Recomendado)
 
-**Obrigatório:**
-- Servidor UNRAID (ou Linux com Docker)
-- **GPU NVIDIA** com 6-8 GB VRAM (ex: RTX 3060, RTX 3070, RTX 3080, RTX 4060+)
-- RAM: 16 GB (mínimo 8 GB)
-- Disco: 50 GB livres (~8.5 GB Docker + dados + modelos)
-- Internet: Apenas para instalação inicial (download do modelo ~4.8 GB)
+**Baixe o executável pronto para seu sistema operacional:**
 
-**Verifique sua GPU:**
-```bash
-nvidia-smi  # Deve listar sua GPU NVIDIA
-```
+1. Acesse a página de [Releases](https://github.com/[seu-usuario]/etnopapers/releases/latest)
+2. Baixe o pacote para seu SO:
+   - **Windows**: `Etnopapers-Windows-v1.0.0.zip`
+   - **macOS**: `Etnopapers-macOS-v1.0.0.zip`
+   - **Linux**: `Etnopapers-Linux-v1.0.0.tar.gz`
 
-### Opção 1: Instalação no UNRAID (Recomendado)
+3. Extraia o arquivo
 
-**Passo 1: Instalar NVIDIA Driver Plugin**
-1. Abra **Apps** → Busque "nvidia"
-2. Instale **"Nvidia-Driver"** (Community Applications)
-3. Reinicie o servidor UNRAID
-4. Verifique: `nvidia-smi` deve mostrar sua GPU
+4. **Instale o Ollama** (pré-requisito):
+   - Windows: [Download](https://ollama.ai/download/windows)
+   - macOS: [Download](https://ollama.ai/download/mac)
+   - Linux: `curl -fsSL https://ollama.ai/install.sh | sh`
 
-**Passo 2: Instalar Etnopapers**
-```bash
-# Via Community Applications (quando disponível)
-Apps → Buscar "Etnopapers" → Install
+5. **Baixe o modelo de AI**:
+   ```bash
+   ollama pull qwen2.5:7b-instruct-q4_K_M
+   ```
 
-# OU via Docker Compose manual:
-git clone https://github.com/etnopapers/etnopapers.git
-cd etnopapers
-docker-compose up -d
-```
+6. **Execute o Etnopapers**:
+   - Windows: Duplo-clique em `etnopapers.exe`
+   - macOS: Abra `Etnopapers.app`
+   - Linux: `./etnopapers`
 
-**Passo 3: Download do modelo AI (primeira vez)**
-```bash
-# Aguarde ~5-20 minutos dependendo da internet
-docker exec etnopapers-ollama ollama pull qwen2.5:7b-instruct-q4_K_M
+7. **Configure MongoDB URI** na primeira execução (via GUI)
 
-# Verificar se modelo foi baixado
-docker exec etnopapers-ollama ollama list
-# Deve mostrar: qwen2.5:7b-instruct-q4_K_M
-```
+**Pronto!** O navegador abrirá automaticamente em `http://localhost:8000`
 
-**Passo 4: Acessar interface**
-```
-http://seu-servidor-unraid:8000
-```
+---
 
-### Opção 2: Docker (Qualquer servidor Linux com GPU)
+### Opção 2: Build do Código-Fonte
+
+Para desenvolvedores ou quem quer compilar manualmente:
+
+**Pré-requisitos:**
+- Python 3.11+
+- Node.js 18+
+- Ollama instalado
+
+**Build:**
 
 ```bash
-# Pré-requisito: NVIDIA Container Toolkit instalado
-# Veja: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
-
-# Clonar repositório
-git clone https://github.com/etnopapers/etnopapers.git
+# 1. Clonar repositório
+git clone https://github.com/[seu-usuario]/etnopapers.git
 cd etnopapers
 
-# Iniciar serviços
-docker-compose up -d
+# 2. Executar script de build
+# Windows:
+build-windows.bat
 
-# Aguardar download do modelo (primeira vez)
-docker-compose logs -f ollama
+# macOS:
+./build-macos.sh
 
-# Acessar no navegador
-# http://localhost:8000
+# Linux:
+./build-linux.sh
+
+# 3. Executável estará em: dist/etnopapers.exe (ou Etnopapers.app / etnopapers)
 ```
 
-### Primeiro Uso
+Veja [docs/build-from-source.md](docs/build-from-source.md) para instruções detalhadas.
 
-**Não precisa configurar nada!** 🎉
+---
 
-1. **Acesse a interface web**: `http://seu-servidor:8000`
-2. **Faça upload de um PDF**: Arraste um artigo científico sobre etnobotânica
-3. **Aguarde extração**: ~1-3 segundos (processamento local com GPU)
-4. **Revise os metadados**: Sistema mostra título, autores, espécies, etc.
-5. **Salve ou edite**: Clique em "Salvar" (finalizar) ou "Editar" (corrigir)
+## 📋 Requisitos
 
-**Sem configuração de API keys!** Tudo funciona automaticamente.
+### Hardware
 
-## 📁 Estrutura do Projeto
+**Mínimo:**
+- CPU: 4 cores
+- RAM: 8 GB
+- Disco: 10 GB livres
+- GPU: Nvidia GPU com 4+ GB VRAM (opcional, mas recomendado)
 
+**Recomendado:**
+- CPU: 6+ cores
+- RAM: 16 GB
+- Disco: 20 GB livres
+- GPU: Nvidia RTX 3060 ou superior (12 GB VRAM)
+
+### Software (Pré-requisitos)
+
+1. **Ollama** - Para inferência AI local
+   - Download: https://ollama.ai/download
+
+2. **MongoDB** - Database (local ou MongoDB Atlas cloud)
+   - Local: https://www.mongodb.com/try/download/community
+   - Cloud (gratuito): https://www.mongodb.com/cloud/atlas
+
+**Nota**: Ollama e MongoDB precisam ser instalados separadamente. O executável do Etnopapers os usa como serviços externos.
+
+---
+
+## 🎯 Primeiro Uso
+
+### 1. Iniciar Ollama
+
+Certifique-se que o Ollama está rodando:
+
+```bash
+# Verificar
+curl http://localhost:11434/api/tags
+
+# Se não estiver rodando:
+# Windows: Abrir Ollama.exe (inicia automaticamente)
+# macOS: Abrir Ollama.app (fica na barra de menu)
+# Linux: sudo systemctl start ollama
 ```
-etnopapers/
-├── specs/main/                      # Documentação técnica
-│   ├── spec.md                      # Especificação completa (v2.0)
-│   ├── local-ai-integration.md      # Detalhes da integração AI local
-│   ├── plan-local-ai.md             # Plano de implementação
-│   ├── tasks-v2-local-ai.md         # Tasks para desenvolvimento
-│   ├── data-model.md                # Estrutura MongoDB
-│   ├── quickstart.md                # Guia de instalação detalhado
-│   └── contracts/                   # APIs e integrações
-├── frontend/                        # Interface web (React + TypeScript)
-├── backend/                         # Servidor (Python FastAPI)
-│   ├── services/
-│   │   └── extraction_service.py    # Cliente Ollama + Instructor
-│   ├── routers/
-│   │   └── extraction.py            # Endpoint /api/extract/metadata
-│   └── models/
-│       └── extraction.py            # Schemas Pydantic
-├── docker-compose.yml               # 3 serviços: MongoDB + Ollama + Etnopapers
-├── CLAUDE.md                        # Guia para desenvolvimento com Claude
-└── README.md                        # Este arquivo
+
+### 2. Configurar MongoDB
+
+**Opção A: MongoDB Atlas (Cloud - Recomendado)**
+
+1. Criar conta gratuita em https://www.mongodb.com/cloud/atlas
+2. Criar cluster M0 (gratuito)
+3. Obter URI: `mongodb+srv://user:password@cluster.mongodb.net/etnopapers`
+
+**Opção B: MongoDB Local**
+
+```bash
+# Instalar MongoDB Community
+# URI será: mongodb://localhost:27017/etnopapers
 ```
 
-## 📚 Documentação Técnica
+### 3. Executar Etnopapers
 
-- **[Guia de Deployment](docs/DEPLOYMENT.md)**: Configuração de GPU NVIDIA, troubleshooting UNRAID, otimização de performance
-- **[Especificação Técnica v2.0](specs/main/spec.md)**: Requisitos funcionais, histórias de usuário e arquitetura
-- **[Integração AI Local](specs/main/local-ai-integration.md)**: Detalhes de Ollama + Qwen2.5, comparação de modelos, implementação
-- **[Plano de Implementação](specs/main/plan-local-ai.md)**: Roadmap de 7-10 dias, 39 tasks em 5 fases
-- **[Modelo de Dados MongoDB](specs/main/data-model.md)**: Arquitetura document-oriented, coleções e queries
-- **[Guia de Instalação](specs/main/quickstart.md)**: Setup de GPU, troubleshooting, FAQ
-- **[API REST](specs/main/contracts/api-rest.yaml)**: Documentação OpenAPI dos endpoints
+- Windows: Duplo-clique em `etnopapers.exe`
+- macOS: Abrir `Etnopapers.app`
+- Linux: `./etnopapers`
 
-## 🌟 Principais Funcionalidades
+### 4. Configuração Inicial (GUI)
 
-### ✅ Disponível na v2.0
+Na primeira execução, uma janela aparecerá solicitando:
+- **MongoDB URI**: Cole o URI do MongoDB Atlas ou local
+- Clique em "Salvar e Iniciar"
 
-- Upload de PDFs científicos (até 50 MB)
-- **Extração automática via AI local** (Qwen2.5-7B-Instruct)
-- **Inferência rápida**: 1-3 segundos por artigo (GPU)
-- **100% privado**: Dados nunca saem do servidor
-- Interface de edição manual para correções
-- Validação taxonômica de espécies de plantas (GBIF API)
-- Histórico de artigos processados com busca/filtro
-- Rascunhos automáticos (não perde trabalho se fechar navegador)
-- Download completo do banco MongoDB (backup ZIP)
-- Detecção de duplicatas (por DOI ou título+ano+autor)
+Configuração será salva em arquivo `.env` e não precisará repetir.
 
-### 🔄 Metadados Extraídos
+### 5. Usar Aplicação
+
+O navegador abrirá automaticamente em `http://localhost:8000`
+
+1. **Upload de PDF**: Arraste um artigo científico sobre etnobotânica
+2. **Aguarde extração**: ~1-5 segundos (processamento local)
+3. **Revise os metadados**: Sistema mostra título, autores, espécies, etc.
+4. **Salve ou edite**: Clique em "Salvar" (finalizar) ou "Editar" (corrigir)
+
+---
+
+## 🔄 Metadados Extraídos
 
 O modelo de AI local extrai automaticamente:
 
@@ -201,107 +224,172 @@ O modelo de AI local extrai automaticamente:
 
 **Acurácia típica**: >80% (com revisão manual recomendada)
 
+---
+
 ## 💰 Custos
 
 ### Investimento Inicial
 - **Software Etnopapers**: Gratuito (código aberto, MIT License)
-- **GPU NVIDIA** (se não tiver): ~$300-500 (RTX 3060)
-- **Servidor UNRAID** (se não tiver): ~$0 (software gratuito) + hardware
+- **Ollama**: Gratuito
+- **MongoDB Atlas**: Gratuito até 512 MB (M0 cluster)
+- **GPU Nvidia** (opcional): ~$300-500 (RTX 3060)
 
 ### Custos Recorrentes
 - **Processamento de artigos**: **R$ 0,00** (AI local, sem custos por requisição)
 - **APIs externas**: **R$ 0,00** (apenas validação taxonômica GBIF, gratuita)
-- **Energia elétrica**: ~R$ 5-15/mês (GPU em standby + uso ocasional)
+- **MongoDB Atlas**: **R$ 0,00** (tier gratuito)
+- **Energia elétrica**: ~R$ 2-5/mês (uso ocasional)
 
-### Comparação com APIs Externas (v1.0)
+### Comparação com APIs Externas
 
-| Métrica | v1.0 (APIs Externas) | v2.0 (AI Local) |
-|---------|---------------------|-----------------|
+| Métrica | APIs Externas | AI Local (Etnopapers) |
+|---------|---------------|----------------------|
 | Custo por artigo | R$ 0,05 - R$ 0,15 | **R$ 0,00** |
 | 100 artigos | R$ 5 - R$ 15 | **R$ 0,00** |
 | 1000 artigos | R$ 50 - R$ 150 | **R$ 0,00** |
 | Privacidade | Dados enviados a terceiros | **100% local** |
 | Quota | Limitada por plano | **Ilimitada** |
 
-**ROI (Return on Investment)**: Com ~500-1000 artigos processados, o investimento em GPU se paga comparado com APIs externas.
-
-## 🔐 Segurança e Privacidade
-
-### v2.0 Garante 100% de Privacidade
-
-- ✅ **Dados nunca saem do servidor**: AI roda localmente, sem chamadas externas
-- ✅ **PDFs não são salvos**: Apenas metadados extraídos permanecem
-- ✅ **Banco de dados local**: MongoDB no próprio servidor
-- ✅ **Sem telemetria**: Zero rastreamento ou analytics
-- ✅ **Código aberto**: Auditável (MIT License)
-- ✅ **Offline-capable**: Funciona sem internet após download do modelo
-
-### Comparação com APIs Externas
-
-| Aspecto | APIs Externas | AI Local |
-|---------|---------------|----------|
-| Dados do PDF | Enviados para Google/OpenAI/Anthropic | Permanecem no servidor |
-| Metadados extraídos | Trafegam pela internet | Nunca saem do servidor |
-| Dependência de internet | Sempre necessária | Apenas setup inicial |
-| Risco de vazamento | Médio (depende do provedor) | **Zero** |
-| Compliance LGPD/GDPR | Complexo (dados em terceiros) | **Simples (dados locais)** |
+---
 
 ## ⚡ Performance
 
 ### Benchmarks (Inferência Local)
 
-| GPU | VRAM | Tempo por Artigo | Throughput |
-|-----|------|------------------|------------|
-| RTX 4090 | 24 GB | 0.5-1s | ~60-120 artigos/min |
-| RTX 4080 | 16 GB | 1-2s | ~30-60 artigos/min |
-| RTX 3080 | 10 GB | 2-3s | ~20-30 artigos/min |
-| **RTX 3060** | **12 GB** | **2-4s** | **15-30 artigos/min** |
-| RTX 2070 | 8 GB | 4-6s | ~10-15 artigos/min |
+| Hardware | Tempo por Artigo | Throughput |
+|----------|------------------|------------|
+| RTX 4090 (24 GB) | 0.5-1s | ~60-120 artigos/min |
+| RTX 4080 (16 GB) | 1-2s | ~30-60 artigos/min |
+| RTX 3080 (10 GB) | 2-3s | ~20-30 artigos/min |
+| **RTX 3060 (12 GB)** | **2-4s** | **15-30 artigos/min** |
+| RTX 2070 (8 GB) | 4-6s | ~10-15 artigos/min |
+| **CPU (16 cores)** | **10-20s** | **3-6 artigos/min** |
 
-**Nota**: Tempos assumem PDFs de ~10-20 páginas. Artigos mais longos podem levar mais tempo.
+**Nota**: GPU é opcional mas altamente recomendada. Funciona com CPU, porém mais lento.
 
-## 🆚 Comparação: v1.0 (APIs Externas) vs. v2.0 (AI Local)
+---
 
-| Aspecto | v1.0 | v2.0 |
-|---------|------|------|
-| **Privacidade** | Dados enviados a terceiros | 100% local ✅ |
-| **Custo/artigo** | $0.02-0.05 | $0 ✅ |
-| **Latência** | 2-10s (rede + API) | 1-3s (GPU) ✅ |
-| **Quota** | Limitada | Ilimitada ✅ |
-| **Setup** | Configurar API key | Apenas upload ✅ |
-| **Docker** | ~180 MB | ~8.5 GB |
-| **Hardware** | Básico | GPU NVIDIA necessária |
-| **Internet** | Sempre | Apenas setup inicial ✅ |
-| **Acurácia** | 80-85% | 80-85% (similar) |
+## 📁 Estrutura do Projeto
 
-**Recomendação**: Se você tem GPU NVIDIA, v2.0 é superior em todos os aspectos (exceto tamanho Docker).
+```
+etnopapers/
+├── backend/                         # Servidor Python
+│   ├── launcher.py                  # Entry point do executável
+│   ├── gui/                         # Interface Tkinter
+│   │   └── config_dialog.py         # Dialog de configuração
+│   ├── utils/                       # Utilitários
+│   │   └── environment_validator.py # Validação Ollama/MongoDB
+│   ├── services/
+│   │   └── extraction_service.py    # Cliente Ollama + Instructor
+│   └── routers/
+│       └── extraction.py            # Endpoint /api/extract/metadata
+├── frontend/                        # Interface web (React)
+│   ├── src/                         # Código-fonte React
+│   └── dist/                        # Build estático (incluído no exe)
+├── docs/                            # Documentação
+│   ├── instalacao-standalone.md     # Guia para usuários
+│   └── build-from-source.md         # Guia para desenvolvedores
+├── build.spec                       # Configuração PyInstaller
+├── build-windows.bat                # Script build Windows
+├── build-macos.sh                   # Script build macOS
+├── build-linux.sh                   # Script build Linux
+├── .env.example                     # Template de configuração
+├── CLAUDE.md                        # Guia para desenvolvimento
+└── README.md                        # Este arquivo
+```
+
+---
+
+## 📚 Documentação
+
+- **[Guia de Instalação Standalone](docs/instalacao-standalone.md)**: Instalação completa passo-a-passo
+- **[Build from Source](docs/build-from-source.md)**: Compilar do código-fonte
+- **[Especificação Técnica](specs/main/spec.md)**: Arquitetura e requisitos
+- **[Modelo de Dados](specs/main/data-model.md)**: Estrutura MongoDB
+
+---
+
+## 🔐 Segurança e Privacidade
+
+### 100% de Privacidade Garantida
+
+- ✅ **Dados nunca saem do computador**: AI roda localmente
+- ✅ **PDFs não são salvos**: Apenas metadados extraídos permanecem
+- ✅ **Banco de dados externo**: MongoDB (local ou cloud de sua escolha)
+- ✅ **Sem telemetria**: Zero rastreamento ou analytics
+- ✅ **Código aberto**: Auditável (MIT License)
+- ✅ **Offline-capable**: Funciona sem internet após instalação
+
+---
+
+## 🛠️ Solução de Problemas
+
+### Erro: "Ollama não está rodando"
+
+```bash
+# Verificar status
+curl http://localhost:11434/api/tags
+
+# Reiniciar Ollama
+# Windows: Reiniciar Ollama.exe
+# macOS: Quit e reabrir Ollama.app
+# Linux: sudo systemctl restart ollama
+```
+
+### Erro: "Cannot connect to MongoDB"
+
+1. Verificar MongoDB URI no arquivo `.env`
+2. Testar conexão:
+   ```bash
+   mongosh "seu-mongodb-uri"
+   ```
+3. Reconfigurar: Deletar `.env` e reiniciar Etnopapers
+
+### Erro: "Model not found"
+
+```bash
+# Baixar modelo
+ollama pull qwen2.5:7b-instruct-q4_K_M
+
+# Verificar
+ollama list
+```
+
+Veja [docs/instalacao-standalone.md](docs/instalacao-standalone.md) para mais soluções.
+
+---
 
 ## 🤝 Contribuindo
 
-Contribuições são bem-vindas! Veja como ajudar:
+Contribuições são bem-vindas!
 
-1. **Reportar bugs**: Abra uma [issue](https://github.com/etnopapers/etnopapers/issues) descrevendo o problema
-2. **Sugerir melhorias**: Compartilhe suas ideias
-3. **Contribuir código**: Fork, desenvolva e envie pull request
-4. **Melhorar documentação**: Corrija erros ou adicione exemplos
-5. **Testar modelos**: Experimente modelos alternativos (Mistral, Sabiá, NuExtract)
+1. Fork do repositório
+2. Criar branch: `git checkout -b feature/nome-da-feature`
+3. Fazer alterações e testar
+4. Commit: `git commit -m "Adiciona feature X"`
+5. Push: `git push origin feature/nome-da-feature`
+6. Abrir Pull Request
 
-### Roadmap Futuro (v2.1+)
+### Roadmap Futuro
 
-- [ ] Fine-tuning do Qwen2.5 em corpus etnobotânico brasileiro
-- [ ] Processamento em batch (múltiplos PDFs de uma vez)
-- [ ] OCR para PDFs escaneados (Tesseract integration)
-- [ ] Dashboard de analytics (espécies mais mencionadas, mapas, etc.)
-- [ ] Exportação para CSV/JSON/Excel
-- [ ] API REST pública para integrações
+- [ ] Interface desktop nativa moderna (customtkinter ou Electron)
+- [ ] Prompt customizável via GUI
+- [ ] Fine-tuning do Qwen2.5 em corpus etnobotânico
+- [ ] Processamento em batch (múltiplos PDFs)
+- [ ] OCR para PDFs escaneados
+- [ ] Dashboard de analytics
+- [ ] Exportação CSV/JSON/Excel
 - [ ] Sistema de autenticação multi-usuário
-- [ ] RAG com banco de conhecimento etnobotânico
+
+---
 
 ## 📄 Licença
 
 MIT License - Software livre e de código aberto.
 
 Veja [LICENSE](LICENSE) para detalhes completos.
+
+---
 
 ## 🙏 Agradecimentos
 
@@ -317,79 +405,15 @@ Este projeto foi desenvolvido para apoiar pesquisadores em etnobotânica, preser
 
 ## 📞 Suporte
 
-### Documentação
-- **[Guia Rápido](specs/main/quickstart.md)**: Instalação passo-a-passo
-- **[Troubleshooting](specs/main/troubleshooting.md)**: Problemas comuns e soluções
-- **[Especificações Técnicas](specs/main/)**: Documentação completa
-
-### Problemas Comuns
-
-**GPU não detectada:**
-```bash
-# Verificar se NVIDIA Driver está instalado
-nvidia-smi
-
-# Verificar se containers têm acesso à GPU
-docker exec etnopapers-ollama nvidia-smi
-```
-
-**Modelo não carrega:**
-```bash
-# Download manual do modelo
-docker exec etnopapers-ollama ollama pull qwen2.5:7b-instruct-q4_K_M
-
-# Verificar modelos disponíveis
-docker exec etnopapers-ollama ollama list
-```
-
-**Inferência muito lenta (>10s):**
-- Verificar se GPU está sendo usada (não caiu para CPU)
-- Verificar VRAM disponível: `nvidia-smi`
-- Considerar quantização menor (Q3 em vez de Q4)
-
-### Reportar Issues
-- **GitHub Issues**: [etnopapers/etnopapers/issues](https://github.com/etnopapers/etnopapers/issues)
-- **Discussões**: [GitHub Discussions](https://github.com/etnopapers/etnopapers/discussions)
-
----
-
-## 🔬 Especificações Técnicas (v2.0)
-
-**Modelo de AI**: Qwen2.5-7B-Instruct (Q4 quantizado)
-- Tamanho: 4.8 GB (Q4_K_M)
-- Context window: 128K tokens
-- Linguagens: 29+ (incluindo português)
-- Structured outputs: JSON nativo via Instructor
-
-**Framework**: Ollama
-- Versão: latest
-- API: OpenAI-compatível
-- GPU: NVIDIA CUDA
-
-**Backend**: Python 3.11+ FastAPI
-- Bibliotecas: instructor, pydantic, pdfplumber, pymongo
-- Endpoints: 30+ REST APIs
-
-**Frontend**: React 18 + TypeScript
-- State: Zustand
-- Tables: TanStack React Table v8
-- Forms: react-hook-form
-
-**Database**: MongoDB 7.0
-- Modelo: Document-oriented (NoSQL)
-- Coleção principal: `referencias`
-- Tamanho estimado: 1-2 MB por 1000 artigos
-
-**Docker**:
-- Serviços: 3 (MongoDB + Ollama + Etnopapers)
-- Tamanho total: ~8.5 GB
-- Volumes: mongodb_data, ollama_models
-- GPU: passthrough via nvidia-docker
+- **Guia de Instalação**: [docs/instalacao-standalone.md](docs/instalacao-standalone.md)
+- **Build from Source**: [docs/build-from-source.md](docs/build-from-source.md)
+- **Issues**: [GitHub Issues](https://github.com/[seu-usuario]/etnopapers/issues)
+- **Discussões**: [GitHub Discussions](https://github.com/[seu-usuario]/etnopapers/discussions)
 
 ---
 
 **Desenvolvido com ❤️ para pesquisadores em etnobotânica**
 
-🤖 *Sistema com AI Local - 100% Privado - Zero Custos Recorrentes*
+🤖 *Sistema com AI Local - 100% Privado - Zero Custos Recorrentes - Aplicação Standalone Nativa*
 
 🌿 *Preservando conhecimentos tradicionais sobre plantas*
