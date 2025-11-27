@@ -25,10 +25,18 @@
 - Q: Qual o limite de tamanho de arquivo PDF? → A: 50 MB por arquivo
 - Q: Como tratar PDFs escaneados (sem texto pesquisável)? → A: Tentar processar mas exibir aviso de qualidade reduzida, e após extração mostrar tela de edição para correção/complementação manual dos metadados
 - Q: Como garantir unicidade de espécies de plantas no banco de dados? → A: Nome científico (binomial) como chave única, com validação via API externa para obter nome aceito atual, família botânica e autores do nome científico
-- Q: O que acontece se usuário fechar janela sem salvar? → A: Salvar automaticamente como rascunho. Após extração, apresentar botões "Salvar" (finalizar no BD), "Editar" (abrir interface de edição) e "Descartar" (excluir dados extraídos)
+- Q: O que acontece se usuário fechar janela sem salvar? → A: ~~Salvar automaticamente como rascunho~~ **[ATUALIZADO 2025-11-27]** Reter em localStorage; usuário deve clicar "Salvar" para persistir em MongoDB. Após extração, apresentar botões "Salvar" (finalizar no BD), "Editar" (abrir interface de edição) e "Descartar" (deletar de localStorage)
 - Q: Como será feita a extração de metadados? → A: ~~Usando APIs externas (Gemini, ChatGPT, Claude) com chave fornecida pelo usuário~~ **[ATUALIZADO v2.0]** Usando modelo de AI local (Qwen2.5-7B-Instruct) rodando no próprio servidor via Ollama com inferência em GPU. Sem necessidade de API keys
 - Q: Como evitar duplicação de artigos na base de dados? → A: Sistema verifica duplicatas após extração de metadados usando DOI (se disponível) ou combinação título+ano+primeiro autor. Se duplicata for detectada, usuário é informado e pode optar por descartar ou sobrescrever o registro existente
-- Q: O sistema deve usar contexto do pesquisador para melhorar extração? → A: Sim, pesquisador pode configurar perfil opcional (área de especialização, região de foco, idiomas/línguas indígenas relevantes, comunidades estudadas) que é incluído como contexto no prompt enviado à API de IA, melhorando precisão da extração
+- Q: O sistema deve usar contexto do pesquisador para melhorar extração? → A: Sim, pesquisador pode configurar perfil opcional (área de especialização, região de foco, idiomas/línguas indígenas relevantes, comunidades estudadas) que é incluído como contexto no prompt enviado ao Ollama, melhorando precisão da extração
+
+### Session 2025-11-27 (Clarificações de Implementação - Data Model + UX)
+
+- Q: Como estruturar `comunidade` dentro de `usosPorComunidade`? → A: Como objeto inline denormalizado {nome, tipo, país, estado, município}. Sem referência externa. Dados da comunidade copiados em cada registro de uso.
+- Q: Como representar confiança de validação taxonômica? → A: Dois campos separados: `statusValidacao` ("validado" | "naoValidado") para resultado da consulta API, E `confianca` ("alta" | "media" | "baixa") para qualidade do match. Ambos presentes em cada espécie.
+- Q: Quais campos em `usosPorComunidade` são obrigatórios? → A: Todos os 7 campos são OPCIONAIS. Registros podem conter qualquer subconjunto de {forma, tipo, propósito, partes, dosagem, metodoPreparacao, origem}. Sistema captura o que está disponível no artigo.
+- Q: Quando persistir metadados extraídos: localStorage vs MongoDB? → A: localStorage após extração (sem auto-save ao BD). Botão "Salvar" → MongoDB status="finalizado"; "Editar" → abre editor; "Descartar" → deleta de localStorage. Browser close = perda de dados em localStorage.
+- Q: Prompt de extração deve suportar múltiplos modelos Ollama? → A: Não. Prompt hardcoded para Qwen2.5-7B-Instruct. Nenhum suporte a parameterização ou fallback de modelos. Simplicidade conforme Constitution IV.
 
 ## Cenários de Usuário e Testes *(obrigatório)*
 
@@ -51,7 +59,7 @@ Um pesquisador acessa o sistema através de uma página web e faz o upload de um
 7. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Salvar", **Então** os metadados são salvos finalizados no banco de dados **MongoDB** e o PDF não é armazenado
 8. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Editar", **Então** o sistema abre a interface de edição manual permitindo correções e complementações
 9. **Dado** que o usuário visualiza os metadados extraídos, **Quando** o usuário clica em "Descartar", **Então** o sistema exclui os dados extraídos e solicita confirmação antes de descartar
-10. **Dado** que o usuário fechou a janela/navegador sem clicar em nenhum botão, **Quando** o usuário retorna ao sistema, **Então** os dados extraídos estão salvos como rascunho e podem ser recuperados
+10. **Dado** que o usuário fechou a janela/navegador sem clicar em nenhum botão, **Quando** o usuário retorna ao sistema **na mesma sessão do navegador**, **Então** os dados extraídos ainda estão em localStorage e podem ser salvos em MongoDB clicando "Salvar", ou descartados clicando "Descartar". **[CLARIFICADO 2025-11-27: localStorage apenas — se navegador fechado/cookies apagados, dados são perdidos]**
 11. **Dado** que o usuário está na página principal, **Quando** a página carrega, **Então** o sistema exibe uma tabela com todos os artigos já processados, mostrando colunas: título, ano, autores, status, data de processamento e número de espécies
 12. **Dado** que a tabela de artigos está visível, **Quando** o usuário clica no cabeçalho de uma coluna, **Então** a tabela é ordenada por aquela coluna (crescente/decrescente alternadamente)
 13. **Dado** que a tabela de artigos está visível, **Quando** o usuário digita texto no campo de busca/filtro, **Então** a tabela filtra em tempo real mostrando apenas artigos que contenham o texto buscado em qualquer campo visível
@@ -184,8 +192,8 @@ Um pesquisador deseja revisar artigos processados anteriormente e acessa uma int
 - **RF-031**: Ao clicar em "Salvar", o sistema DEVE armazenar os metadados com status "finalizado" no banco de dados
 - **RF-032**: Ao clicar em "Editar", o sistema DEVE abrir interface de edição manual com todos os campos editáveis
 - **RF-033**: Ao clicar em "Descartar", o sistema DEVE solicitar confirmação e então excluir permanentemente os dados extraídos
-- **RF-034**: Se o usuário fechar navegador/janela sem selecionar ação, o sistema DEVE salvar automaticamente os metadados com status "rascunho"
-- **RF-035**: O sistema DEVE permitir recuperação de rascunhos salvos automaticamente para finalização posterior
+- **RF-034**: Se o usuário fechar navegador/janela sem selecionar ação, o sistema DEVE reter os metadados extraídos em localStorage do navegador. **[CLARIFICADO 2025-11-27: localStorage apenas; sem auto-save em MongoDB]**
+- **RF-035**: O sistema DEVE permitir que metadados retidos em localStorage sejam recuperados e salvos em MongoDB durante a mesma sessão do navegador, clicando no botão "Salvar"
 - **RF-036**: O sistema DEVE detectar artigos duplicados após a extração de metadados, antes de permitir salvamento
 - **RF-037**: O sistema DEVE verificar duplicatas usando DOI como critério primário (se DOI estiver disponível nos metadados extraídos)
 - **RF-038**: Se DOI não estiver disponível, o sistema DEVE verificar duplicatas usando a combinação de título + ano de publicação + primeiro autor
@@ -277,8 +285,8 @@ Estrutura de documento exemplo:
       "nomeCientifico": "Chamomilla recutita",
       "familia": "Asteraceae",
       "nomeAceitoValidado": "Chamomilla recutita (L.) Rydb.",
-      "statusValidacao": "validado|naoValidado",
-      "confianca": "alta|media|baixa",
+      "statusValidacao": "validado",
+      "confianca": "alta",
       "usosPorComunidade": [
         {
           "comunidade": {
@@ -319,8 +327,8 @@ Estrutura de documento exemplo:
       "nomeCientifico": "Mentha sp.",
       "familia": "Lamiaceae",
       "nomeAceitoValidado": "Mentha spicata L.",
-      "statusValidacao": "validado|naoValidado",
-      "confianca": "alta|media|baixa",
+      "statusValidacao": "validado",
+      "confianca": "media",
       "usosPorComunidade": [
         {
           "comunidade": {
@@ -369,16 +377,16 @@ Estrutura de documento exemplo:
 - `data_processamento`: ISO 8601 timestamp de quando foi extraído
 - `status`: "finalizado" (salvo pelo usuário) ou "rascunho" (auto-saved)
 - `especies[]`: Array de objetos com:
-  - Identificação: `vernacular`, `nomeCientifico`, `familia`, `nomeAceitoValidado`, `statusValidacao`, `confianca`
-  - **Uso detalhado por comunidade** (`usosPorComunidade[]`): Para cada comunidade tradicional que usa a planta, array com:
-    - `comunidade`: {nome, tipo, país, estado, município} - Comunidade utilizadora
-    - `formaDeUso`: Forma (chá, pó, óleo, infusão, decocção, cataplasma, tinctura, banho, etc.)
-    - `tipoDeUso`: Tipo (medicinal, alimentar, ritual, cosmético, construção, etc.)
-    - `propositoEspecifico`: Propósito (febre, tosse, digestão, analgésico, etc.)
-    - `partesUtilizadas`: Partes da planta (folhas, raízes, cascas, flores, sementes, etc.)
-    - `dosagem`: Quantidade/dosagem (se mencionado)
-    - `metodoPreparacao`: Como é preparada detalhadamente
-    - `origem`: Origem da informação
+  - Identificação: `vernacular`, `nomeCientifico`, `familia`, `nomeAceitoValidado`, `statusValidacao` ("validado" | "naoValidado"), `confianca` ("alta" | "media" | "baixa")
+  - **Uso detalhado por comunidade** (`usosPorComunidade[]`): Para cada comunidade tradicional que usa a planta, array com **todos os 7 campos opcionais** — registros podem conter qualquer subconjunto:
+    - `comunidade`: {nome, tipo, país, estado, município} - **Comunidade utilizadora (inline, denormalizada)**
+    - `formaDeUso`: Forma (chá, pó, óleo, infusão, decocção, cataplasma, tinctura, banho, etc.) — OPCIONAL
+    - `tipoDeUso`: Tipo (medicinal, alimentar, ritual, cosmético, construção, etc.) — OPCIONAL
+    - `propositoEspecifico`: Propósito (febre, tosse, digestão, analgésico, etc.) — OPCIONAL
+    - `partesUtilizadas`: Partes da planta (folhas, raízes, cascas, flores, sementes, etc.) — OPCIONAL
+    - `dosagem`: Quantidade/dosagem (se mencionado) — OPCIONAL
+    - `metodoPreparacao`: Como é preparada detalhadamente — OPCIONAL
+    - `origem`: Origem da informação — OPCIONAL
 - `tipoUso`, `metodologia`, `pais`, `estado`, `municipio`, `local`, `bioma`: Contexto geográfico/temático do artigo
 - `comunidades[]`: Array de comunidades tradicionais mencionadas no artigo (nome, tipo, localização)
 - `periodoEstudo`: Período do estudo (dataInicio, dataFim) - opcional
@@ -512,6 +520,18 @@ Estrutura de documento exemplo:
 - **Gemma 2-9B:** Boa performance, mas português limitado
 
 **Recomendação:** Qwen2.5 oferece o melhor balanço para etnobotânica brasileira.
+
+### Prompt de Extração: Hardcoded para Qwen2.5 **[NOVO 2025-11-27]**
+
+**Decisão:** O prompt de extração de metadados é **hardcoded especificamente para Qwen2.5-7B-Instruct**. Nenhum suporte a parameterização de prompt ou fallback para modelos alternativos.
+
+**Rationale:**
+- Simplicidade (Princípio IV da Constituição): Um prompt, um modelo, uma estratégia clara
+- Otimização: Prompt tuned para strengths específicos de Qwen (português excelente, JSON nativo, instruction-tuned)
+- Sem necessidade de versioning ou compatibilidade entre modelos
+- Suporte a múltiplos modelos pode ser adicionado no futuro se explicitamente requisitado
+
+**Implicação:** Se no futuro necessário usar modelo diferente (ex: Mistral para latência menor), prompt será completamente reescrito e testado.
 
 ### Considerações Técnicas de Docker **[ATUALIZADO v2.0]**
 

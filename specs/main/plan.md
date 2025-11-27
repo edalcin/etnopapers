@@ -1,10 +1,10 @@
 # Implementation Plan: Etnopapers v2.0 (Local AI + MongoDB)
 
-**Branch**: `main` | **Data**: 2025-11-24 | **Versão**: 2.0 | **Especificação**: `specs/main/spec.md`
+**Branch**: `main` | **Data**: 2025-11-27 | **Versão**: 2.0 | **Especificação**: `specs/main/spec.md`
 **Entrada**: Especificação funcional v2.0 em `/specs/main/spec.md` com 72 requisitos (RF-001 a RF-072)
 **Foco adicional**: Captura detalhada de uso de plantas por comunidades tradicionais (forma, tipo, propósito)
 
-**Status**: ✅ Plan actualizado para v2.0 (2025-11-24) - Ollama + MongoDB + GPU
+**Status**: ✅ Plan atualizado para v2.0 (2025-11-27) - Ollama + MongoDB + GPU + Clarificações de Implementação (localStorage, campos opcionais, estrutura denormalizada)
 
 ---
 
@@ -101,9 +101,23 @@ nvidia-docker - GPU passthrough
 
 ---
 
+## Clarificações de Implementação (2025-11-27)
+
+**Resultado**: 5 ambiguidades críticas resolvidas via `/speckit.clarify`. Impactos de implementação:
+
+| Clarificação | Decisão | Impacto em Tarefas |
+|--------------|---------|-------------------|
+| **1. Estrutura de `comunidade` em `usosPorComunidade`** | Inline denormalizado {nome, tipo, país, estado, município} | TASK-002 (schema MongoDB), TASK-005 (Pydantic models) |
+| **2. Campos de confiança taxonômica** | Dois campos: `statusValidacao` ("validado"\|"naoValidado") + `confianca` ("alta"\|"media"\|"baixa") | TASK-005 (Pydantic), TASK-008b (TaxonomyService) |
+| **3. Campos `usosPorComunidade` obrigatórios** | **Todos OPCIONAIS** — registros podem ter qualquer subconjunto dos 7 campos | TASK-004a (prompt design), TASK-005 (validação leniente) |
+| **4. Persistência de metadados extraídos** | **localStorage apenas** (sem auto-save ao MongoDB). "Salvar" → MongoDB status="finalizado" | TASK-013 (PDFUpload), TASK-013d (MetadataDisplay), estado frontend |
+| **5. Suporte a múltiplos modelos Ollama** | **Não** — prompt hardcoded para Qwen2.5-7B-Instruct | TASK-004a (escopo reduzido), CLAUDE.md (decisão de simplicidade) |
+
+---
+
 ## Verificação da Constituição
 
-**Constitution v2.0.0 (2025-11-24)** - ✅ PASS
+**Constitution v2.0.0 (2025-11-27)** - ✅ PASS (Clarificações incorporadas)
 
 | Princípio | Status | Verificação |
 |-----------|--------|-------------|

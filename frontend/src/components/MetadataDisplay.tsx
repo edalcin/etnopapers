@@ -124,8 +124,54 @@ export default function MetadataDisplay({
             <div className="species-list">
               {data.especies.map((species, i) => (
                 <div key={i} className="species-item">
-                  <span className="vernacular">{species.vernacular}</span>
-                  <span className="scientific"><em>{species.nomeCientifico}</em></span>
+                  <div className="species-names">
+                    <span className="vernacular">{species.vernacular || '⚠️ Sem nome comum'}</span>
+                    <span className="scientific"><em>{species.nomeCientifico || '⚠️ Sem nome científico'}</em></span>
+                    {species.familia && <span className="familia">Fam: {species.familia}</span>}
+                  </div>
+
+                  {/* Validation Status (Clarificação 2025-11-27) */}
+                  {(species.statusValidacao || species.confianca) && (
+                    <div className="species-validation">
+                      {species.statusValidacao === 'validado' && (
+                        <span className="badge badge-validated">✅ Validado</span>
+                      )}
+                      {species.statusValidacao === 'naoValidado' && (
+                        <span className="badge badge-not-validated">⚠️ Não validado</span>
+                      )}
+                      {species.confianca && (
+                        <span className={`confidence confidence-${species.confianca}`}>
+                          {species.confianca === 'alta' && '🟢 Alta'}
+                          {species.confianca === 'media' && '🟡 Média'}
+                          {species.confianca === 'baixa' && '🔴 Baixa'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Usage Details by Community (Clarificação Q1, Q3) */}
+                  {species.usosPorComunidade && species.usosPorComunidade.length > 0 && (
+                    <div className="usos-por-comunidade">
+                      <div className="usos-header">📍 Uso por Comunidade:</div>
+                      {species.usosPorComunidade.map((uso, j) => (
+                        <div key={j} className="uso-item">
+                          <div className="comunidade-info">
+                            <strong>{uso.comunidade.nome}</strong>
+                            {uso.comunidade.tipo && <span className="tipo-comunidade">({uso.comunidade.tipo})</span>}
+                          </div>
+                          {uso.formaDeUso && <div className="uso-field">📋 Forma: {uso.formaDeUso}</div>}
+                          {uso.tipoDeUso && <div className="uso-field">🏷️ Tipo: {uso.tipoDeUso}</div>}
+                          {uso.propositoEspecifico && <div className="uso-field">🎯 Propósito: {uso.propositoEspecifico}</div>}
+                          {uso.partesUtilizadas && uso.partesUtilizadas.length > 0 && (
+                            <div className="uso-field">🌱 Partes: {uso.partesUtilizadas.join(', ')}</div>
+                          )}
+                          {uso.dosagem && <div className="uso-field">💊 Dosagem: {uso.dosagem}</div>}
+                          {uso.metodoPreparacao && <div className="uso-field">🔬 Método: {uso.metodoPreparacao}</div>}
+                          {uso.origem && <div className="uso-field">📚 Origem: {uso.origem}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

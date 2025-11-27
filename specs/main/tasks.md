@@ -10,11 +10,11 @@
 
 ## Resumo Executivo
 
-Este documento lista todas as tarefas necessárias para implementar o Etnopapers v2.0, organizado por fase de desenvolvimento.
+Este documento lista todas as tarefas necessárias para implementar o Etnopapers v2.0, organizado por fase de desenvolvimento. **Atualizado 2025-11-27**: Incluídas 4 tarefas de componentes frontend críticos (MetadataDisplay, ManualEditor, ArticlesTable, DatabaseDownload).
 
 **Arquitetura**: Ollama + Qwen2.5-7B-Instruct (GPU) + MongoDB + FastAPI + React
-**Total Estimado**: 26 tarefas, ~7-10 dias com 1 dev
-**MVP Crítico**: Tarefas 1-16 (infraestrutura + backend + frontend core)
+**Total Estimado**: 30 tarefas (~88 story points), ~7-10 dias com 1 dev full-time
+**MVP Crítico**: Tarefas 1-19 (infraestrutura + backend + frontend core + 4 componentes principais)
 
 ---
 
@@ -736,9 +736,160 @@ docker exec etnopapers nvidia-smi
 
 ---
 
+### TASK-016: Implementar MetadataDisplay Component (3 Action Buttons)
+
+**Prioridade**: P1 (Crítica - User Story 1)
+**Pontos**: 4
+**Status**: Pendente
+
+**Descrição**: Criar componente React que exibe metadados extraídos com 3 botões de ação (Salvar, Editar, Descartar) conforme RF-030-033. Gerencia estado localStorage para dados em transação.
+
+**Critérios de Aceitação**:
+- [ ] `frontend/src/components/MetadataDisplay.tsx` criado
+- [ ] Component props: `metadata` (objeto extraído), callbacks: `onSave`, `onEdit`, `onDiscard`
+- [ ] 3 botões claramente visíveis:
+  - "Salvar" → chama `onSave()` → POST para backend `/api/articles` com status="finalizado"
+  - "Editar" → chama `onEdit()` → abre ManualEditor component
+  - "Descartar" → solicita confirmação → deleta dados de localStorage → chama `onDiscard()`
+- [ ] Exibe campos do metadata em formato legível (tabela/cards):
+  - Título, autores, ano, DOI, resumo
+  - Espécies (vernacular + científico + confiança validação)
+  - País, estado, município, bioma
+  - Tipo de uso, comunidades
+- [ ] Indica claramente quais campos estão vazios/não extraídos (RF-011)
+- [ ] Detecta PDFs escaneados: exibe aviso se `is_scanned=true` com recomendação de edição manual (RF-019-020)
+- [ ] Integração com Zustand store: salva/recupera de localStorage
+- [ ] Testes: propaga eventos corretamente, estado UI atualiza
+- [ ] Responsivo (mobile + desktop)
+
+**Arquivos**:
+```
+/frontend/src/components/MetadataDisplay.tsx
+/frontend/src/tests/components/MetadataDisplay.test.tsx
+```
+
+**Dependências**: TASK-013 (PDFUpload)
+
+---
+
+### TASK-017: Implementar ManualEditor Component (Edição de Metadados)
+
+**Prioridade**: P2 (User Story 3)
+**Pontos**: 5
+**Status**: Pendente
+
+**Descrição**: Criar interface completa de edição manual de metadados extraídos com validação de formulário e persistência em MongoDB.
+
+**Critérios de Aceitação**:
+- [ ] `frontend/src/components/ManualEditor.tsx` criado
+- [ ] Formulário com todos os campos de RF-007:
+  - Texto: título, autores[], resumo, DOI, publicação
+  - Numéricos: ano (1900-2030 validation)
+  - Selects: tipo_de_uso, metodologia, bioma, país, estado, município
+  - Arrays: espécies[] com form nested para cada espécie:
+    - vernacular, nomeCientifico, familia, statusValidacao, confianca
+    - usosPorComunidade[] com nested fields (7 campos OPCIONAIS cada)
+- [ ] React-hook-form para validação (RF-018)
+- [ ] Botões: "Salvar" (POST `/api/articles` status="finalizado"), "Cancelar", "Desfazer" (revert to extracted)
+- [ ] Validações:
+  - Título obrigatório
+  - Ano entre 1900-2030
+  - Espécies: nomeCientifico deve ter binomial format validation (genus+species)
+  - DOI formato validation (se presente)
+- [ ] Marcação visual de campos editados manualmente (RF-018)
+- [ ] Testes: form validation, save/cancel, nested arrays
+- [ ] Responsivo
+
+**Arquivos**:
+```
+/frontend/src/components/ManualEditor.tsx
+/frontend/src/hooks/useMetadataForm.ts
+/frontend/src/tests/components/ManualEditor.test.tsx
+```
+
+**Dependências**: TASK-016 (MetadataDisplay)
+
+---
+
+### TASK-018: Implementar ArticlesTable Component (List + Sort + Filter)
+
+**Prioridade**: P1 (Critical - User Story 1, RF-043-046)
+**Pontos**: 5
+**Status**: Pendente
+
+**Descrição**: Criar tabela interativa de artigos processados com ordenação, filtro em tempo real e paginação usando TanStack React Table v8.
+
+**Critérios de Aceitação**:
+- [ ] `frontend/src/components/ArticlesTable.tsx` criado
+- [ ] Fetch inicial: GET `/api/articles?status=finalizado&limit=50&offset=0`
+- [ ] Colunas exibidas (RF-044):
+  - Título, Ano, Autores, Status (finalizado/rascunho), Data Processamento, # Espécies
+- [ ] Ordenação (RF-045): clicável em cada coluna header, alterna asc/desc
+  - Implementar: `sort_by` + `sort_order` query params
+- [ ] Filtro em tempo real (RF-046-047):
+  - Campo de busca que filtra por substring em qualquer coluna
+  - Case-insensitive
+  - Debounce 300ms para performance
+  - Implementar: `search` query param
+- [ ] Paginação:
+  - 50 artigos por página
+  - Botões: Previous/Next
+  - Mostrar "Página X de Y"
+- [ ] Mensagem amigável quando vazio (RF-052): "Nenhum artigo processado ainda. Faça upload do primeiro PDF!"
+- [ ] Mensagem quando filtro retorna zero resultados: "Nenhum artigo encontrado com esse filtro"
+- [ ] Click na linha → navega para detalhe/edição do artigo
+- [ ] Testes: sort, filter, pagination, empty state
+- [ ] Responsivo (truncate titles on mobile)
+
+**Arquivos**:
+```
+/frontend/src/components/ArticlesTable.tsx
+/frontend/src/services/articlesService.ts (GET /api/articles)
+/frontend/src/tests/components/ArticlesTable.test.tsx
+```
+
+**Dependências**: Backend TASK-006 (GET `/api/articles` endpoint)
+
+---
+
+### TASK-019: Implementar DatabaseDownload Action (ZIP Backup)
+
+**Prioridade**: P1 (Critical - User Story 1, RF-048-051)
+**Pontos**: 3
+**Status**: Pendente
+
+**Descrição**: Adicionar botão "Download Base de Dados" que faz download de backup ZIP completo do MongoDB.
+
+**Critérios de Aceitação**:
+- [ ] Botão visível na página principal (homepage)
+- [ ] Click → GET `/api/database/download`
+- [ ] Backend retorna ZIP file com:
+  - Arquivo BSON/JSON contendo todos documentos da collection `referencias`
+  - Nome descritivo: `etnopapers_backup_YYYYMMDD.zip` (RF-050)
+  - Pode ser importado em qualquer MongoDB (RF-051)
+- [ ] Frontend tratamento:
+  - Mostrar loading spinner enquanto download processa
+  - Barra de progresso (se backend suporta Content-Length)
+  - Mensagem de sucesso ao completar
+  - Mensagem de erro se falhar
+- [ ] Requisição deve completar em < 3 segundos (CS-016)
+- [ ] Arquivo baixado pode ser extraído e importado em MongoDB
+- [ ] Testes: button visibility, download trigger, error handling
+
+**Arquivos**:
+```
+/frontend/src/components/DatabaseDownload.tsx (ou action em Home)
+/frontend/src/services/databaseService.ts (GET /api/database/download)
+/frontend/src/tests/components/DatabaseDownload.test.tsx
+```
+
+**Dependências**: Backend TASK-006 (GET `/api/database/download` endpoint)
+
+---
+
 ## Fase 3: Testing & Refinement
 
-### TASK-016: Criar Test Dataset
+### TASK-020: Criar Test Dataset
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -769,7 +920,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-017: Medir Acurácia de Extração
+### TASK-021: Medir Acurácia de Extração
 
 **Prioridade**: P3
 **Pontos**: 5
@@ -799,7 +950,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-018: Performance Benchmarking
+### TASK-022: Performance Benchmarking
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -830,7 +981,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-019: Otimização de Prompts
+### TASK-023: Otimização de Prompts
 
 **Prioridade**: P3
 **Pontos**: 5
@@ -857,7 +1008,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-020: Testes de Casos Extremos
+### TASK-024: Testes de Casos Extremos
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -892,7 +1043,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-021: Production Readiness Checklist
+### TASK-025: Production Readiness Checklist
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -923,7 +1074,7 @@ docker exec etnopapers nvidia-smi
 
 ## Fase 4: Documentação & Deploy
 
-### TASK-022: Atualizar README (GPU, UNRAID, Troubleshooting)
+### TASK-026: Atualizar README (GPU, UNRAID, Troubleshooting)
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -953,7 +1104,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-023: Criar DEPLOYMENT.md
+### TASK-027: Criar DEPLOYMENT.md
 
 **Prioridade**: P3
 **Pontos**: 2
@@ -979,7 +1130,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-024: Release Notes v2.0
+### TASK-028: Release Notes v2.0
 
 **Prioridade**: P3
 **Pontos**: 2
@@ -1007,7 +1158,7 @@ docker exec etnopapers nvidia-smi
 
 ---
 
-### TASK-025: Teste Final em UNRAID
+### TASK-029: Teste Final em UNRAID
 
 **Prioridade**: P3
 **Pontos**: 3
@@ -1043,46 +1194,47 @@ docker exec etnopapers nvidia-smi
 |------|---------|--------|-----------------|
 | **0: Setup** | 4 | 10 | 20-40h |
 | **1: Backend** | 6 | 19 | 38-76h |
-| **2: Frontend** | 6 | 13 | 26-52h |
+| **2: Frontend** | 10 | 24 | 48-96h | ← +4 tarefas críticas (MetadataDisplay, ManualEditor, ArticlesTable, DatabaseDownload) |
 | **3: Testing** | 6 | 22 | 44-88h |
 | **4: Docs** | 4 | 10 | 20-40h |
-| **Total** | **26** | **74** | **148-296h** |
+| **Total** | **30** | **85** | **170-340h** |
 
 ### Caminho Crítico (MVP)
 
 1. TASK-001 → TASK-002 → TASK-003 → TASK-004 (Setup: 10 pontos)
 2. TASK-005 → TASK-006 → TASK-007 → TASK-008 → TASK-009 (Backend: 19 pontos)
-3. TASK-011 → TASK-013 → TASK-014 (Frontend: 8 pontos)
+3. TASK-010 → TASK-013 → TASK-016 → TASK-017 → TASK-018 → TASK-019 (Frontend core: 21 pontos)
 
-**MVP Total**: 37 pontos ≈ 74-148 horas (4-7 dias)
+**MVP Total**: 50 pontos ≈ 100-200 horas (5-10 dias)
 
 ---
 
-## Dependências Visuais
+## Dependências Visuais (Atualizado com 4 novos componentes frontend)
 
 ```
 TASK-001, TASK-002 (paralelo)
   ↓
 TASK-003, TASK-004 (paralelo, bloqueia tudo)
-  ├→ TASK-005 → TASK-006 → TASK-007 → TASK-010 (backend)
+  ├→ TASK-005 → TASK-006 → TASK-007 → TASK-010 (backend core)
   │                          ↓
   │                        TASK-008, TASK-009 (paralelo)
+  │                          ↓
+  │                  TASK-008b, TASK-008c (paralelo, TaxonomyService + DuplicateDetector)
   │
-  ├→ TASK-011 → TASK-012 → TASK-013 → TASK-014 → TASK-016 (frontend, pode start depois TASK-007)
-  │                                       ↓
-  │                                     TASK-015
+  ├→ TASK-011 → TASK-012 → TASK-013 → TASK-014 → TASK-015 → TASK-016 (frontend core)
+  │                                                              ↓
+  │                                       TASK-017 (ManualEditor depende de TASK-016)
+  │                                              ↓
+  │                      TASK-018 (ArticlesTable - depende de backend TASK-006)
+  │                              ↓
+  │                            TASK-019 (DatabaseDownload - depende de backend TASK-006)
   │
-  └→ TASK-017 → TASK-018 → TASK-020 (testing, paralelo com frontend)
-                   ↓
-                 TASK-019 (paralelo)
-                 TASK-021 (paralelo)
+  └→ TASK-020 → TASK-021 → TASK-022 → TASK-023 → TASK-024 (testing & refinement, paralelo com frontend)
 
-TASK-010, TASK-016, TASK-021 → TASK-022 (production checklist)
-  ↓
-TASK-023 → TASK-024 → TASK-025 (docs, paralelo)
-  ↓
-TASK-026 (final validation)
+TASK-025 (production readiness checklist) → TASK-026, TASK-027, TASK-028 (docs, paralelo) → TASK-029 (final validation)
 ```
+
+**Paralelo (P)**: TASK-001/002, TASK-003/004, TASK-008/008b/008c, TASK-016/017/018/019, TASK-026/027/028
 
 ---
 
@@ -1096,7 +1248,8 @@ TASK-026 (final validation)
 
 ---
 
-**Documento gerado**: 2025-11-24
-**Versão**: 2.0 (Local AI + MongoDB + GPU)
-**Status**: Pronto para implementação
-**Estimativa total**: 7-10 dias com 1 desenvolvedor
+**Documento gerado/atualizado**: 2025-11-27
+**Versão**: 2.0 (Local AI + MongoDB + GPU + Clarificações 2025-11-27)
+**Status**: Pronto para implementação ✅
+**Estimativa total**: 5-10 dias com 1 desenvolvedor full-time (MVP: 5-10 dias; Full: 10-14 dias)
+**Novidades 2025-11-27**: +4 tarefas de componentes frontend críticos (TASK-016 a TASK-019) que resolvem gaps de User Story 1

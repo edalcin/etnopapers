@@ -310,67 +310,274 @@ export default function ManualEditor({
             </button>
           </div>
 
-          {speciesFields.map((field, index) => (
-            <div key={field.id} className="array-item species-item">
-              <div className="form-row">
-                <Controller
-                  name={`especies.${index}.vernacular`}
-                  control={control}
-                  render={({ field }) => (
-                    <div className="form-group">
-                      <label>Nome Comum</label>
-                      <input
-                        {...field}
-                        type="text"
-                        placeholder="ex: Açaí"
-                      />
-                    </div>
-                  )}
-                />
+          {speciesFields.map((field, index) => {
+            // Nested array for usosPorComunidade (Clarificação 2025-11-27)
+            const { fields: usosFields, append: appendUso, remove: removeUso } = useFieldArray({
+              control,
+              name: `especies.${index}.usosPorComunidade`,
+            })
 
-                <Controller
-                  name={`especies.${index}.nomeCientifico`}
-                  control={control}
-                  render={({ field }) => (
-                    <div className="form-group flex-grow">
-                      <label>Nome Científico</label>
-                      <input
-                        {...field}
-                        type="text"
-                        placeholder="ex: Euterpe oleracea"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
+            return (
+              <div key={field.id} className="array-item species-item">
+                {/* Species Identification */}
+                <div className="form-row">
+                  <Controller
+                    name={`especies.${index}.vernacular`}
+                    control={control}
+                    render={({ field }) => (
+                      <div className="form-group">
+                        <label>Nome Comum</label>
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="ex: Açaí"
+                        />
+                      </div>
+                    )}
+                  />
 
-              {watchedSpecies?.[index]?.nomeCientifico && (
-                <div className={`validation-badge ${
-                  validatingSpecies[watchedSpecies[index].nomeCientifico] ? 'validating' : ''
-                } ${
-                  speciesValidation[watchedSpecies[index].nomeCientifico] ? 'valid' : 'invalid'
-                }`}>
-                  {validatingSpecies[watchedSpecies[index].nomeCientifico] ? (
-                    <span>⏳ Validando...</span>
-                  ) : speciesValidation[watchedSpecies[index].nomeCientifico] ? (
-                    <span>✅ Validado</span>
-                  ) : (
-                    <span>⚠️ Não validado</span>
-                  )}
+                  <Controller
+                    name={`especies.${index}.nomeCientifico`}
+                    control={control}
+                    render={({ field }) => (
+                      <div className="form-group flex-grow">
+                        <label>Nome Científico</label>
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="ex: Euterpe oleracea"
+                        />
+                      </div>
+                    )}
+                  />
                 </div>
-              )}
 
-              {speciesFields.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => removeSpecies(index)}
-                  className="btn-remove"
-                >
-                  Remover
-                </button>
-              )}
-            </div>
-          ))}
+                {/* Additional Species Details (Clarificação Q2) */}
+                <div className="form-row">
+                  <Controller
+                    name={`especies.${index}.familia`}
+                    control={control}
+                    render={({ field }) => (
+                      <div className="form-group">
+                        <label>Família Botânica</label>
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="ex: Arecaceae"
+                        />
+                      </div>
+                    )}
+                  />
+
+                  <Controller
+                    name={`especies.${index}.statusValidacao`}
+                    control={control}
+                    render={({ field }) => (
+                      <div className="form-group">
+                        <label>Status Validação</label>
+                        <select {...field}>
+                          <option value="">Nenhum</option>
+                          <option value="validado">Validado</option>
+                          <option value="naoValidado">Não Validado</option>
+                        </select>
+                      </div>
+                    )}
+                  />
+
+                  <Controller
+                    name={`especies.${index}.confianca`}
+                    control={control}
+                    render={({ field }) => (
+                      <div className="form-group">
+                        <label>Confiança</label>
+                        <select {...field}>
+                          <option value="">Nenhuma</option>
+                          <option value="alta">Alta</option>
+                          <option value="media">Média</option>
+                          <option value="baixa">Baixa</option>
+                        </select>
+                      </div>
+                    )}
+                  />
+                </div>
+
+                {watchedSpecies?.[index]?.nomeCientifico && (
+                  <div className={`validation-badge ${
+                    validatingSpecies[watchedSpecies[index].nomeCientifico] ? 'validating' : ''
+                  } ${
+                    speciesValidation[watchedSpecies[index].nomeCientifico] ? 'valid' : 'invalid'
+                  }`}>
+                    {validatingSpecies[watchedSpecies[index].nomeCientifico] ? (
+                      <span>⏳ Validando...</span>
+                    ) : speciesValidation[watchedSpecies[index].nomeCientifico] ? (
+                      <span>✅ Validado</span>
+                    ) : (
+                      <span>⚠️ Não validado</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Usage by Community (Clarificação Q1, Q3 - All fields optional) */}
+                <div className="nested-section">
+                  <div className="section-header">
+                    <h5>📍 Uso por Comunidade</h5>
+                    <button
+                      type="button"
+                      onClick={() => appendUso({
+                        comunidade: { nome: '', tipo: '', país: '', estado: '', município: '' },
+                        formaDeUso: '',
+                        tipoDeUso: '',
+                        propositoEspecifico: '',
+                        partesUtilizadas: [],
+                      })}
+                      className="btn-add-small"
+                    >
+                      + Adicionar Uso
+                    </button>
+                  </div>
+
+                  {usosFields.map((usoField, usoIndex) => (
+                    <div key={usoField.id} className="uso-item nested-item">
+                      <div className="form-row">
+                        <Controller
+                          name={`especies.${index}.usosPorComunidade.${usoIndex}.comunidade.nome`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="form-group">
+                              <label>Comunidade *</label>
+                              <input
+                                {...field}
+                                type="text"
+                                placeholder="ex: Povo Yanomami"
+                              />
+                            </div>
+                          )}
+                        />
+
+                        <Controller
+                          name={`especies.${index}.usosPorComunidade.${usoIndex}.comunidade.tipo`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="form-group">
+                              <label>Tipo Comunidade</label>
+                              <select {...field}>
+                                <option value="">Selecione...</option>
+                                <option value="indígena">Indígena</option>
+                                <option value="quilombola">Quilombola</option>
+                                <option value="ribeirinha">Ribeirinha</option>
+                                <option value="caiçara">Caiçara</option>
+                                <option value="outro">Outro</option>
+                              </select>
+                            </div>
+                          )}
+                        />
+                      </div>
+
+                      {/* Optional uso fields (Clarificação Q3) */}
+                      <div className="form-row">
+                        <Controller
+                          name={`especies.${index}.usosPorComunidade.${usoIndex}.formaDeUso`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="form-group">
+                              <label>Forma de Uso</label>
+                              <input
+                                {...field}
+                                type="text"
+                                placeholder="ex: Chá, Pó, Óleo..."
+                              />
+                            </div>
+                          )}
+                        />
+
+                        <Controller
+                          name={`especies.${index}.usosPorComunidade.${usoIndex}.tipoDeUso`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="form-group">
+                              <label>Tipo de Uso</label>
+                              <input
+                                {...field}
+                                type="text"
+                                placeholder="ex: Medicinal, Alimentar..."
+                              />
+                            </div>
+                          )}
+                        />
+
+                        <Controller
+                          name={`especies.${index}.usosPorComunidade.${usoIndex}.propositoEspecifico`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="form-group">
+                              <label>Propósito</label>
+                              <input
+                                {...field}
+                                type="text"
+                                placeholder="ex: Febre, Tosse..."
+                              />
+                            </div>
+                          )}
+                        />
+                      </div>
+
+                      <div className="form-row">
+                        <Controller
+                          name={`especies.${index}.usosPorComunidade.${usoIndex}.metodoPreparacao`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="form-group">
+                              <label>Método Preparação</label>
+                              <textarea
+                                {...field}
+                                placeholder="ex: Fervir por 10 minutos..."
+                                rows={2}
+                              />
+                            </div>
+                          )}
+                        />
+
+                        <Controller
+                          name={`especies.${index}.usosPorComunidade.${usoIndex}.dosagem`}
+                          control={control}
+                          render={({ field }) => (
+                            <div className="form-group">
+                              <label>Dosagem</label>
+                              <input
+                                {...field}
+                                type="text"
+                                placeholder="ex: 1 colher de chá"
+                              />
+                            </div>
+                          )}
+                        />
+                      </div>
+
+                      {usosFields.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => removeUso(usoIndex)}
+                          className="btn-remove-small"
+                        >
+                          Remover Uso
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {speciesFields.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => removeSpecies(index)}
+                    className="btn-remove"
+                  >
+                    Remover Espécie
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </section>
 
         {/* Locations Section */}

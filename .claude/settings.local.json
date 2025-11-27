@@ -13,7 +13,11 @@
       "Bash(git commit:*)",
       "Bash(pkill:*)",
       "Bash(git checkout:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(powershell -Command \".specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks\")",
+      "Bash(dir:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
