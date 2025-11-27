@@ -166,6 +166,7 @@ etnopapers/
 
 ## 📚 Documentação Técnica
 
+- **[Guia de Deployment](docs/DEPLOYMENT.md)**: Configuração de GPU NVIDIA, troubleshooting UNRAID, otimização de performance
 - **[Especificação Técnica v2.0](specs/main/spec.md)**: Requisitos funcionais, histórias de usuário e arquitetura
 - **[Integração AI Local](specs/main/local-ai-integration.md)**: Detalhes de Ollama + Qwen2.5, comparação de modelos, implementação
 - **[Plano de Implementação](specs/main/plan-local-ai.md)**: Roadmap de 7-10 dias, 39 tasks em 5 fases
