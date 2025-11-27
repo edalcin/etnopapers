@@ -1,6 +1,6 @@
 # Feature Specification: Standalone Desktop Application with Embedded UI
 
-**Feature Directory**: `specs/001-standalone-desktop-app`
+**Feature Directory**: `specs/`
 **Created**: 2025-11-27
 **Status**: Draft
 **Working Branch**: `main` (no feature branch)
