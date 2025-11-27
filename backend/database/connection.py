@@ -86,30 +86,74 @@ class DatabaseConnection:
             # MongoDB creates collections automatically on first insert/operation
             # We just need to create the indexes for performance
 
-            # Single collection: referencias (simplified denormalized model)
+            # Single collection: referencias (denormalized model with enhanced fields)
             try:
                 referencias_col = self.db["referencias"]
 
-                # Drop existing doi index to recreate with sparse=True
-                try:
-                    referencias_col.drop_index("doi_1")
-                    logger.info("Dropped existing doi index")
-                except Exception:
-                    # Index doesn't exist, that's fine
-                    pass
+                # Drop existing indexes to recreate with current schema
+                existing_indexes = referencias_col.index_information()
+                for index_name in existing_indexes:
+                    if index_name != "_id_":  # Never drop the _id index
+                        try:
+                            referencias_col.drop_index(index_name)
+                            logger.info(f"Dropped existing index: {index_name}")
+                        except Exception:
+                            pass
 
-                # Create indexes for filtering and searching
+                # Create comprehensive indexes for filtering, searching, and aggregation
+
+                # 1. Unique indexes (prevent duplicates)
                 referencias_col.create_index("doi", unique=True, sparse=True)
+                logger.info("Index created: doi (unique, sparse)")
+
+                # 2. Single-field indexes for filtering
                 referencias_col.create_index("ano")
+                logger.info("Index created: ano")
+
                 referencias_col.create_index("status")
-                referencias_col.create_index("titulo")
-                logger.info("Indexes created for: referencias (doi, ano, status, titulo)")
+                logger.info("Index created: status")
+
+                # 3. Text index for full-text search
+                referencias_col.create_index([("titulo", "text"), ("resumo", "text")])
+                logger.info("Index created: titulo + resumo (text search)")
+
+                # 4. Geographic/location indexes
+                referencias_col.create_index([("pais", 1), ("estado", 1), ("municipio", 1)])
+                logger.info("Index created: geographic hierarchy (pais, estado, municipio)")
+
+                # 5. Species-related indexes (for enhanced data model)
+                referencias_col.create_index("especies.nomeCientifico")
+                logger.info("Index created: species.nomeCientifico")
+
+                referencias_col.create_index("especies.familia")
+                logger.info("Index created: species.familia")
+
+                referencias_col.create_index("especies.statusValidacao")
+                logger.info("Index created: species.statusValidacao")
+
+                # 6. Community usage indexes (NEW - Clarificação Q1, Q3)
+                referencias_col.create_index("especies.usosPorComunidade.comunidade.nome")
+                logger.info("Index created: community usage - community name")
+
+                referencias_col.create_index("especies.usosPorComunidade.tipoDeUso")
+                logger.info("Index created: community usage - type of use")
+
+                referencias_col.create_index("especies.usosPorComunidade.propositoEspecifico")
+                logger.info("Index created: community usage - specific purpose")
+
+                # 7. Use and methodology indexes
+                referencias_col.create_index("tipoUso")
+                logger.info("Index created: tipoUso")
+
+                referencias_col.create_index("metodologia")
+                logger.info("Index created: metodologia")
+
+                logger.info(
+                    "✓ MongoDB database ready (single 'referencias' collection, 12 indexes initialized)"
+                )
+
             except Exception as e:
                 logger.warning(f"Index creation for referencias: {e}")
-
-            logger.info(
-                "MongoDB database ready (single 'referencias' collection, indexes initialized)"
-            )
 
         except Exception as e:
             logger.error(f"Error initializing collections: {e}")
