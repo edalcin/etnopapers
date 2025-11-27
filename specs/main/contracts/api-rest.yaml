@@ -1,0 +1,571 @@
+openapi: 3.0.0
+info:
+  title: Etnopapers API - Standalone Desktop Application
+  description: REST API for ethnobotany metadata extraction and management
+  version: 3.0.0
+  contact:
+    name: Etnopapers Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local embedded backend (desktop application)
+
+tags:
+  - name: Health
+    description: System health and connectivity checks
+  - name: Articles
+    description: CRUD operations for scientific articles
+  - name: Extraction
+    description: PDF upload and metadata extraction
+  - name: Database
+    description: Database backup and export
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: System health check
+      description: Verify backend, MongoDB, and Ollama connectivity
+      operationId: checkHealth
+      responses:
+        '200':
+          description: All services operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                  backend:
+                    type: string
+                    enum: [ok]
+                  mongodb:
+                    type: string
+                    enum: [ok, unavailable]
+                  ollama:
+                    type: string
+                    enum: [ok, unavailable]
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/articles:
+    get:
+      tags:
+        - Articles
+      summary: List all articles
+      description: Retrieve paginated list of articles with optional filtering and sorting
+      operationId: listArticles
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: search
+          in: query
+          description: Search in title, abstract, and species names
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [titulo, ano, data_atualizacao]
+            default: data_atualizacao
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [rascunho, finalizado]
+      responses:
+        '200':
+          description: Articles list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ArticleListItem'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+    post:
+      tags:
+        - Articles
+      summary: Create new article
+      description: Create a new article with extracted or manually entered metadata
+      operationId: createArticle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferenceData'
+      responses:
+        '201':
+          description: Article created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  status:
+                    type: string
+                  data_criacao:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate article (DOI already exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/articles/{articleId}:
+    get:
+      tags:
+        - Articles
+      summary: Get article by ID
+      operationId: getArticle
+      parameters:
+        - name: articleId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-f0-9]{24}$'
+      responses:
+        '200':
+          description: Article retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleDetail'
+        '404':
+          description: Article not found
+
+    put:
+      tags:
+        - Articles
+      summary: Update article
+      operationId: updateArticle
+      parameters:
+        - name: articleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferenceData'
+      responses:
+        '200':
+          description: Article updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  data_atualizacao:
+                    type: string
+                    format: date-time
+        '404':
+          description: Article not found
+
+    delete:
+      tags:
+        - Articles
+      summary: Delete article
+      operationId: deleteArticle
+      parameters:
+        - name: articleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Article deleted
+        '404':
+          description: Article not found
+
+  /api/extract/metadata:
+    post:
+      tags:
+        - Extraction
+      summary: Upload PDF and extract metadata
+      description: Upload a PDF file for automatic metadata extraction using Ollama
+      operationId: extractMetadata
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file (max 100 MB)
+              required:
+                - file
+      responses:
+        '200':
+          description: Metadata extracted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  data:
+                    $ref: '#/components/schemas/ReferenceData'
+                  extracted_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid file or file too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Ollama service unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [error]
+                  error:
+                    type: string
+                    example: "Serviço de AI local indisponível. Verifique Ollama ou reinicie o container."
+                  code:
+                    type: string
+                    enum: [OLLAMA_UNAVAILABLE]
+
+  /api/database/download:
+    get:
+      tags:
+        - Database
+      summary: Download database backup
+      description: Export entire MongoDB database as ZIP archive containing mongodump
+      operationId: downloadDatabaseBackup
+      responses:
+        '200':
+          description: Database backup ready for download
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: attachment; filename="etnopapers-backup-2025-11-27.zip"
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '503':
+          description: MongoDB unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/taxonomy/validate:
+    post:
+      tags:
+        - Articles
+      summary: Validate plant species names
+      description: Check species names against GBIF and Tropicos databases
+      operationId: validateTaxonomy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                species:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      nomeCientifico:
+                        type: string
+                      vernacular:
+                        type: string
+      responses:
+        '200':
+          description: Taxonomy validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nomeCientifico:
+                          type: string
+                        status:
+                          type: string
+                          enum: [validado, não_validado, parcialmente_validado]
+                        familia:
+                          type: string
+                        gbifId:
+                          type: integer
+        '503':
+          description: Taxonomy service unavailable (GBIF offline)
+
+components:
+  schemas:
+    SpeciesData:
+      type: object
+      required:
+        - vernacular
+        - nomeCientifico
+      properties:
+        vernacular:
+          type: string
+          maxLength: 100
+          description: Common/vernacular name
+        nomeCientifico:
+          type: string
+          maxLength: 100
+          description: Scientific binomial name
+          pattern: '^[A-Z][a-z]+ [a-z]+( sp\.)?$'
+        familia:
+          type: string
+          maxLength: 50
+          nullable: true
+        status:
+          type: string
+          enum: [validado, não_validado, parcialmente_validado]
+          default: não_validado
+        gbifId:
+          type: integer
+          nullable: true
+
+    LocalizacaoData:
+      type: object
+      required:
+        - pais
+      properties:
+        pais:
+          type: string
+          maxLength: 100
+        estado:
+          type: string
+          maxLength: 2
+        municipio:
+          type: string
+          maxLength: 100
+        local:
+          type: string
+          maxLength: 150
+        territorio_indigena:
+          type: string
+          maxLength: 150
+          nullable: true
+        coordenadas:
+          type: object
+          properties:
+            latitude:
+              type: number
+              minimum: -90
+              maximum: 90
+            longitude:
+              type: number
+              minimum: -180
+              maximum: 180
+            precisao:
+              type: string
+              enum: [ponto, município, estado, país]
+
+    ComunidadeData:
+      type: object
+      properties:
+        nome:
+          type: string
+          maxLength: 150
+        tipo:
+          type: string
+          enum: [urbana, rural, indígena, quilombola, outro]
+        populacao_estimada:
+          type: integer
+          minimum: 0
+
+    ReferenceData:
+      type: object
+      required:
+        - ano
+        - titulo
+        - autores
+        - especies
+        - tipo_de_uso
+        - metodologia
+        - localizacao
+      properties:
+        ano:
+          type: integer
+          minimum: 1900
+          maximum: 2050
+        titulo:
+          type: string
+          maxLength: 500
+        publicacao:
+          type: string
+          maxLength: 300
+        autores:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 100
+        resumo:
+          type: string
+          maxLength: 5000
+        doi:
+          type: string
+          pattern: '^10\.\d{4,}/.+$'
+          nullable: true
+        url:
+          type: string
+          format: uri
+          nullable: true
+        especies:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SpeciesData'
+        tipo_de_uso:
+          type: string
+          enum: [medicinal, alimentar, ritual, construção, artesanato, outro]
+        usos_especificos:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            maxLength: 100
+        metodologia:
+          type: string
+          enum: [entrevistas, observação, revisão_bibliográfica, experimento, misto]
+        descricao_metodologia:
+          type: string
+          maxLength: 1000
+        localizacao:
+          $ref: '#/components/schemas/LocalizacaoData'
+        bioma:
+          type: string
+          maxLength: 100
+        ecossistema:
+          type: string
+          maxLength: 100
+        comunidade:
+          $ref: '#/components/schemas/ComunidadeData'
+        status:
+          type: string
+          enum: [rascunho, finalizado]
+          default: rascunho
+        palavras_chave:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+        notas_internas:
+          type: string
+          maxLength: 1000
+
+    ArticleListItem:
+      type: object
+      properties:
+        _id:
+          type: string
+        ano:
+          type: integer
+        titulo:
+          type: string
+        autores:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        especies_count:
+          type: integer
+        data_atualizacao:
+          type: string
+          format: date-time
+
+    ArticleDetail:
+      allOf:
+        - $ref: '#/components/schemas/ReferenceData'
+        - type: object
+          properties:
+            _id:
+              type: string
+            data_criacao:
+              type: string
+              format: date-time
+            data_atualizacao:
+              type: string
+              format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
