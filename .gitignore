@@ -16,92 +16,87 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
-.venv
-env/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
 
 # Node.js
 node_modules/
-npm-debug.log
-npm-debug.log.*
+npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-# Frontend Build
-dist/
-build/
-.next/
-out/
-
-# IDE & Editors
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.project
+.classpath
+*.sublime-project
+*.sublime-workspace
 .DS_Store
 Thumbs.db
-*.user
-*.suo
-*.iml
-.sublime-workspace
-.sublime-project
-
-# Testing
-.pytest_cache/
-.coverage
-coverage/
-htmlcov/
-.nyc_output
-jest-coverage/
-__snapshots__/
 
 # Environment
 .env
 .env.local
 .env.*.local
 
-# Database
-data/
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-logs/
+# Build
+dist/
+build/
 *.log
 
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.swp
-
-# OS specific
+# OS
 .DS_Store
 .AppleDouble
 .LSOverride
 Thumbs.db
-desktop.ini
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
 # Docker
+docker-compose.override.yml
 .dockerignore
 
-# Specify templates
-.specify/
+# Database
+*.db
+*.sqlite
+*.sqlite3
+mongodb_data/
+
+# Temporary
+*.tmp
+*.temp
+*.bak
+.tmp/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# IDE workspace
+.code-workspace
+
+# Frontend build
+frontend/dist/
+
+# Data files (if storing locally)
+data/
+uploads/
