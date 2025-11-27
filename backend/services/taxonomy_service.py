@@ -2,203 +2,255 @@
 Taxonomy validation service
 
 Orchestrates GBIF and Tropicos APIs with in-memory caching
+Updated 2025-11-27: Thread-safe in-memory cache with httpx
 """
 
-import asyncio
-import json
 import logging
-from datetime import datetime
-from datetime import timedelta
-from pathlib import Path
+import threading
+import time
 from typing import Any
 from typing import Dict
 from typing import Optional
 
-from backend.clients.gbif_client import GBIFClient
-from backend.clients.tropicos_client import TropicosClient
-from backend.config import settings
+import httpx
+
+from backend.exceptions import TaxonomyTimeoutError
 
 logger = logging.getLogger(__name__)
 
 
-class TaxonomyService:
-    """Service for plant species taxonomy validation"""
+# Configuration
+GBIF_API_URL = "https://api.gbif.org/v1/species"
+TROPICOS_API_URL = "https://www.tropicos.org/services/json"
+API_TIMEOUT = 5  # seconds
+CACHE_TTL_DAYS = 30
 
-    CACHE_FILE = Path("data/taxonomy_cache.json")
-    CACHE_TTL_DAYS = settings.CACHE_TTL_DAYS
-    _cache: Dict[str, Dict[str, Any]] = {}
-    _cache_timestamps: Dict[str, str] = {}
 
-    @classmethod
-    def _load_cache(cls):
-        """Load taxonomy cache from file"""
-        try:
-            if cls.CACHE_FILE.exists():
-                with open(cls.CACHE_FILE, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    cls._cache = data.get("cache", {})
-                    cls._cache_timestamps = data.get("timestamps", {})
-                    logger.info(f"Loaded taxonomy cache with {len(cls._cache)} entries")
-            else:
-                logger.info("No taxonomy cache file found, starting fresh")
-        except Exception as e:
-            logger.error(f"Error loading taxonomy cache: {e}")
+class TaxonomyCache:
+    """Thread-safe in-memory cache with TTL"""
 
-    @classmethod
-    def _save_cache(cls):
-        """Save taxonomy cache to file"""
-        try:
-            cls.CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
-            data = {
-                "cache": cls._cache,
-                "timestamps": cls._cache_timestamps,
-                "saved_at": datetime.now().isoformat(),
+    def __init__(self, ttl_days: int = CACHE_TTL_DAYS):
+        self.cache: Dict[str, Dict[str, Any]] = {}
+        self.ttl_seconds = ttl_days * 24 * 3600
+        self.lock = threading.Lock()
+
+    def get(self, key: str) -> Optional[Dict[str, Any]]:
+        """Get value from cache if not expired"""
+        with self.lock:
+            if key not in self.cache:
+                return None
+
+            entry = self.cache[key]
+            age = time.time() - entry["timestamp"]
+
+            if age > self.ttl_seconds:
+                del self.cache[key]
+                logger.debug(f"Cache expired for {key}")
+                return None
+
+            logger.debug(f"Cache hit for {key} (age: {age/3600:.1f}h)")
+            return entry["data"]
+
+    def set(self, key: str, value: Dict[str, Any]) -> None:
+        """Set value in cache with timestamp"""
+        with self.lock:
+            self.cache[key] = {
+                "data": value,
+                "timestamp": time.time(),
             }
-            with open(cls.CACHE_FILE, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-            logger.debug(f"Saved taxonomy cache with {len(cls._cache)} entries")
-        except Exception as e:
-            logger.error(f"Error saving taxonomy cache: {e}")
+            logger.debug(f"Cached {key}")
 
-    @classmethod
-    def _is_cache_valid(cls, key: str) -> bool:
-        """Check if cache entry is still valid"""
-        if key not in cls._cache_timestamps:
-            return False
+    def cleanup(self) -> None:
+        """Remove expired entries"""
+        with self.lock:
+            now = time.time()
+            expired_keys = [
+                k
+                for k, v in self.cache.items()
+                if (now - v["timestamp"]) > self.ttl_seconds
+            ]
 
-        try:
-            cached_at = datetime.fromisoformat(cls._cache_timestamps[key])
-            age = datetime.now() - cached_at
-            return age < timedelta(days=cls.CACHE_TTL_DAYS)
-        except Exception:
-            return False
+            for key in expired_keys:
+                del self.cache[key]
 
-    @classmethod
-    async def validate_species(
-        cls, scientific_name: str
-    ) -> Optional[Dict[str, Any]]:
+            if expired_keys:
+                logger.info(f"Cleaned {len(expired_keys)} expired cache entries")
+
+    def stats(self) -> Dict[str, Any]:
+        """Get cache statistics"""
+        with self.lock:
+            total = len(self.cache)
+            now = time.time()
+
+            age_stats = []
+            for entry in self.cache.values():
+                age_hours = (now - entry["timestamp"]) / 3600
+                age_stats.append(age_hours)
+
+            avg_age = sum(age_stats) / len(age_stats) if age_stats else 0
+
+            return {
+                "total_cached": total,
+                "average_age_hours": round(avg_age, 1),
+                "ttl_days": CACHE_TTL_DAYS,
+            }
+
+
+class TaxonomyService:
+    """
+    Plant species taxonomy validation service
+
+    Validates scientific names against:
+    1. GBIF Species API (primary)
+    2. Tropicos API (fallback)
+    3. Local cache (30-day TTL)
+    """
+
+    def __init__(self):
+        self.cache = TaxonomyCache()
+        self.http_client = httpx.Client(timeout=API_TIMEOUT)
+        logger.info("TaxonomyService initialized")
+
+    def validate_species(self, scientific_name: str) -> Optional[Dict[str, Any]]:
         """
-        Validate a plant species name
-
-        Uses multi-strategy approach:
-        1. Check cache (valid for 30 days)
-        2. Query GBIF API
-        3. Fallback to Tropicos API
-        4. Mark as "não_validado" if all fail
+        Validate species scientific name
 
         Args:
             scientific_name: Scientific name to validate
 
         Returns:
-            Species data with validation status
+            Dict with validation results or None
         """
-        if not scientific_name:
+        if not scientific_name or not scientific_name.strip():
             return None
 
-        key = scientific_name.lower().strip()
+        normalized_name = scientific_name.strip()
 
-        # Load cache on first use
-        if not cls._cache:
-            cls._load_cache()
-
-        # Check cache
-        if key in cls._cache and cls._is_cache_valid(key):
-            logger.debug(f"Cache hit for '{scientific_name}'")
-            return cls._cache[key]
+        # Check cache first
+        cached = self.cache.get(normalized_name)
+        if cached:
+            cached["source"] = "cache"
+            return cached
 
         # Try GBIF first
-        logger.info(f"Validating '{scientific_name}' with GBIF...")
-        result = await GBIFClient.search_species(scientific_name)
-
-        if result:
-            cls._cache[key] = result
-            cls._cache_timestamps[key] = datetime.now().isoformat()
-            cls._save_cache()
-            return result
+        try:
+            result = self._validate_gbif(normalized_name)
+            if result:
+                self.cache.set(normalized_name, result)
+                result["source"] = "gbif"
+                return result
+        except Exception as e:
+            logger.warning(f"GBIF validation failed for {normalized_name}: {e}")
 
         # Fallback to Tropicos
-        logger.info(f"GBIF failed, trying Tropicos for '{scientific_name}'...")
-        result = await TropicosClient.search_species(scientific_name)
+        try:
+            result = self._validate_tropicos(normalized_name)
+            if result:
+                self.cache.set(normalized_name, result)
+                result["source"] = "tropicos"
+                return result
+        except Exception as e:
+            logger.warning(f"Tropicos validation failed for {normalized_name}: {e}")
 
-        if result:
-            cls._cache[key] = result
-            cls._cache_timestamps[key] = datetime.now().isoformat()
-            cls._save_cache()
-            return result
+        logger.warning(f"Could not validate {normalized_name}")
+        return None
 
-        # All APIs failed
-        logger.warning(f"Could not validate '{scientific_name}' with any API")
-        result = {
-            "nome_cientifico": scientific_name,
-            "status_validacao": "nao_validado",
-            "fonte_validacao": None,
-            "message": "Não foi possível validar com as APIs disponíveis",
-        }
+    def _validate_gbif(self, scientific_name: str) -> Optional[Dict[str, Any]]:
+        """Validate against GBIF Species API"""
+        try:
+            response = self.http_client.get(
+                f"{GBIF_API_URL}/search",
+                params={"q": scientific_name, "limit": 1},
+            )
+            response.raise_for_status()
 
-        cls._cache[key] = result
-        cls._cache_timestamps[key] = datetime.now().isoformat()
-        cls._save_cache()
+            data = response.json()
+            results = data.get("results", [])
 
-        return result
+            if not results:
+                logger.debug(f"No GBIF results for {scientific_name}")
+                return None
 
-    @classmethod
-    async def validate_multiple_species(
-        cls, species_list: list[str]
-    ) -> list[Dict[str, Any]]:
-        """
-        Validate multiple species in parallel
+            match = results[0]
 
-        Args:
-            species_list: List of scientific names
+            if match.get("matchType") not in ["EXACT", "FUZZY", "HIGHERRANK"]:
+                logger.debug(f"GBIF match type not acceptable")
+                return None
 
-        Returns:
-            List of validation results
-        """
-        tasks = [cls.validate_species(name) for name in species_list]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+            accepted_name = match.get("scientificName", scientific_name)
+            family = match.get("family")
+            is_exact = match.get("matchType") == "EXACT"
 
-        return [r for r in results if r is not None and not isinstance(r, Exception)]
+            logger.info(f"GBIF validated {scientific_name} → {accepted_name}")
 
-    @classmethod
-    def get_cache_stats(cls) -> Dict[str, Any]:
+            return {
+                "accepted_name": accepted_name,
+                "family": family,
+                "confidence": "alta" if is_exact else "media",
+                "validated": True,
+            }
+
+        except httpx.TimeoutException:
+            raise TaxonomyTimeoutError()
+        except Exception as e:
+            logger.warning(f"GBIF error: {e}")
+            return None
+
+    def _validate_tropicos(self, scientific_name: str) -> Optional[Dict[str, Any]]:
+        """Validate against Tropicos API"""
+        try:
+            response = self.http_client.get(
+                f"{TROPICOS_API_URL}/NameSearch",
+                params={"name": scientific_name, "type": "species", "output": "json"},
+            )
+            response.raise_for_status()
+
+            data = response.json()
+
+            if not isinstance(data, list) or len(data) == 0:
+                logger.debug(f"No Tropicos results for {scientific_name}")
+                return None
+
+            match = data[0]
+            accepted_name = match.get("name", scientific_name)
+            family = match.get("family")
+
+            logger.info(f"Tropicos validated {scientific_name} → {accepted_name}")
+
+            return {
+                "accepted_name": accepted_name,
+                "family": family,
+                "confidence": "media",
+                "validated": True,
+            }
+
+        except httpx.TimeoutException:
+            raise TaxonomyTimeoutError()
+        except Exception as e:
+            logger.warning(f"Tropicos error: {e}")
+            return None
+
+    def get_family(self, scientific_name: str) -> Optional[str]:
+        """Get family for species"""
+        result = self.validate_species(scientific_name)
+        return result.get("family") if result else None
+
+    def get_accepted_name(self, scientific_name: str) -> Optional[str]:
+        """Get standardized scientific name"""
+        result = self.validate_species(scientific_name)
+        return result.get("accepted_name", scientific_name) if result else scientific_name
+
+    def cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
-        if not cls._cache:
-            cls._load_cache()
+        return self.cache.stats()
 
-        valid_count = sum(
-            1 for key in cls._cache if cls._is_cache_valid(key)
-        )
+    def cleanup_cache(self) -> None:
+        """Manually trigger cache cleanup"""
+        self.cache.cleanup()
 
-        return {
-            "total_entries": len(cls._cache),
-            "valid_entries": valid_count,
-            "expired_entries": len(cls._cache) - valid_count,
-            "cache_ttl_days": cls.CACHE_TTL_DAYS,
-        }
-
-    @classmethod
-    def clear_cache(cls):
-        """Clear all cached taxonomy data"""
-        cls._cache.clear()
-        cls._cache_timestamps.clear()
-        if cls.CACHE_FILE.exists():
-            cls.CACHE_FILE.unlink()
-        logger.info("Taxonomy cache cleared")
-
-    @classmethod
-    def clear_expired_cache(cls):
-        """Remove expired entries from cache"""
-        if not cls._cache:
-            cls._load_cache()
-
-        expired_keys = [
-            key for key in cls._cache if not cls._is_cache_valid(key)
-        ]
-
-        for key in expired_keys:
-            cls._cache.pop(key, None)
-            cls._cache_timestamps.pop(key, None)
-
-        if expired_keys:
-            cls._save_cache()
-            logger.info(f"Removed {len(expired_keys)} expired taxonomy entries")
+    def __del__(self):
+        """Cleanup on deletion"""
+        try:
+            self.http_client.close()
+        except:
+            pass
