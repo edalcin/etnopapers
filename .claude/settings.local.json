@@ -35,7 +35,21 @@
       "Bash(npm --version:*)",
       "Bash(.build-windows.bat)",
       "Bash(echo:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git -C:*)",
+      "Bash(git rm:*)",
+      "SlashCommand(/speckit.tasks)",
+      "Bash(mv:*)",
+      "SlashCommand(/speckit.analyze)",
+      "Bash(if [ -d \"venv\" ])",
+      "Bash(then echo \"venv exists\")",
+      "Bash(else echo \"venv not found\")",
+      "Bash(fi)",
+      "Bash(python -m pip list:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(npm run build:*)",
+      "Bash(python:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,3 +1,5 @@
+## Prompt:
+
 Quero uma tabela com os seguintes dados retirados deste artigo: 
 
 * título
@@ -5,6 +7,10 @@ Quero uma tabela com os seguintes dados retirados deste artigo:
 * ano
 * comunidades estudadas
 * espécies de plantas usadas pelas comunidades com tipo de uso
+
+---
+
+## Raciocínio:
 
 ### Thought for 338.5 seconds
 
@@ -93,7 +99,9 @@ I should also check if there are any other species mentioned in the text that I 
 
 I think that's all. Now, structuring the table accordingly.
 
+---
 
+## Resposta:
 
 Aqui está a tabela com os dados solicitados do artigo "Rapid ethnobotanical diagnosis of the Fulni-ô Indigenous lands (NE Brazil): floristic survey and local conservation priorities for medicinal plants":
 
@@ -113,4 +121,3 @@ Aqui está a tabela com os dados solicitados do artigo "Rapid ethnobotanical dia
 - Uso de madeira: Alguns espécies (como Anadenanthera colubrina e Myracrodruon urundeuva) são usadas tanto para fins medicinais quanto para madeira, o que eleva a pressão sobre suas populações.
 - Conservação: O artigo destaca a necessidade de envolvimento direto dos Fulni-ô na conservação e gestão de recursos locais, com base em estratégias de priorização de conservação.
 
-Se precisar de mais detalhes ou ajustes, é só pedir!
