@@ -7,7 +7,15 @@
 
 ## Summary
 
-Build a standalone desktop application (Windows, macOS, Linux) that bundles a React UI frontend with a Python FastAPI backend. The application enables ethnobotany researchers to upload PDFs, extract metadata using local Ollama AI inference, manage extracted articles in MongoDB, and download database backups—all without requiring users to manage a terminal, install services, or provide API keys. The architecture uses Electron as the native desktop container with HTTP communication to a locally-spawned FastAPI backend process.
+Build a standalone desktop application (Windows, macOS, Linux) that bundles a React UI frontend with a Python FastAPI backend. The application enables ethnobotany researchers to upload PDFs, extract metadata using local Ollama AI inference, manage extracted articles in MongoDB, and download database backups—all without requiring users to manage a terminal, install services, or provide API keys.
+
+**Architecture**: The application uses **Electron as the native desktop window container** to render a React-based UI (not a web browser). The FastAPI backend runs as a subprocess spawned by Electron's main process, with HTTP communication between frontend (Electron renderer) and backend (Python subprocess).
+
+**Service Requirements**: Users must have two services available:
+1. **Ollama** (local AI inference engine) - runs on user's machine, manages by user
+2. **MongoDB** (data storage) - can be local or cloud-based (MongoDB Atlas), configured via MONGO_URI during first run. Application does not bundle MongoDB; users provide connection URI.
+
+No other backend services, authentication, or API keys are required.
 
 ## Technical Context
 
