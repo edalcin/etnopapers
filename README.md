@@ -14,7 +14,7 @@ Etnopapers é uma aplicação desktop nativa que automatiza a extração de info
 
 ## 📖 O que é Etnobotânica?
 
-Etnobotânica é o estudo da relação entre pessoas e plantas. Pesquisadores documentam como comunidades tradicionais (indígenas, quilombolas, ribeirinhas) usam plantas para medicina, alimentação, rituais e outras finalidades. Esses conhecimentos são publicados em artigos científicos, mas ficam dispersos e difíceis de consultar.
+A etnobotânica é uma disciplina que investiga as interações e relações complexas entre as plantas e as pessoas ao longo do tempo e do espaço. Ela abrange o conhecimento tradicional e ocidental, incluindo os diversos usos (alimentares, medicinais, entre outros), a cosmovisão, os sistemas de gestão e classificação, e as línguas que as diferentes culturas mantêm em relação às plantas e aos seus ecossistemas terrestres e aquáticos associados. Em essência, busca compreender como as sociedades percebem, utilizam, manejam e atribuem significado cultural as plantas, atuando como uma ponte fundamental entre a biologia e as ciências humanas (Prance, 2007).
 
 ## 💡 Como funciona?
 
