@@ -326,9 +326,6 @@ Licença MIT - Livre para usar, modificar e distribuir
 ### Para Etnobotânicos
 Digitalizar literatura, organizar por planta/região/comunidade, exportar para análise
 
-### Para Comunidades Indígenas
-Documentar conhecimento tradicional, controlar dados localmente, organizar pesquisa
-
 ### Para Organizações de Conservação
 Construir inventários botânicos, rastrear espécies ameaçadas, mapear conhecimento tradicional
 
@@ -386,6 +383,6 @@ Construído com projetos open-source incríveis:
 
 **Etnopapers v2.0** - Tornando a pesquisa etnobotânica mais acessível
 
-Feito com ❤️ para pesquisadores de etnobotânica e comunidades indígenas em todo o mundo
+Feito com ❤️ para pesquisadores de etnobotânica em todo o mundo
 
 🌿 🔬 📚 🌍
