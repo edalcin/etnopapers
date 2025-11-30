@@ -49,7 +49,9 @@
       "Bash(python -m pip install:*)",
       "Bash(npm run build:*)",
       "Bash(python:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(wix --version:*)",
+      "Bash(choco install:*)"
     ],
     "deny": [],
     "ask": []

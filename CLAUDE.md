@@ -529,3 +529,6 @@ print('Connected!')
 - **Analytics Dashboard**: Planned feature to visualize article counts, species coverage, geographic distribution.
 - **Batch Upload**: Currently single PDF per session. Future: queue multiple PDFs for processing.
 - **Community Collaboration**: Current design is single-user per server. Future: add multi-user with sharing/collaboration features.
+- toda documentação deve ser em inglês, apenas o README.md em português
+- Toda documentação técnica deste projeto deve ser em inglês. A documentação estratégica e README.md devem estar em português brasileiro.
+- Nunca crie um novo branch. Use sempre o main branch
