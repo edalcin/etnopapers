@@ -9,8 +9,11 @@
 **Etnopapers** é uma aplicação desktop nativa que automatiza a extração e catalogação de metadados etnobotânicos a partir de artigos científicos sobre o uso tradicional de plantas por comunidades indígenas e tradicionais.
 
 🌿 **100% Privado** - Todo processamento acontece localmente no seu computador
+
 🚀 **Fácil de Usar** - Upload de PDF por arrastar-e-soltar com extração automática
+
 📊 **Abrangente** - Captura plantas, usos, comunidades, localizações e biomas
+
 🔧 **Gratuito e Open Source** - Sem assinaturas, sem APIs externas, sem dependência de nuvem
 
 ---
@@ -83,30 +86,46 @@ A etnobotânica investiga as interações complexas entre plantas e pessoas ao l
 
 ### Extração Automática
 ✅ Nomes de plantas (vernacular + científico)
+
 ✅ Usos tradicionais (medicinal, alimentar, rituais)
+
 ✅ Comunidades indígenas e localizações
+
 ✅ Biomas e ecossistemas
+
 ✅ Autores, ano e detalhes de publicação
 
 ### Banco de Dados Inteligente
 ✅ MongoDB para armazenamento escalável
+
 ✅ Busca full-text em artigos
+
 ✅ Filtrar por ano, país, espécie, uso
+
 ✅ Paginação e ordenação
+
 ✅ Analytics avançado
 
 ### Ferramentas Profissionais
 ✅ Download de backup como ZIP
+
 ✅ Checksums SHA256 de integridade
+
 ✅ Export para JSON/CSV
+
 ✅ Restaurar de backups
+
 ✅ Pronto para colaboração em equipe
 
 ### Multi-plataforma
 ✅ Executável Windows (~150 MB)
+
 ✅ App macOS (~150 MB)
+
 ✅ Binário Linux (~150 MB)
+
 ✅ Sem instalação necessária
+
 ✅ Portável, arquivo único
 
 ---
@@ -321,17 +340,29 @@ Compilar revisões, extrair dados de tese, praticar com ferramentas open-source
 ## 🎉 Recursos Implementados
 
 ✅ IA local com Ollama (v2.0)
+
 ✅ Aplicação desktop standalone
+
 ✅ Integração MongoDB
+
 ✅ Extração de texto de PDF
+
 ✅ Extração automática de metadados
+
 ✅ Busca full-text
+
 ✅ Gerenciamento de artigos (CRUD)
+
 ✅ Backup e restauração de banco de dados
+
 ✅ Verificações de saúde e monitoramento
+
 ✅ Interface de configuração do usuário
+
 ✅ Documentação abrangente
+
 ✅ Testes unitários e integração
+
 ✅ Suporte multi-idioma (PT, EN)
 
 ---
