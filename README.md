@@ -158,21 +158,6 @@ chmod +x etnopapers-linux-vX.Y.Z
 ./etnopapers-linux-vX.Y.Z
 ```
 
-### Do Código-Fonte (Desenvolvimento)
-```bash
-git clone https://github.com/edalcin/etnopapers.git
-cd etnopapers
-
-# Frontend
-cd frontend && npm install && npm run dev
-
-# Backend (outro terminal)
-cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
 ---
 
 ## 💻 Como Usar
@@ -201,42 +186,6 @@ Clique em "Salvar Artigo" para armazenar no banco de dados
 - Filtro por ano, país, tipo de uso
 - Baixe backup completo
 - Exporte para análise posterior
-
----
-
-## 🔧 Desenvolvimento
-
-### Pré-requisitos
-- Node.js 18+
-- Python 3.11+
-- Instância MongoDB
-- Ollama (para testes)
-
-### Desenvolvimento Frontend
-```bash
-cd frontend
-npm install
-npm run dev      # Servidor de desenvolvimento
-npm run build    # Build de produção
-npm run test     # Executar testes
-```
-
-### Desenvolvimento Backend
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload  # Servidor de desenvolvimento
-pytest tests/               # Executar testes
-```
-
-### Construir Executáveis Standalone
-```bash
-./build-windows.bat    # Windows
-bash build-macos.sh    # macOS
-bash build-linux.sh    # Linux
-```
 
 ---
 
@@ -302,10 +251,10 @@ Licença MIT - Livre para usar, modificar e distribuir
 ## 📝 Citação
 
 ```bibtex
-@software{etnopapers2024,
+@software{etnopapers2025,
   author = {Dalcin, E.},
   title = {Etnopapers: Sistema de Extração de Metadados Etnobotânicos},
-  year = {2024},
+  year = {2025},
   url = {https://github.com/edalcin/etnopapers}
 }
 ```
@@ -384,28 +333,6 @@ Compilar revisões, extrair dados de tese, praticar com ferramentas open-source
 ✅ Documentação abrangente
 ✅ Testes unitários e integração
 ✅ Suporte multi-idioma (PT, EN)
-
----
-
-## 🚀 Recursos Planejados
-
-### v2.1 (Q2 2024)
-- Fila de upload em lote
-- UI de filtro avançado
-- Export para CSV/Excel
-- Detecção de duplicatas aprimorada
-
-### v2.2 (Q3 2024)
-- Colaboração multi-usuário
-- Workspaces em equipe
-- Logging de atividades
-- Suporte a campos customizados
-
-### v3.0 (Q4 2024)
-- App móvel (iOS/Android)
-- Interface web
-- Sincronização em tempo real
-- Analytics avançado
 
 ---
 
