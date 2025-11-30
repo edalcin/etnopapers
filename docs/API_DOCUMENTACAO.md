@@ -1,31 +1,31 @@
-# Etnopapers API Documentation
+# Documentação da API Etnopapers
 
-**Version**: 2.0
-**Base URL**: `http://localhost:8000`
-**API Format**: RESTful JSON
-
----
-
-## Table of Contents
-
-1. [Health & Status](#health--status)
-2. [Configuration](#configuration)
-3. [Metadata Extraction](#metadata-extraction)
-4. [Articles Management](#articles-management)
-5. [Database Operations](#database-operations)
-6. [Error Handling](#error-handling)
+**Versão**: 2.0
+**URL Base**: `http://localhost:8000`
+**Formato da API**: RESTful JSON
 
 ---
 
-## Health & Status
+## Índice
 
-### Get API Health
+1. [Saúde e Status](#saúde-e-status)
+2. [Configuração](#configuração)
+3. [Extração de Metadados](#extração-de-metadados)
+4. [Gerenciamento de Artigos](#gerenciamento-de-artigos)
+5. [Operações do Banco de Dados](#operações-do-banco-de-dados)
+6. [Tratamento de Erros](#tratamento-de-erros)
+
+---
+
+## Saúde e Status
+
+### Verificar Saúde da API
 
 **Endpoint**: `GET /api/health`
 
-**Description**: Check if the FastAPI server is running and responsive
+**Descrição**: Verificar se o servidor FastAPI está rodando e respondendo
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "status": "ok",
@@ -36,13 +36,13 @@
 
 ---
 
-### Get Ollama Health
+### Verificar Saúde do Ollama
 
 **Endpoint**: `GET /api/health/ollama`
 
-**Description**: Check Ollama service status and available models
+**Descrição**: Verificar status do serviço Ollama e modelos disponíveis
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "status": "ok",
@@ -52,7 +52,7 @@
 }
 ```
 
-**Response** (503 Service Unavailable):
+**Resposta** (503 Serviço Indisponível):
 ```json
 {
   "detail": "Ollama indisponível. Por favor, inicie o Ollama."
@@ -61,13 +61,13 @@
 
 ---
 
-### Get MongoDB Health
+### Verificar Saúde do MongoDB
 
 **Endpoint**: `GET /api/health/mongodb`
 
-**Description**: Check MongoDB connection status
+**Descrição**: Verificar status da conexão com MongoDB
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "status": "ok",
@@ -77,7 +77,7 @@
 }
 ```
 
-**Response** (503 Service Unavailable):
+**Resposta** (503 Serviço Indisponível):
 ```json
 {
   "detail": "MongoDB indisponível. Verifique MONGO_URI."
@@ -86,22 +86,22 @@
 
 ---
 
-## Configuration
+## Configuração
 
-### Validate MongoDB URI
+### Validar URI MongoDB
 
 **Endpoint**: `POST /api/config/validate-mongo`
 
-**Description**: Validate MongoDB connection string
+**Descrição**: Validar string de conexão MongoDB
 
-**Request Body**:
+**Corpo da Requisição**:
 ```json
 {
   "mongo_uri": "mongodb://localhost:27017/etnopapers"
 }
 ```
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "valid": true,
@@ -111,7 +111,7 @@
 }
 ```
 
-**Response** (400 Bad Request):
+**Resposta** (400 Requisição Inválida):
 ```json
 {
   "detail": "MongoDB URI inválida. Verifique o formato."
@@ -120,20 +120,20 @@
 
 ---
 
-### Save MongoDB Configuration
+### Salvar Configuração MongoDB
 
 **Endpoint**: `POST /api/config/save-mongo`
 
-**Description**: Save MongoDB URI to `.env` file
+**Descrição**: Salvar URI MongoDB no arquivo `.env`
 
-**Request Body**:
+**Corpo da Requisição**:
 ```json
 {
   "mongo_uri": "mongodb://localhost:27017/etnopapers"
 }
 ```
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "message": "Configuração MongoDB salva com sucesso",
@@ -143,31 +143,31 @@
 
 ---
 
-## Metadata Extraction
+## Extração de Metadados
 
-### Extract Metadata from PDF
+### Extrair Metadados de PDF
 
 **Endpoint**: `POST /api/extract/metadata`
 
-**Description**: Upload PDF and extract ethnobotanical metadata using Ollama
+**Descrição**: Enviar PDF e extrair metadados etnobotânicos usando Ollama
 
-**Request**: Multipart form data
-- `file`: PDF file (max 100 MB)
+**Requisição**: Dados multipart form
+- `file`: Arquivo PDF (máx 100 MB)
 
-**cURL Example**:
+**Exemplo com cURL**:
 ```bash
 curl -X POST "http://localhost:8000/api/extract/metadata" \
-  -F "file=@example.pdf"
+  -F "file=@exemplo.pdf"
 ```
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "titulo": "Etnobotânica das Plantas Medicinais do Sertão",
   "autores": ["Silva, M.", "Santos, J."],
   "ano": 2020,
   "publicacao": "Journal of Ethnobotany, Vol 45(3)",
-  "doi": "10.1234/example.2020",
+  "doi": "10.1234/exemplo.2020",
   "resumo": "Esta pesquisa documenta o uso tradicional de plantas medicinais...",
   "especies": [
     {
@@ -192,14 +192,14 @@ curl -X POST "http://localhost:8000/api/extract/metadata" \
 }
 ```
 
-**Response** (400 Bad Request):
+**Resposta** (400 Requisição Inválida):
 ```json
 {
   "detail": "PDF inválido ou não contém texto extraível"
 }
 ```
 
-**Response** (503 Service Unavailable):
+**Resposta** (503 Serviço Indisponível):
 ```json
 {
   "detail": "Serviço Ollama indisponível. Tente novamente."
@@ -208,25 +208,25 @@ curl -X POST "http://localhost:8000/api/extract/metadata" \
 
 ---
 
-## Articles Management
+## Gerenciamento de Artigos
 
-### List Articles
+### Listar Artigos
 
 **Endpoint**: `GET /api/articles`
 
-**Query Parameters**:
-- `skip`: Number of articles to skip (default: 0)
-- `limit`: Number of articles to return (default: 20)
-- `year`: Filter by publication year
-- `country`: Filter by country code
-- `search`: Full-text search in title and authors
+**Parâmetros de Consulta**:
+- `skip`: Número de artigos a pular (padrão: 0)
+- `limit`: Número de artigos a retornar (padrão: 20)
+- `year`: Filtrar por ano de publicação
+- `country`: Filtrar por código de país
+- `search`: Busca full-text em título e autores
 
-**Example**:
+**Exemplo**:
 ```
 GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 ```
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "articles": [
@@ -248,11 +248,11 @@ GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 
 ---
 
-### Get Article Detail
+### Obter Detalhe do Artigo
 
 **Endpoint**: `GET /api/articles/{article_id}`
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "_id": "507f1f77bcf86cd799439011",
@@ -280,15 +280,15 @@ GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 
 ---
 
-### Create Article
+### Criar Artigo
 
 **Endpoint**: `POST /api/articles`
 
-**Request Body**:
+**Corpo da Requisição**:
 ```json
 {
   "titulo": "Plantas Medicinais Tradicionais",
-  "autores": ["Author 1", "Author 2"],
+  "autores": ["Autor 1", "Autor 2"],
   "ano": 2020,
   "publicacao": "Journal of Ethnobotany",
   "especies": [
@@ -306,7 +306,7 @@ GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 }
 ```
 
-**Response** (201 Created):
+**Resposta** (201 Criado):
 ```json
 {
   "_id": "507f1f77bcf86cd799439011",
@@ -317,13 +317,13 @@ GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 
 ---
 
-### Update Article
+### Atualizar Artigo
 
 **Endpoint**: `PUT /api/articles/{article_id}`
 
-**Request Body**: Same as Create Article
+**Corpo da Requisição**: Mesmo do Criar Artigo
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "_id": "507f1f77bcf86cd799439011",
@@ -334,11 +334,11 @@ GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 
 ---
 
-### Delete Article
+### Deletar Artigo
 
 **Endpoint**: `DELETE /api/articles/{article_id}`
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "message": "Artigo deletado com sucesso",
@@ -348,15 +348,15 @@ GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 
 ---
 
-## Database Operations
+## Operações do Banco de Dados
 
-### Get Database Statistics
+### Obter Estatísticas do Banco de Dados
 
 **Endpoint**: `GET /api/database/stats`
 
-**Description**: Get summary statistics about the database
+**Descrição**: Obter estatísticas resumidas sobre o banco de dados
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 ```json
 {
   "total_articles": 150,
@@ -379,28 +379,28 @@ GET /api/articles?skip=0&limit=20&year=2020&country=Brasil
 
 ---
 
-### Download Database Backup
+### Baixar Backup do Banco de Dados
 
 **Endpoint**: `GET /api/database/download`
 
-**Description**: Download complete database backup as ZIP file
+**Descrição**: Baixar backup completo do banco de dados como arquivo ZIP
 
-**Response** (200 OK):
+**Resposta** (200 OK):
 - Content-Type: `application/zip`
 - Content-Disposition: `attachment; filename="etnopapers_backup_2024-01-15.zip"`
 
-**ZIP Contents**:
-- `referencias.json` - All articles with metadata
-- `backup_metadata.json` - Backup statistics and metadata
-- `checksum.json` - SHA256 checksum for integrity verification
+**Conteúdo do ZIP**:
+- `referencias.json` - Todos os artigos com metadados
+- `backup_metadata.json` - Estatísticas e metadados do backup
+- `checksum.json` - Checksum SHA256 para verificação de integridade
 
 ---
 
-## Error Handling
+## Tratamento de Erros
 
-### Standard Error Response
+### Resposta de Erro Padrão
 
-All errors follow this format:
+Todos os erros seguem este formato:
 
 ```json
 {
@@ -410,33 +410,33 @@ All errors follow this format:
 }
 ```
 
-### Common HTTP Status Codes
+### Códigos HTTP Comuns
 
-| Status | Meaning | Example |
-|--------|---------|---------|
-| 200 | OK | Successful request |
-| 201 | Created | New article created |
-| 400 | Bad Request | Invalid PDF file |
-| 404 | Not Found | Article ID doesn't exist |
-| 503 | Service Unavailable | Ollama not running |
+| Status | Significado | Exemplo |
+|--------|------------|---------|
+| 200 | OK | Requisição bem-sucedida |
+| 201 | Criado | Novo artigo criado |
+| 400 | Requisição Inválida | Arquivo PDF inválido |
+| 404 | Não Encontrado | ID de artigo não existe |
+| 503 | Serviço Indisponível | Ollama não rodando |
 
-### Example Error Responses
+### Exemplos de Respostas de Erro
 
-**400 - Invalid Input**:
+**400 - Entrada Inválida**:
 ```json
 {
   "detail": "PDF inválido ou não contém texto extraível"
 }
 ```
 
-**404 - Not Found**:
+**404 - Não Encontrado**:
 ```json
 {
   "detail": "Artigo não encontrado"
 }
 ```
 
-**503 - Service Unavailable**:
+**503 - Serviço Indisponível**:
 ```json
 {
   "detail": "Ollama indisponível. Por favor, inicie o Ollama a partir de https://ollama.com/download"
@@ -445,89 +445,89 @@ All errors follow this format:
 
 ---
 
-## Authentication
+## Autenticação
 
-**Current Version**: No authentication required (designed for local networks)
+**Versão Atual**: Sem autenticação (projetado para redes locais)
 
-**Future Enhancement**: JWT tokens via HttpOnly cookies
-
----
-
-## Rate Limiting
-
-**Current Version**: No rate limiting
-
-**Recommendation**: Implement before production deployment
+**Melhoria Futura**: Tokens JWT via HttpOnly cookies
 
 ---
 
-## CORS Configuration
+## Limitação de Taxa
 
-Frontend cross-origin requests are allowed from:
-- `http://localhost:3000` (dev)
-- `http://127.0.0.1:8000` (production)
+**Versão Atual**: Sem limitação de taxa
+
+**Recomendação**: Implementar antes da implantação em produção
 
 ---
 
-## Examples
+## Configuração CORS
 
-### Complete Workflow: Upload and Save Article
+Requisições cross-origin do frontend são permitidas de:
+- `http://localhost:3000` (desenvolvimento)
+- `http://127.0.0.1:8000` (produção)
+
+---
+
+## Exemplos
+
+### Fluxo Completo: Upload e Salvar Artigo
 
 ```bash
-# 1. Upload PDF for extraction
+# 1. Enviar PDF para extração
 curl -X POST "http://localhost:8000/api/extract/metadata" \
   -F "file=@paper.pdf" \
-  > extracted.json
+  > extraido.json
 
-# 2. Save extracted metadata as article
+# 2. Salvar metadados extraídos como artigo
 curl -X POST "http://localhost:8000/api/articles" \
   -H "Content-Type: application/json" \
-  -d @extracted.json
+  -d @extraido.json
 
-# 3. Get all articles from Brazil
+# 3. Obter todos os artigos do Brasil
 curl "http://localhost:8000/api/articles?country=Brasil&limit=50"
 
-# 4. Download backup
+# 4. Baixar backup
 curl -X GET "http://localhost:8000/api/database/download" \
   > etnopapers_backup.zip
 ```
 
 ---
 
-## Interactive API Testing
+## Teste Interativo da API
 
-Access the Swagger UI at: `http://localhost:8000/docs`
+Acesse a Swagger UI em: `http://localhost:8000/docs`
 
-Or access the ReDoc at: `http://localhost:8000/redoc`
+Ou acesse o ReDoc em: `http://localhost:8000/redoc`
 
 ---
 
-## Support & Troubleshooting
+## Suporte e Solução de Problemas
 
-**Ollama not responding**:
+**Ollama não respondendo**:
 ```bash
-# Check Ollama service
+# Verificar serviço Ollama
 curl http://localhost:11434/api/tags
 
-# Restart Ollama:
-# Download from https://ollama.com/download
+# Reiniciar Ollama:
+# Baixe de https://ollama.com/download
 ```
 
-**MongoDB connection error**:
+**Erro de conexão MongoDB**:
 ```bash
-# Check MongoDB is running:
+# Verificar se MongoDB está rodando:
 mongosh
-# Should connect without errors
+# Deve conectar sem erros
 ```
 
-**PDF extraction failing**:
-- Ensure PDF is text-extractable (not scanned image)
-- File should be <100 MB
-- Check Ollama has sufficient memory (4GB+ recommended)
+**Extração de PDF falhando**:
+- Garanta que o PDF é texto-extraível (não imagem scaneada)
+- Arquivo deve ser <100 MB
+- Verifique que Ollama tem memória suficiente (4GB+ recomendado)
 
 ---
 
-**Last Updated**: 2024-01-15
-**API Version**: 2.0
-**Python Version**: 3.11+
-**FastAPI Version**: 0.100+
+**Última Atualização**: 2024-01-15
+**Versão da API**: 2.0
+**Versão Python**: 3.11+
+**Versão FastAPI**: 0.100+
