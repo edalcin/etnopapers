@@ -1,23 +1,59 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Layout from '@components/Layout'
-import Home from '@pages/Home'
-import Upload from '@pages/Upload'
-import History from '@pages/History'
-import Settings from '@pages/Settings'
-import NotFound from '@pages/NotFound'
+import { useEffect, useState } from 'react'
+import Home from './pages/Home'
+import Settings from './pages/Settings'
+import ConfigurationDialog from './components/ConfigurationDialog'
+import { useAppStore } from './store/appStore'
+import './App.css'
 
-export default function App() {
+function App() {
+  const { appState, initialize, setAppState } = useAppStore()
+  const [showConfigDialog, setShowConfigDialog] = useState(false)
+
+  useEffect(() => {
+    initialize()
+  }, [initialize])
+
+  useEffect(() => {
+    if (appState === 'unconfigured') {
+      setShowConfigDialog(true)
+    }
+  }, [appState])
+
+  const handleConfigurationComplete = () => {
+    setShowConfigDialog(false)
+    setAppState('configured')
+  }
+
+  if (appState === 'loading') {
+    return (
+      <div className="app-loading">
+        <div className="spinner"></div>
+        <p>Iniciando Etnopapers...</p>
+      </div>
+    )
+  }
+
+  if (appState === 'error') {
+    return (
+      <div className="app-error">
+        <h2>Erro ao Iniciar</h2>
+        <p>Verifique se o backend esta rodando e tente novamente.</p>
+      </div>
+    )
+  }
+
   return (
-    <Router>
-      <Routes>
-        <Route element={<Layout />}>
+    <>
+      <ConfigurationDialog isOpen={showConfigDialog} onConfigured={handleConfigurationComplete} />
+      <Router>
+        <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/history" element={<History />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </>
   )
 }
+
+export default App

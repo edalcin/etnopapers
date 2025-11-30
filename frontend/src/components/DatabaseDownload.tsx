@@ -1,167 +1,128 @@
-import { useState, useEffect } from 'react'
-import apiClient from '@services/api'
+import { useState } from 'react'
 import './DatabaseDownload.css'
 
-interface DatabaseInfo {
-  size_mb: number
-  collections: number
-  collection_info?: Record<string, number>
-}
-
 export default function DatabaseDownload() {
-  const [info, setInfo] = useState<DatabaseInfo | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [downloading, setDownloading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [stats, setStats] = useState<any>(null)
+  const [showStats, setShowStats] = useState(false)
 
-  useEffect(() => {
-    loadDatabaseInfo()
-  }, [])
+  const handleGetStats = async () => {
+    setLoading(true)
+    setError(null)
 
-  const loadDatabaseInfo = async () => {
     try {
-      setLoading(true)
-      const response = await apiClient.get('/health')
-      setInfo(response.data.database)
-      setError(null)
+      const response = await fetch('/api/database/stats')
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+        setShowStats(true)
+      } else {
+        setError('Erro ao obter informacoes do banco de dados')
+      }
     } catch (err) {
-      setError('Erro ao carregar informações do banco de dados')
-      console.error(err)
+      setError('Erro ao conectar com o servidor')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDownload = async () => {
+    setLoading(true)
+    setError(null)
+
     try {
-      setDownloading(true)
-      setError(null)
-      const response = await apiClient.get('/database/download', {
-        responseType: 'blob',
-      })
+      const response = await fetch('/api/database/download')
+      
+      if (response.ok) {
+        // Get filename from headers
+        const contentDisposition = response.headers.get('content-disposition')
+        let filename = 'etnopapers_backup.zip'
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename=([^;]+)/)
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1]
+          }
+        }
 
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute(
-        'download',
-        `etnopapers_${new Date().toISOString().split('T')[0]}.zip`
-      )
-      document.body.appendChild(link)
-      link.click()
-      link.parentNode?.removeChild(link)
-      window.URL.revokeObjectURL(url)
+        // Download file
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
 
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+        setError(null)
+      } else {
+        const errorData = await response.json()
+        setError(errorData.detail || 'Erro ao fazer download do backup')
+      }
     } catch (err) {
-      setError('Erro ao baixar banco de dados')
-      console.error(err)
+      setError('Erro ao fazer download do backup')
     } finally {
-      setDownloading(false)
+      setLoading(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="database-download">
-        <div className="loading">Carregando informações...</div>
-      </div>
-    )
-  }
-
   return (
-    <div className="database-download">
+    <div className="database-download-container">
       <div className="download-card">
         <div className="card-header">
-          <h3>💾 Banco de Dados MongoDB</h3>
-          <p>Faça download do dump completo de suas coleções MongoDB em arquivo .zip</p>
+          <h3>Fazer Backup da Base de Dados</h3>
+          <p>Exporte todos os artigos e configuracoes como arquivo ZIP</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-
-        {success && (
-          <div className="success-message">✅ Download iniciado com sucesso!</div>
-        )}
-
-        {info && (
-          <>
-            <div className="info-section">
-              <div className="info-item">
-                <span className="info-label">Tamanho</span>
-                <span className="info-value">{info.size_mb.toFixed(2)} MB</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Coleções</span>
-                <span className="info-value">{info.collections}</span>
-              </div>
-            </div>
-
-            {info.collection_info && Object.keys(info.collection_info).length > 0 && (
-              <div className="tables-info">
-                <h4>Documentos por Coleção</h4>
-                <div className="table-stats">
-                  {Object.entries(info.collection_info).map(([collection, count]) => (
-                    <div key={collection} className="stat-row">
-                      <span className="table-name">{collection}</span>
-                      <span className="record-count">{count} documentos</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="features">
-              <p>✅ Dump completo de todas as coleções MongoDB</p>
-              <p>✅ Arquivo .zip comprimido e portável</p>
-              <p>✅ Pode ser restaurado em qualquer instância MongoDB</p>
-              <p>✅ Integridade de dados verificada</p>
-            </div>
-
-            <div className="action-buttons">
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="btn-download"
-              >
-                {downloading ? '📥 Baixando...' : '📥 Baixar Banco de Dados'}
-              </button>
-              <button
-                onClick={loadDatabaseInfo}
-                disabled={downloading}
-                className="btn-refresh"
-              >
-                🔄 Atualizar Info
-              </button>
-            </div>
-          </>
-        )}
-
-        <div className="help-section">
-          <h4>Como usar o backup?</h4>
-          <p>
-            O arquivo .zip contém um dump das coleções MongoDB. Você pode restaurá-lo com:
+        <div className="card-content">
+          <p className="description">
+            O backup contem todos os artigos salvos com metadados completos. 
+            Voce pode usar este backup para:
           </p>
           <ul>
-            <li>
-              <strong>mongorestore</strong> - Ferramenta CLI oficial do MongoDB
-              <br />
-              <code>mongorestore --archive=dump.zip --gzip</code>
-            </li>
-            <li>
-              <strong>MongoDB Compass</strong> - Interface gráfica oficial
-            </li>
-            <li>
-              <strong>Python</strong> - <code>pymongo</code> para processamento customizado
-            </li>
-            <li>
-              <strong>Node.js</strong> - <code>mongodb</code> driver para processamento
-            </li>
+            <li>Manter uma copia de seguranca de seus dados</li>
+            <li>Transferir dados para outro computador</li>
+            <li>Restaurar dados apos problemas</li>
           </ul>
-          <p style={{ marginTop: '12px', fontSize: '12px', color: '#666' }}>
-            💡 Dica: Extraia o arquivo .zip e use <code>mongorestore</code> para restaurar em seu servidor MongoDB.
+
+          {stats && showStats && (
+            <div className="stats-box">
+              <h4>Informacoes do Backup:</h4>
+              <p>Total de artigos: <strong>{stats.total_articles}</strong></p>
+              <p>Base de dados: <strong>{stats.database_name}</strong></p>
+            </div>
+          )}
+
+          {error && (
+            <div className="error-message">
+              <p>{error}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="card-actions">
+          <button
+            onClick={handleGetStats}
+            className="btn-secondary"
+            disabled={loading}
+          >
+            {loading && !error ? 'Verificando...' : 'Verificar Tamanho'}
+          </button>
+          <button
+            onClick={handleDownload}
+            className="btn-primary"
+            disabled={loading}
+          >
+            {loading ? 'Baixando...' : 'Fazer Download do Backup'}
+          </button>
+        </div>
+
+        <div className="card-footer">
+          <p className="hint">
+            Dica: Guarde o arquivo ZIP em um local seguro para proteger seus dados.
           </p>
         </div>
       </div>

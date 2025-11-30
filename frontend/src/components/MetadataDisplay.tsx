@@ -1,228 +1,125 @@
 import { useState } from 'react'
-import type { ExtractedMetadata } from '@types'
+import { useExtractionStore } from '../store/extractionStore'
 import './MetadataDisplay.css'
 
 interface MetadataDisplayProps {
-  data: ExtractedMetadata
-  loading?: boolean
-  error?: string
-  onSave?: (data: ExtractedMetadata) => void
-  onEdit?: () => void
-  onDiscard?: () => void
-  isScanned?: boolean
+  onNewExtraction?: () => void
+  onSuccess?: () => void
 }
 
-export default function MetadataDisplay({
-  data,
-  loading = false,
-  error,
-  onSave,
-  onEdit,
-  onDiscard,
-  isScanned = false,
-}: MetadataDisplayProps) {
-  const [saved, setSaved] = useState(false)
+export default function MetadataDisplay({ onNewExtraction, onSuccess }: MetadataDisplayProps) {
+  const { extractedData, updateField, addSpecies, removeSpecies, clearExtraction } = useExtractionStore()
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [newVernacular, setNewVernacular] = useState('')
+  const [newScientific, setNewScientific] = useState('')
 
-  const handleSave = async () => {
-    if (onSave) {
-      await onSave(data)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+  if (!extractedData) return null
+
+  const handleAddSpecies = () => {
+    if (newVernacular && newScientific) {
+      addSpecies({ vernacular: newVernacular, nomeCientifico: newScientific })
+      setNewVernacular('')
+      setNewScientific('')
     }
   }
 
-  if (loading) {
-    return (
-      <div className="metadata-display">
-        <div className="loading">
-          <div className="spinner" />
-          <p>Extraindo metadados com IA...</p>
-        </div>
-      </div>
-    )
+  const handleSave = async () => {
+    setIsSaving(true)
+    setSaveError(null)
+
+    try {
+      const response = await fetch('/api/articles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(extractedData)
+      })
+
+      if (response.ok) {
+        clearExtraction()
+        onSuccess?.()
+      } else {
+        const error = await response.json()
+        setSaveError(error.detail || 'Erro ao salvar')
+      }
+    } catch (err) {
+      setSaveError('Erro ao salvar artigo')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  if (error) {
-    return (
-      <div className="metadata-display">
-        <div className="error">
-          <p>❌ Erro ao extrair metadados</p>
-          <p className="error-message">{error}</p>
-        </div>
-      </div>
-    )
+  const handleDiscard = () => {
+    if (confirm('Descartar os dados extraidos?')) {
+      clearExtraction()
+      onNewExtraction?.()
+    }
   }
 
   return (
     <div className="metadata-display">
-      {isScanned && (
-        <div className="warning-banner">
-          <span>⚠️ PDF Escaneado Detectado</span>
-          <p>
-            Este documento é um PDF escaneado. A qualidade da extração pode estar
-            reduzida. Revise os dados com atenção.
-          </p>
-        </div>
-      )}
+      <div className="display-header">
+        <h2>Metadados Extraidos</h2>
+        <p>Revise e corrija os dados antes de salvar</p>
+      </div>
 
-      <div className="metadata-card">
-        <div className="metadata-header">
-          <h3>Metadados Extraídos</h3>
-          {saved && <span className="saved-badge">✅ Salvo!</span>}
+      <div className="metadata-form">
+        <div className="form-row">
+          <div className="form-group full-width">
+            <label>Titulo:</label>
+            <input type="text" value={extractedData.titulo} onChange={(e) => updateField('titulo', e.target.value)} className="form-input" />
+          </div>
         </div>
 
-        {/* Bibliographic Section */}
-        <section className="metadata-section">
-          <h4>📚 Informações Bibliográficas</h4>
-
-          <div className="field">
-            <label>Título</label>
-            <p className={!data.titulo ? 'missing' : ''}>
-              {data.titulo || '⚠️ Não extraído'}
-            </p>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Ano:</label>
+            <input type="number" value={extractedData.ano || ''} onChange={(e) => updateField('ano', e.target.value ? parseInt(e.target.value) : null)} className="form-input" />
           </div>
-
-          <div className="field-row">
-            <div className="field">
-              <label>Ano</label>
-              <p>{data.ano_publicacao || '⚠️ Não extraído'}</p>
-            </div>
-            <div className="field">
-              <label>DOI</label>
-              <p>{data.doi ? <code>{data.doi}</code> : '⚠️ Não encontrado'}</p>
-            </div>
+          <div className="form-group">
+            <label>DOI:</label>
+            <input type="text" value={extractedData.doi || ''} onChange={(e) => updateField('doi', e.target.value)} className="form-input" />
           </div>
+        </div>
 
-          <div className="field">
-            <label>Autores ({data.autores?.length || 0})</label>
-            {data.autores && data.autores.length > 0 ? (
-              <ul className="authors-list">
-                {data.autores.map((author, i) => (
-                  <li key={i}>
-                    <strong>{author.nome}</strong> {author.sobrenome}
-                    {author.email && <span className="email">{author.email}</span>}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="missing">⚠️ Nenhum autor extraído</p>
-            )}
+        <div className="form-section">
+          <h3>Especies</h3>
+          <div className="species-list">
+            {extractedData.especies?.map((s, i) => (
+              <div key={i} className="species-item">
+                <p>{s.vernacular} - {s.nomeCientifico}</p>
+                <button onClick={() => removeSpecies(i)} className="btn-remove">X</button>
+              </div>
+            ))}
           </div>
-
-          <div className="field">
-            <label>Resumo</label>
-            <p className={!data.resumo ? 'missing' : 'resumo'}>
-              {data.resumo || '⚠️ Não extraído'}
-            </p>
+          <div className="add-species">
+            <input type="text" value={newVernacular} onChange={(e) => setNewVernacular(e.target.value)} placeholder="Nome comum" className="form-input" />
+            <input type="text" value={newScientific} onChange={(e) => setNewScientific(e.target.value)} placeholder="Nome cientifico" className="form-input" />
+            <button onClick={handleAddSpecies} className="btn-secondary">Adicionar</button>
           </div>
-        </section>
+        </div>
 
-        {/* Botanical Section */}
-        <section className="metadata-section">
-          <h4>🌿 Espécies de Plantas</h4>
-          {data.especies && data.especies.length > 0 ? (
-            <div className="species-list">
-              {data.especies.map((species, i) => (
-                <div key={i} className="species-item">
-                  <div className="species-names">
-                    <span className="vernacular">{species.vernacular || '⚠️ Sem nome comum'}</span>
-                    <span className="scientific"><em>{species.nomeCientifico || '⚠️ Sem nome científico'}</em></span>
-                    {species.familia && <span className="familia">Fam: {species.familia}</span>}
-                  </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Tipo de Uso:</label>
+            <select value={extractedData.tipo_de_uso || ''} onChange={(e) => updateField('tipo_de_uso', e.target.value)} className="form-input">
+              <option value="">-</option>
+              <option value="medicinal">Medicinal</option>
+              <option value="alimentar">Alimentar</option>
+              <option value="ritualistico">Ritualistico</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Pais:</label>
+            <input type="text" value={extractedData.pais || ''} onChange={(e) => updateField('pais', e.target.value)} className="form-input" />
+          </div>
+        </div>
 
-                  {/* Validation Status (Clarificação 2025-11-27) */}
-                  {(species.statusValidacao || species.confianca) && (
-                    <div className="species-validation">
-                      {species.statusValidacao === 'validado' && (
-                        <span className="badge badge-validated">✅ Validado</span>
-                      )}
-                      {species.statusValidacao === 'naoValidado' && (
-                        <span className="badge badge-not-validated">⚠️ Não validado</span>
-                      )}
-                      {species.confianca && (
-                        <span className={`confidence confidence-${species.confianca}`}>
-                          {species.confianca === 'alta' && '🟢 Alta'}
-                          {species.confianca === 'media' && '🟡 Média'}
-                          {species.confianca === 'baixa' && '🔴 Baixa'}
-                        </span>
-                      )}
-                    </div>
-                  )}
+        {saveError && <div className="error-message"><p>{saveError}</p></div>}
 
-                  {/* Usage Details by Community (Clarificação Q1, Q3) */}
-                  {species.usosPorComunidade && species.usosPorComunidade.length > 0 && (
-                    <div className="usos-por-comunidade">
-                      <div className="usos-header">📍 Uso por Comunidade:</div>
-                      {species.usosPorComunidade.map((uso, j) => (
-                        <div key={j} className="uso-item">
-                          <div className="comunidade-info">
-                            <strong>{uso.comunidade.nome}</strong>
-                            {uso.comunidade.tipo && <span className="tipo-comunidade">({uso.comunidade.tipo})</span>}
-                          </div>
-                          {uso.formaDeUso && <div className="uso-field">📋 Forma: {uso.formaDeUso}</div>}
-                          {uso.tipoDeUso && <div className="uso-field">🏷️ Tipo: {uso.tipoDeUso}</div>}
-                          {uso.propositoEspecifico && <div className="uso-field">🎯 Propósito: {uso.propositoEspecifico}</div>}
-                          {uso.partesUtilizadas && uso.partesUtilizadas.length > 0 && (
-                            <div className="uso-field">🌱 Partes: {uso.partesUtilizadas.join(', ')}</div>
-                          )}
-                          {uso.dosagem && <div className="uso-field">💊 Dosagem: {uso.dosagem}</div>}
-                          {uso.metodoPreparacao && <div className="uso-field">🔬 Método: {uso.metodoPreparacao}</div>}
-                          {uso.origem && <div className="uso-field">📚 Origem: {uso.origem}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="missing">⚠️ Nenhuma espécie extraída</p>
-          )}
-        </section>
-
-        {/* Geographic Section */}
-        <section className="metadata-section">
-          <h4>🗺️ Regiões</h4>
-          {data.regioes && data.regioes.length > 0 ? (
-            <div className="tags-list">
-              {data.regioes.map((regiao, i) => (
-                <span key={i} className="tag regiao">
-                  {regiao}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="missing">⚠️ Nenhuma região extraída</p>
-          )}
-        </section>
-
-        {/* Communities Section */}
-        <section className="metadata-section">
-          <h4>👥 Comunidades</h4>
-          {data.comunidades && data.comunidades.length > 0 ? (
-            <div className="tags-list">
-              {data.comunidades.map((comunidade, i) => (
-                <span key={i} className="tag comunidade">
-                  {comunidade}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="missing">⚠️ Nenhuma comunidade extraída</p>
-          )}
-        </section>
-
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <button onClick={handleSave} className="btn-save" disabled={!data.titulo}>
-            💾 Salvar
-          </button>
-          <button onClick={onEdit} className="btn-edit">
-            ✏️ Editar
-          </button>
-          <button onClick={onDiscard} className="btn-discard">
-            🗑️ Descartar
-          </button>
+        <div className="form-actions">
+          <button onClick={handleDiscard} className="btn-danger" disabled={isSaving}>Descartar</button>
+          <button onClick={handleSave} className="btn-primary" disabled={isSaving}>Salvar</button>
         </div>
       </div>
     </div>
