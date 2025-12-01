@@ -1,0 +1,32 @@
+{
+  "_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "ano": 2010,
+  "titulo": "Uso e conhecimento tradicional de plantas medicinais no Sertão do Ribeirão, Florianópolis, SC, Brasil",
+  "publicacao": "Acta bot. bras. 24(2): 395-406",
+  "autores": [
+    "Giraldi, M.",
+    "Hanazaki, N."
+  ],
+  "resumo": "O objetivo desta pesquisa foi realizar um estudo etnobotânico sobre o uso e o conhecimento tradicional de plantas medicinais no Sertão do Ribeirão, uma comunidade de origem açoriana, inse- rida no domínio da Mata Atlântica e localizada dentro dos limites do Parque Municipal da Lagoa do Peri. Foram realizadas 13 entrevistas com moradores do Sertão do Ribeirão, sendo identifi cadas 114 espécies de plantas medicinais, distribuídas em 48 famílias botânicas.",
+  "especies": [
+    {
+      "vernacular": "maçanilha",
+      "tipoUso": "alimentação",
+      "nomeCientifico": "Chamomilla recutita"
+    },
+    {
+      "vernacular": "hortelã-branca",
+      "tipoUso": "medicinal"
+    }
+  ],
+  "comunidade": {
+    "nome": "Pescadores Artesanais da Praia Branca",
+    "localização": "Praia Branca"
+  },
+  "metodologia": "entrevistas",
+  "pais": "Brasil",
+  "estado": "SC",
+  "municipio": "Florianópolis",
+  "local": "Sertão do Ribeirão",
+  "bioma": "Mata Atlântica"
+}
