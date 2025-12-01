@@ -154,23 +154,11 @@ Extraídos quando disponíveis no documento:
 - 🔌 **OLLAMA obrigatório**: Sem o OLLAMA instalado e rodando, não é possível processar PDFs
 - 🚀 **Use GPU**: Uma placa de vídeo dedicada melhora muito o desempenho da IA
 
-## Sobre
-
-**EtnoPapers** foi desenvolvido por:
-
-**Eduardo Dalcin**
-Instituto de Pesquisas Jardim Botânico do Rio de Janeiro
-📧 edalcin@jbrj.gov.br
-
-e
-
-[Claude](https://www.claude.com/product/claude-code)
-
 ---
 
 ## Suporte
 
-Para questões, problemas ou sugestões sobre o EtnoPapers, entre em contato através do email acima.
+Para questões, problemas ou sugestões sobre o EtnoPapers, use o [Issues](https://github.com/edalcin/etnopapers/issues).
 
 ---
 
