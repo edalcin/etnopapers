@@ -1,6 +1,6 @@
 # EtnoPapers
 
-<img src="docs/etnopapers.png" alt="EtnoPapers" width="400" />
+<img src="docs/etnopapers.png" alt="EtnoPapers" width="150" />
 
 **Aplicação Desktop para Extração Automatizada de Metadados Etnobotânicos**
 
