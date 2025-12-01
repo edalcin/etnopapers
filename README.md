@@ -162,6 +162,10 @@ Extraídos quando disponíveis no documento:
 Instituto de Pesquisas Jardim Botânico do Rio de Janeiro
 📧 edalcin@jbrj.gov.br
 
+e
+
+[Claude](https://www.claude.com/product/claude-code)
+
 ---
 
 ## Suporte
