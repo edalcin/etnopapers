@@ -6,6 +6,14 @@
 
 ---
 
+## Status do Projeto
+
+🔄 **Em Migração**: Este projeto está sendo refatorado de Electron (Node.js/TypeScript) para **C# WPF** para melhor integração nativa com Windows, melhor performance e melhor experiência do usuário. Todos os recursos e funcionalidades serão preservados na nova versão.
+
+Para acompanhar o progresso da migração, consulte a especificação em `specs/migrate-to-wpf/spec.md`.
+
+---
+
 ## Sobre o EtnoPapers
 
 O EtnoPapers é uma aplicação desktop nativa para Windows desenvolvida para pesquisadores em etnobotânica que precisam catalogar e organizar dados sobre o uso tradicional de plantas por comunidades indígenas e tradicionais.
@@ -73,16 +81,22 @@ Mantenha seus dados seguros e acessíveis:
 
 ## Instalação
 
+> ⚠️ **Nota**: A versão atual do EtnoPapers está em transição para C# WPF. As instruções de instalação abaixo são para a versão final. Por enquanto, consulte a documentação da especificação em `specs/migrate-to-wpf/` para acompanhar o desenvolvimento.
+
 1. **Instale o OLLAMA** (pré-requisito obrigatório)
    - Visite o site oficial do OLLAMA e siga as instruções de instalação
    - Certifique-se de que o serviço está rodando antes de usar o EtnoPapers
 
-2. **Instale o EtnoPapers**
-   - Execute o instalador do EtnoPapers
-   - Siga as instruções do assistente de instalação
-   - O instalador configura automaticamente todas as dependências necessárias
+2. **Instale o .NET 8 Runtime**
+   - Baixe e instale o .NET 8 Runtime do site oficial da Microsoft
+   - Necessário para executar a aplicação C# WPF
 
-3. **Configure o MongoDB** (opcional, mas recomendado)
+3. **Instale o EtnoPapers**
+   - Execute o instalador do EtnoPapers (arquivo .msi ou .exe)
+   - Siga as instruções do assistente de instalação
+   - O instalador verifica e instala automaticamente o .NET 8 se necessário
+
+4. **Configure o MongoDB** (opcional, mas recomendado)
    - Crie uma conta gratuita no MongoDB Atlas ou instale um servidor local
    - Obtenha a URI de conexão do seu banco de dados
    - Configure a URI nas configurações do EtnoPapers
