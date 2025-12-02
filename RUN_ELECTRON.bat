@@ -31,13 +31,8 @@ echo.
 echo Compilando aplicacao Electron...
 echo.
 
-REM Compilar main process (output: dist/main/index.cjs)
-call pnpm build:main
-if errorlevel 1 (
-    echo ERRO: Falha ao compilar main process
-    pause
-    exit /b 1
-)
+REM Set production environment
+set NODE_ENV=production
 
 REM Compilar renderer (output: dist/renderer/)
 echo.
@@ -45,6 +40,26 @@ echo Compilando React UI...
 call pnpm build:renderer
 if errorlevel 1 (
     echo ERRO: Falha ao compilar renderer
+    pause
+    exit /b 1
+)
+
+REM Compilar preload script (output: dist/main/preload/index.js)
+echo.
+echo Compilando Preload...
+call pnpm build:preload
+if errorlevel 1 (
+    echo ERRO: Falha ao compilar preload
+    pause
+    exit /b 1
+)
+
+REM Compilar main process (output: dist/main/index.cjs)
+echo.
+echo Compilando main process...
+call pnpm build:main
+if errorlevel 1 (
+    echo ERRO: Falha ao compilar main process
     pause
     exit /b 1
 )

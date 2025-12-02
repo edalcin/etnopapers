@@ -4,6 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  base: './',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -12,10 +13,12 @@ export default defineConfig({
       '@renderer': path.resolve(__dirname, './src/renderer'),
     },
   },
+  root: path.resolve(__dirname, './src/renderer'),
   build: {
     target: 'ES2022',
-    outDir: 'dist/renderer',
+    outDir: path.resolve(__dirname, './dist/renderer'),
     sourcemap: true,
+    emptyOutDir: true,
   },
   server: {
     port: 5173,

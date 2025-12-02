@@ -313,3 +313,4 @@ This updates `.claude/claude.md` (or equivalent for Cursor/Copilot) with:
 - Constitution is non-negotiable during analysis (modifications require separate process)
 - Slash commands detect current context (branch, feature dir) automatically
 - Due to single-branch workflow, the SpecKit branch naming conventions do not apply to this project
+- este projeto deve ter apenas o main branch. Nunca criar um novo branch. Comitar sempre no main branch

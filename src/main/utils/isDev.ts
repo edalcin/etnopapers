@@ -1,5 +1,6 @@
 /**
  * Development environment detection
+ * Check if running from source (src/ dir) or from compiled dist/
  */
 
-export const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+export const isDev = __dirname.includes('src/main') || __dirname.includes('src\\main');
