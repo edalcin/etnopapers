@@ -1,19 +1,38 @@
 # EtnoPapers - Quick Commands Reference
 
+## Native Windows Application
+
+The application now runs as a native Windows desktop app using Electron!
+
+```bash
+# Quick start (Windows)
+RUN_ELECTRON.bat                # or RUN_ELECTRON.ps1 for PowerShell
+
+# Manual start
+pnpm build                      # Compile main process + renderer
+pnpm start                      # Launch native app
+
+# Development with hot reload
+pnpm dev                        # Runs main process watch + dev server
+```
+
+**See RUNNING_NATIVE_APP.md for complete native app guide!**
+
 ## Development
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Start development server (UI testing)
-pnpm run dev                    # http://localhost:5173
+# Start development server (with Electron native app)
+pnpm dev                        # http://localhost:5173 + native window
 
 # Build for production
-pnpm run build                  # Output: dist/renderer/
+pnpm build                      # Output: dist/renderer/ + dist/main/index.cjs
 
-# Build main process (when ready)
-# pnpm run build:main           # Requires esbuild script
+# Build individual components
+pnpm build:main                 # Compile main process (TypeScript → CommonJS)
+pnpm build:renderer             # Compile React UI
 ```
 
 ## Code Quality
@@ -203,6 +222,7 @@ UI Interaction Target:  <200ms
 MVP_COMPLETION_SUMMARY.md     - Full project overview
 TESTING_GUIDE.md              - Testing procedures
 COMMANDS.md                   - This file
+RUNNING_NATIVE_APP.md         - Complete guide for native Windows app
 specs/main/spec.md            - Feature specification
 specs/main/plan.md            - Technical design
 specs/main/tasks.md           - Task breakdown (88 tasks)
