@@ -14,7 +14,14 @@
     "format": "prettier --write src",
     "dist": "electron-builder"
   },
-  "keywords": ["ethnobotany", "metadata", "extraction", "pdf", "electron", "react"],
+  "keywords": [
+    "ethnobotany",
+    "metadata",
+    "extraction",
+    "pdf",
+    "electron",
+    "react"
+  ],
   "author": "Eduardo Dalcin <edalcin@jbrj.gov.br>",
   "license": "MIT",
   "packageManager": "pnpm@10.16.1",
@@ -38,6 +45,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@tailwindcss/postcss": "^4.1.17",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
