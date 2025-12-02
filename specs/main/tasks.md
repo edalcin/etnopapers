@@ -205,36 +205,36 @@ Tasks are organized by user story priority and implementation phase. Each task i
 
 ### Configuration Service (US4)
 
-- [ ] T031 [US4] Implement Configuration Service (main process)
+- [x] T031 [US4] Implement Configuration Service (main process)
   - **File**: `src/main/services/ConfigurationService.ts`
   - **Acceptance**: Implements IConfigurationService, uses electron-store, validates config
   - **Methods**: load(), save(), get(), update(), reset(), loadDefaults()
 
-- [ ] T032 [US4] Create configuration IPC handlers
+- [x] T032 [US4] Create configuration IPC handlers
   - **File**: `src/main/ipc/configHandlers.ts`
   - **Acceptance**: Exposes config operations via IPC (get, update, reset, test connections)
   - **Channels**: 'config:get', 'config:update', 'config:reset'
 
-- [ ] T033 [US4] Add configuration API to preload script
+- [x] T033 [US4] Add configuration API to preload script
   - **File**: `src/preload/index.ts`
   - **Acceptance**: Exposes configAPI to renderer (get, update, reset methods)
   - **Security**: Uses contextBridge.exposeInMainWorld with secure API
 
 ### Logger Service (Foundational)
 
-- [ ] T034 [P] Implement Logger Service (main process)
+- [x] T034 [P] Implement Logger Service (main process)
   - **File**: `src/main/services/LoggerService.ts`
   - **Acceptance**: Implements ILoggerService, uses winston, file rotation, different log levels
   - **Methods**: debug(), info(), warn(), error(), getLogFilePath()
 
 ### Electron Main Process Setup
 
-- [ ] T035 Create Electron main process entry point
+- [x] T035 Create Electron main process entry point
   - **File**: `src/main/index.ts`
   - **Acceptance**: Creates BrowserWindow, loads renderer, registers IPC handlers, handles app lifecycle
   - **Content**: app.whenReady(), createWindow(), register all IPC handlers, ipcMain setup
 
-- [ ] T036 Create settings page component
+- [x] T036 Create settings page component
   - **File**: `src/renderer/pages/SettingsPage.tsx`
   - **Acceptance**: Form for OLLAMA config (URL, model, prompt), MongoDB URI, test connection buttons
   - **Features**: Form validation, connection testing feedback, persistent save
