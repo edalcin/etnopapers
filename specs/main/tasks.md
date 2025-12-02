@@ -249,81 +249,81 @@ Tasks are organized by user story priority and implementation phase. Each task i
 
 ### PDF Processing Service (US1)
 
-- [ ] T037 [US1] Implement PDF Processing Service (main process)
+- [x] T037 [US1] Implement PDF Processing Service (main process)
   - **File**: `src/main/services/PDFProcessingService.ts`
   - **Acceptance**: Implements IPDFProcessingService, extracts text with pdf.js, gets metadata
   - **Methods**: extractText(), getMetadata(), validatePDF(), checkTextLayers()
 
-- [ ] T038 [US1] Create PDF IPC handlers
+- [x] T038 [US1] Create PDF IPC handlers
   - **File**: `src/main/ipc/pdfHandlers.ts`
   - **Acceptance**: Exposes PDF operations via IPC
   - **Channels**: 'pdf:extractText', 'pdf:getMetadata', 'pdf:validate'
 
-- [ ] T039 [US1] Add PDF API to preload script
+- [x] T039 [US1] Add PDF API to preload script
   - **File**: `src/preload/index.ts`
   - **Acceptance**: Exposes pdfAPI to renderer with type definitions
   - **Methods**: extractText(), getMetadata(), validatePDF()
 
 ### OLLAMA Service (US1)
 
-- [ ] T040 [US1] Implement OLLAMA Service (main process)
+- [x] T040 [US1] Implement OLLAMA Service (main process)
   - **File**: `src/main/services/OLLAMAService.ts`
   - **Acceptance**: Implements IOLLAMAService, calls OLLAMA REST API, parses responses
   - **Methods**: checkHealth(), extractMetadata(), translateToPortuguese(), getAvailableModels()
 
-- [ ] T041 [US1] Create OLLAMA IPC handlers
+- [x] T041 [US1] Create OLLAMA IPC handlers
   - **File**: `src/main/ipc/ollamaHandlers.ts`
   - **Acceptance**: Exposes OLLAMA operations via IPC with progress callbacks
   - **Channels**: 'ollama:checkHealth', 'ollama:extract', 'ollama:translate'
 
-- [ ] T042 [US1] Add OLLAMA API to preload script
+- [x] T042 [US1] Add OLLAMA API to preload script
   - **File**: `src/preload/index.ts`
   - **Acceptance**: Exposes ollamaAPI to renderer with event listeners
   - **Methods**: checkHealth(), extractMetadata(), translateToPortuguese()
 
 ### Data Storage Service (US1, US2)
 
-- [ ] T043 [P] [US1] Implement Data Storage Service (main process)
+- [x] T043 [P] [US1] Implement Data Storage Service (main process)
   - **File**: `src/main/services/DataStorageService.ts`
   - **Acceptance**: Implements IDataStorageService, uses lowdb, CRUD operations
   - **Methods**: initialize(), getAll(), getById(), create(), update(), delete(), count(), checkLimit()
 
-- [ ] T044 [US1] Create storage IPC handlers
+- [x] T044 [US1] Create storage IPC handlers
   - **File**: `src/main/ipc/storageHandlers.ts`
   - **Acceptance**: Exposes storage operations via IPC
   - **Channels**: 'storage:getAll', 'storage:getById', 'storage:create', 'storage:update', 'storage:delete'
 
-- [ ] T045 [US1] Add storage API to preload script
+- [x] T045 [US1] Add storage API to preload script
   - **File**: `src/preload/index.ts`
   - **Acceptance**: Exposes storageAPI to renderer
   - **Methods**: getAll(), getById(), create(), update(), delete()
 
 ### Validation Service (US1)
 
-- [ ] T046 [P] [US1] Implement Validation Service (main process)
+- [x] T046 [P] [US1] Implement Validation Service (main process)
   - **File**: `src/main/services/ValidationService.ts`
   - **Acceptance**: Implements IValidationService, uses Zod schemas from T030
   - **Methods**: validateRecord(), validateExtractedData(), checkMandatoryFields()
 
 ### Extraction Pipeline Service (US1)
 
-- [ ] T047 [US1] Implement Extraction Pipeline Service (orchestration)
+- [x] T047 [US1] Implement Extraction Pipeline Service (orchestration)
   - **File**: `src/main/services/ExtractionPipelineService.ts`
   - **Acceptance**: Implements IExtractionPipelineService, orchestrates PDF → text → AI → validation → storage
   - **Methods**: extractFromPDF(), cancelExtraction(), getExtractionStatus()
 
-- [ ] T048 [US1] Create extraction IPC handlers with progress events
+- [x] T048 [US1] Create extraction IPC handlers with progress events
   - **File**: `src/main/ipc/extractionHandlers.ts`
   - **Acceptance**: Exposes extraction with progress callbacks and error handling
   - **Channels**: 'extraction:start', 'extraction:cancel', 'extraction:status'
   - **Events**: 'extraction:progress' for real-time updates
 
-- [ ] T049 [US1] Add extraction API to preload script
+- [x] T049 [US1] Add extraction API to preload script
   - **File**: `src/preload/index.ts`
   - **Acceptance**: Exposes extractionAPI with event listeners for progress and errors
   - **Methods**: startExtraction(), cancelExtraction(), onProgress(), onError()
 
-- [ ] T050 Finalize preload script with all APIs
+- [x] T050 Finalize preload script with all APIs
   - **File**: `src/preload/index.ts`
   - **Acceptance**: All APIs exposed, type definitions for window object correct
   - **Content**: Complete contextBridge with all service APIs (config, pdf, ollama, storage, extraction)

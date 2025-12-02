@@ -5,6 +5,10 @@
 
 import { contextBridge } from 'electron';
 import { configAPI } from './configAPI';
+import { pdfAPI } from './pdfAPI';
+import { ollamaAPI } from './ollamaAPI';
+import { storageAPI } from './storageAPI';
+import { extractionAPI } from './extractionAPI';
 
 /**
  * Expose APIs to renderer process
@@ -12,6 +16,10 @@ import { configAPI } from './configAPI';
  */
 contextBridge.exposeInMainWorld('etnopapers', {
   config: configAPI,
+  pdf: pdfAPI,
+  ollama: ollamaAPI,
+  storage: storageAPI,
+  extraction: extractionAPI,
 });
 
 /**
@@ -21,6 +29,10 @@ declare global {
   interface Window {
     etnopapers: {
       config: typeof configAPI;
+      pdf: typeof pdfAPI;
+      ollama: typeof ollamaAPI;
+      storage: typeof storageAPI;
+      extraction: typeof extractionAPI;
     };
   }
 }
