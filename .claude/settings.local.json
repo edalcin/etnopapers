@@ -52,7 +52,12 @@
       "Bash(mkdir:*)",
       "Bash(tree:*)",
       "SlashCommand(/speckit.tasks)",
-      "SlashCommand(/speckit.analyze)"
+      "SlashCommand(/speckit.analyze)",
+      "Bash(dotnet new:*)",
+      "Bash(timeout 30 bash:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet build:*)"
     ],
     "deny": [],
     "ask": []
