@@ -17,7 +17,8 @@
       "Bash(do sed -i \"s/^- \\[ \\] T0$i/- [x] T0$i/\" tasks.md)",
       "Bash(done)",
       "Bash(timeout 10 pnpm run dev:*)",
-      "Bash(pnpm run build:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(timeout 5 pnpm run dev:*)"
     ],
     "deny": [],
     "ask": []
