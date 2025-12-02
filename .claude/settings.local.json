@@ -12,7 +12,10 @@
       "Bash(pnpm init:*)",
       "Bash(pnpm add:*)",
       "Bash(ls:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(for i in {52..69})",
+      "Bash(do sed -i \"s/^- \\[ \\] T0$i/- [x] T0$i/\" tasks.md)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

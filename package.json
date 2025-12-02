@@ -29,6 +29,7 @@
     "pdfjs-dist": "^5.4.449",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-router-dom": "^6.28.0",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0",
     "winston": "^3.17.0",

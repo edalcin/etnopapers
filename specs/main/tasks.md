@@ -336,107 +336,107 @@ Tasks are organized by user story priority and implementation phase. Each task i
 
 ### UI Foundation
 
-- [ ] T051 [P] Create React app entry point
+- [x] T051 [P] Create React app entry point
   - **File**: `src/renderer/main.tsx`
   - **Acceptance**: Renders App component, includes global styles, error boundary
   - **Content**: ReactDOM.createRoot() with App component, global CSS import
 
-- [ ] T052 [P] Create root App component with routing
+- [x] T052 [P] Create root App component with routing
   - **File**: `src/renderer/App.tsx`
   - **Acceptance**: Router setup, layout with sidebar, main content area, status bar
   - **Content**: React Router configuration, layout structure with outlet
 
-- [ ] T053 [P] Create Zustand app store
+- [x] T053 [P] Create Zustand app store
   - **File**: `src/renderer/stores/useAppStore.ts`
   - **Acceptance**: Global state for connections (OLLAMA, MongoDB), config, notifications
   - **State**: ollamaConnected, mongoConnected, config, notifications[], loading
 
-- [ ] T054 [P] Create Zustand extraction store
+- [x] T054 [P] Create Zustand extraction store
   - **File**: `src/renderer/stores/useExtractionStore.ts`
   - **Acceptance**: State for current extraction progress, status, results
   - **State**: isExtracting, progress (0-100), currentStep, extractedData, error, cancelRequest
 
 ### Common UI Components
 
-- [ ] T055 [P] Create Button component
+- [x] T055 [P] Create Button component
   - **File**: `src/renderer/components/common/Button.tsx`
   - **Acceptance**: Reusable button with variants (primary, secondary, destructive), disabled state, loading state
   - **Features**: TypeScript types, accessibility attributes, theme support
 
-- [ ] T056 [P] Create Input component
+- [x] T056 [P] Create Input component
   - **File**: `src/renderer/components/common/Input.tsx`
   - **Acceptance**: Text input with label, error state, validation feedback
   - **Features**: TypeScript types, accessibility, placeholder, required indicator
 
-- [ ] T057 [P] Create Select component
+- [x] T057 [P] Create Select component
   - **File**: `src/renderer/components/common/Select.tsx`
   - **Acceptance**: Dropdown select with options, onChange handler, default value
   - **Features**: TypeScript types, grouped options support, disabled state
 
-- [ ] T058 [P] Create Toast notification component
+- [x] T058 [P] Create Toast notification component
   - **File**: `src/renderer/components/common/Toast.tsx`
   - **Acceptance**: Toast notifications (success, error, warning, info), auto-dismiss
   - **Features**: Stacked display, accessibility, auto-dismiss timer
 
-- [ ] T059 [P] Create Modal component
+- [x] T059 [P] Create Modal component
   - **File**: `src/renderer/components/common/Modal.tsx`
   - **Acceptance**: Reusable modal dialog with header, body, footer, close button
   - **Features**: Keyboard escape to close, focus trap, overlay click handling
 
 ### Layout Components
 
-- [ ] T060 [P] Create Sidebar component
+- [x] T060 [P] Create Sidebar component
   - **File**: `src/renderer/components/layout/Sidebar.tsx`
   - **Acceptance**: Navigation links (Home, Upload, Records, Settings, About), active state
   - **Features**: Responsive, accessibility, active link highlighting
 
-- [ ] T061 [P] Create StatusBar component
+- [x] T061 [P] Create StatusBar component
   - **File**: `src/renderer/components/layout/StatusBar.tsx`
   - **Acceptance**: Displays OLLAMA and MongoDB connection status with indicators
   - **Features**: Real-time status updates, color indicators (connected/disconnected)
 
-- [ ] T062 [P] Create Header component
+- [x] T062 [P] Create Header component
   - **File**: `src/renderer/components/layout/Header.tsx`
   - **Acceptance**: App title/logo, current page indicator
   - **Features**: Branding, page context display
 
 ### Upload Page (User Story 1 - P1)
 
-- [ ] T063 [US1] Create Upload Page component
+- [x] T063 [US1] Create Upload Page component
   - **File**: `src/renderer/pages/UploadPage.tsx`
   - **Acceptance**: File drop zone, upload button (disabled if OLLAMA disconnected), extraction progress display
   - **Features**: Conditional rendering based on OLLAMA status
 
-- [ ] T064 [US1] Create File Drop Zone component
+- [x] T064 [US1] Create File Drop Zone component
   - **File**: `src/renderer/components/upload/FileDropZone.tsx`
   - **Acceptance**: Drag-and-drop area, file selection button, PDF validation
   - **Validation**: Check file type, show error for non-PDF files
 
-- [ ] T065 [US1] Create Extraction Progress component
+- [x] T065 [US1] Create Extraction Progress component
   - **File**: `src/renderer/components/upload/ExtractionProgress.tsx`
   - **Acceptance**: Progress bar, current step indicator, cancel button, time elapsed
   - **Features**: Real-time updates from extraction store
 
-- [ ] T066 [US1] Create Extraction Results component
+- [x] T066 [US1] Create Extraction Results component
   - **File**: `src/renderer/components/upload/ExtractionResults.tsx`
   - **Acceptance**: Displays extracted data in editable form, save button, duplicate warning if applicable
   - **Features**: Field-level editing, custom attribute addition, validation on save
 
-- [ ] T067 [US1] Create extraction hook
+- [x] T067 [US1] Create extraction hook
   - **File**: `src/renderer/hooks/useExtraction.ts`
   - **Acceptance**: Custom hook manages extraction workflow, updates store, calls APIs
   - **Methods**: startExtraction(), cancelExtraction(), saveResults()
 
 ### Home Page
 
-- [ ] T068 Create Home Page component
+- [x] T068 Create Home Page component
   - **File**: `src/renderer/pages/HomePage.tsx`
   - **Acceptance**: Welcome message, quick start guide, connection status summary, GPU advisory if applicable
   - **Features**: Contextual help, status indicators
 
 ### About Page
 
-- [ ] T069 Create About Page component
+- [x] T069 Create About Page component
   - **File**: `src/renderer/pages/AboutPage.tsx`
   - **Acceptance**: Displays app name, version, author (Eduardo Dalcin), institution, email
   - **Content**: Fixed information matching spec requirements
