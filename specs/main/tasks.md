@@ -1,18 +1,18 @@
-# Implementation Tasks: EtnoPapers Desktop Application
+# Implementation Tasks: EtnoPapers Desktop Migration - Electron to C# WPF
 
 **Branch**: `main` (single-branch workflow)
 **Spec**: [spec.md](./spec.md)
 **Plan**: [plan.md](./plan.md)
 **Generated**: 2025-12-02
+**Technology**: C# 12 / .NET 8.0 / WPF
 
 ## Task Organization
 
-Tasks are organized by user story priority and implementation phase. Each task includes:
+Tasks are organized by phase and user story priority. Each task includes:
 - **Task ID**: Unique identifier (T001, T002, etc.)
-- **[P]**: Can be executed in parallel with other [P] tasks (different files)
-- **[US#]**: Maps to User Story in spec.md
+- **[P]**: Can be executed in parallel with other [P] tasks (different files, no dependencies)
+- **[US#]**: Maps to User Story in spec.md ([US1], [US2], [US3], [US4])
 - **File Path**: Specific location for implementation
-- **Acceptance Criteria**: Clear definition of "done"
 
 **Execution Order**: Complete tasks sequentially within each phase. Tasks marked [P] can run in parallel if working on different files.
 
@@ -22,845 +22,742 @@ Tasks are organized by user story priority and implementation phase. Each task i
 
 | Story | Priority | Title | MVP | Phase |
 |-------|----------|-------|-----|-------|
-| US1 | P1 | Extract Metadata from PDF Articles | ✅ Core | Phase 3 |
-| US2 | P2 | Manage Local Record Collection | ✅ Core | Phase 4 |
-| US3 | P3 | Synchronize Records to Cloud Database | ⚠️ Optional | Phase 5 |
-| US4 | P1 | Configure Application Settings | ✅ Core | Phase 2 |
+| US1 | P1 | Maintain Full Feature Parity | ✅ Core | Phase 2-5 |
+| US2 | P1 | Improve Windows Native Integration | ✅ Core | Phase 3-5 |
+| US3 | P2 | Improve Performance and Resource Efficiency | ✅ Important | Phase 6-7 |
+| US4 | P1 | Maintain Data Compatibility | ✅ Core | Phase 2-5 |
 
-**MVP Scope**: US1, US2, US4 (extract PDFs, manage records, configure settings) - excludes cloud sync
+**MVP Scope**: US1, US2, US4 (full feature parity, native Windows, data compatibility) - US3 (performance) validated with benchmarks
 
 ---
 
 ## Phase 0: Project Setup & Infrastructure
 
-**Goal**: Initialize project structure, dependencies, and development environment
+**Goal**: Initialize Visual Studio solution, create project structure, and install dependencies
 
-### Project Initialization
+### Solution & Project Creation
 
-- [ ] T001 [P] Initialize Node.js project with pnpm in root directory
-  - **File**: `package.json`
-  - **Acceptance**: `package.json` exists with name "etnopapers", version "1.0.0", type "module", pnpm workspaces configured
-  - **Commands**: `pnpm init`, configure scripts section
+- [ ] T001 Create Visual Studio solution file
+  - **File**: `EtnoPapers.sln`
+  - **Acceptance**: Solution created in root, can be opened in Visual Studio 2022+
+  - **Commands**: `dotnet new sln -n EtnoPapers`
 
-- [ ] T002 [P] Install core dependencies (Electron, React, TypeScript)
-  - **File**: `package.json`
-  - **Acceptance**: Dependencies installed: electron@28+, react@18, react-dom@18, typescript@5.3+
-  - **Commands**: `pnpm add electron react react-dom`, `pnpm add -D typescript @types/react @types/react-dom @types/node`
+- [ ] T002 [P] Create EtnoPapers.Core class library project
+  - **File**: `src/EtnoPapers.Core/EtnoPapers.Core.csproj`
+  - **Acceptance**: .csproj file exists, targets .NET 8.0, references added to solution
+  - **Commands**: `dotnet new classlib -n EtnoPapers.Core -f net8.0`
 
-- [ ] T003 [P] Install build tools (Vite, electron-builder)
-  - **File**: `package.json`
-  - **Acceptance**: Dev dependencies include vite, electron-builder, @vitejs/plugin-react
-  - **Commands**: `pnpm add -D vite electron-builder @vitejs/plugin-react`
+- [ ] T003 [P] Create EtnoPapers.UI WPF project
+  - **File**: `src/EtnoPapers.UI/EtnoPapers.UI.csproj`
+  - **Acceptance**: WPF project created, targets .NET 8.0, references added to solution
+  - **Commands**: `dotnet new wpf -n EtnoPapers.UI -f net8.0`
 
-- [ ] T004 [P] Install UI dependencies (Tailwind CSS, shadcn/ui prerequisites)
-  - **File**: `package.json`
-  - **Acceptance**: tailwindcss, postcss, autoprefixer, class-variance-authority, clsx installed
-  - **Commands**: `pnpm add -D tailwindcss postcss autoprefixer`, `pnpm add class-variance-authority clsx tailwind-merge`
+- [ ] T004 [P] Create EtnoPapers.Core.Tests unit test project
+  - **File**: `tests/EtnoPapers.Core.Tests/EtnoPapers.Core.Tests.csproj`
+  - **Acceptance**: xUnit test project created, references EtnoPapers.Core
+  - **Commands**: `dotnet new xunit -n EtnoPapers.Core.Tests -f net8.0`
 
-- [ ] T005 [P] Install state management and utilities (Zustand, lowdb, MongoDB driver)
-  - **File**: `package.json`
-  - **Acceptance**: zustand, lowdb, mongodb, zod, axios, uuid installed
-  - **Commands**: `pnpm add zustand lowdb mongodb zod axios uuid`
+### NuGet Dependencies
 
-- [ ] T006 [P] Install PDF processing libraries (pdf.js)
-  - **File**: `package.json`
-  - **Acceptance**: pdfjs-dist installed with correct version for Node.js
-  - **Commands**: `pnpm add pdfjs-dist`
+- [ ] T005 [P] Install core NuGet packages (MongoDB, JSON, logging)
+  - **File**: `src/EtnoPapers.Core/EtnoPapers.Core.csproj`
+  - **Acceptance**: Packages added: MongoDB.Driver, Newtonsoft.Json, Serilog, Serilog.Sinks.File
+  - **Commands**: `dotnet add EtnoPapers.Core package MongoDB.Driver` (and others)
 
-- [ ] T007 [P] Install testing frameworks (Vitest, Testing Library, Playwright)
-  - **File**: `package.json`
-  - **Acceptance**: vitest, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, @playwright/test installed
-  - **Commands**: `pnpm add -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event @playwright/test`
+- [ ] T006 [P] Install PDF processing library
+  - **File**: `src/EtnoPapers.Core/EtnoPapers.Core.csproj`
+  - **Acceptance**: iTextSharp or equivalent PDF library installed (evaluate and choose)
+  - **Commands**: `dotnet add EtnoPapers.Core package iTextSharp.Kernel`
 
-### Configuration Files
+- [ ] T007 [P] Install WPF UI dependencies
+  - **File**: `src/EtnoPapers.UI/EtnoPapers.UI.csproj`
+  - **Acceptance**: UI packages installed (Newtonsoft.Json for UI, optional UI frameworks)
+  - **Commands**: `dotnet add EtnoPapers.UI package Newtonsoft.Json`
 
-- [ ] T008 [P] Create TypeScript configuration
-  - **File**: `tsconfig.json`
-  - **Acceptance**: Configured for ES2022, strict mode, paths for @/ alias, separate configs for main/renderer
-  - **Content**: Target ES2022, module ESNext, strict: true, esModuleInterop: true
+- [ ] T008 [P] Install testing dependencies
+  - **File**: `tests/EtnoPapers.Core.Tests/EtnoPapers.Core.Tests.csproj`
+  - **Acceptance**: xUnit, Moq, FluentAssertions installed
+  - **Commands**: `dotnet add EtnoPapers.Core.Tests package Moq` and `dotnet add EtnoPapers.Core.Tests package FluentAssertions`
 
-- [ ] T009 [P] Create Vite configuration for Electron
-  - **File**: `vite.config.ts`
-  - **Acceptance**: Configured for Electron renderer process, React plugin, path aliases
-  - **Content**: Configure build for renderer, resolve @/ to src/, React plugin, Electron plugin
+### Directory Structure & .gitignore
 
-- [ ] T010 [P] Create Vitest configuration
-  - **File**: `vitest.config.ts`
-  - **Acceptance**: Extends vite.config, configured for jsdom environment, setupFiles
-  - **Content**: environment: 'jsdom', setupFiles: './tests/setup.ts'
+- [ ] T009 Create directory structure per implementation plan
+  - **Files**: `src/EtnoPapers.Core/Services/`, `Models/`, `Utils/`, `Validation/`, etc.
+  - **Acceptance**: All directories created as per plan.md project structure
+  - **Commands**: `mkdir -p src/EtnoPapers.Core/{Services,Models,Utils,Validation}` (and others for UI)
 
-- [ ] T011 [P] Create Playwright configuration
-  - **File**: `playwright.config.ts`
-  - **Acceptance**: Configured for Electron app testing, testDir: './tests/e2e'
-  - **Content**: Use electron context, baseURL for app
-
-- [ ] T012 [P] Create Tailwind CSS configuration
-  - **File**: `tailwind.config.js`
-  - **Acceptance**: Content paths include src/, theme extensions for shadcn/ui
-  - **Content**: Configure content paths, extend theme with CSS variables
-
-- [ ] T013 [P] Create PostCSS configuration
-  - **File**: `postcss.config.js`
-  - **Acceptance**: Includes tailwindcss and autoprefixer plugins
-  - **Content**: plugins: [tailwindcss, autoprefixer]
-
-- [ ] T014 [P] Create electron-builder configuration
-  - **File**: `electron-builder.config.js`
-  - **Acceptance**: Configured for Windows installer (NSIS), app metadata, file associations
-  - **Content**: appId, productName, win config with target: nsis, icon paths
-
-- [ ] T015 [P] Create ESLint configuration
-  - **File**: `.eslintrc.json`
-  - **Acceptance**: TypeScript and React rules configured
-  - **Content**: Extends typescript-eslint, react recommended, ignores build output
-
-- [ ] T016 [P] Create Prettier configuration
-  - **File**: `.prettierrc`
-  - **Acceptance**: Consistent formatting rules (semi, singleQuote, trailingComma, etc.)
-  - **Content**: Configure code style preferences for TypeScript
-
-- [ ] T017 [P] Create .gitignore
+- [ ] T010 Create comprehensive .gitignore for .NET
   - **File**: `.gitignore`
-  - **Acceptance**: Ignores node_modules/, dist/, .env, logs/, coverage/, *.log
-  - **Content**: Standard Node.js, Electron, build artifacts, environment files
+  - **Acceptance**: Ignores bin/, obj/, .vs/, *.user, packages/, build artifacts
+  - **Content**: Standard .NET gitignore rules
 
-### Directory Structure
+### Build Configuration
 
-- [ ] T018 [P] Create source directory structure
-  - **Files**: `src/main/`, `src/renderer/`, `src/shared/`, `src/preload/`
-  - **Acceptance**: All directories created with index.ts stubs in each
-  - **Commands**: `mkdir -p src/{main,renderer,shared,preload}/{services,components,types,utils}`
-
-- [ ] T019 [P] Create test directory structure
-  - **Files**: `tests/unit/`, `tests/integration/`, `tests/e2e/`, `tests/fixtures/`
-  - **Acceptance**: All test directories created with empty fixtures
-  - **Commands**: `mkdir -p tests/{unit,integration,e2e,fixtures}`
-
-- [ ] T020 [P] Create resources directory structure
-  - **Files**: `resources/icons/`, `resources/installers/`, `resources/locales/`
-  - **Acceptance**: Resources directories for assets, installers, translations
-  - **Commands**: `mkdir -p resources/{icons,installers,locales}`
-
-- [ ] T021 [P] Create global styles and CSS setup
-  - **File**: `src/renderer/index.css`
-  - **Acceptance**: Tailwind directives present, CSS variables for shadcn/ui theming
-  - **Content**: @tailwind base/components/utilities, :root CSS variables for colors
-
-### Package Scripts
-
-- [ ] T022 Create npm scripts in package.json
-  - **File**: `package.json` scripts section
-  - **Acceptance**: Scripts exist for dev, build, test, lint, format, dist
-  - **Scripts**: `"dev"`, `"build"`, `"test"`, `"test:e2e"`, `"lint"`, `"format"`, `"dist"`
+- [ ] T011 Create build script to validate solution
+  - **File**: `build/build.ps1` or `Makefile`
+  - **Acceptance**: Script builds both projects, reports on success/failure
+  - **Commands**: Include `dotnet build` and `dotnet test`
 
 ---
 
-## Phase 1: Foundational Services & Configuration (User Story 4 - P1)
+## Phase 1: Core Services & Data Layer
 
-**Goal**: Implement configuration management and shared utilities that all features depend on
+**Goal**: Implement business logic services and data models that all other features depend on
 
-**Why This Phase First**: Configuration (US4) is a prerequisite for extraction (US1) and all other features. Without proper setup, users cannot configure AI or database connections.
+**Why First**: All UI and extraction functionality depends on working services and data models
 
-### Shared Types & Validation
+### Data Models (US1, US4)
 
-- [ ] T023 [P] Define core TypeScript interfaces
-  - **File**: `src/shared/types/article.ts`
-  - **Acceptance**: ArticleRecord, PlantSpecies, Community, SyncStatus interfaces match data-model.md
-  - **Content**: Export all data model types from specs/main/data-model.md with complete JSDoc
+- [ ] T012 [P] [US1] [US4] Create ArticleRecord model class
+  - **File**: `src/EtnoPapers.Core/Models/ArticleRecord.cs`
+  - **Acceptance**: Class matches JSON schema from Electron version, includes all fields (title, authors, year, abstract, species, community, etc.)
+  - **Properties**: titulo, autores[], ano, resumo, especies[], comunidade, pais, estado, municipio, local, bioma, metodologia, ano_coleta, customAttributes
 
-- [ ] T024 [P] Define configuration types
-  - **File**: `src/shared/types/config.ts`
-  - **Acceptance**: AppConfiguration, OLLAMAConfig, MongoDBConfig, StorageConfig interfaces
-  - **Content**: Match config structure from data-model.md with validation notes
+- [ ] T013 [P] [US1] [US4] Create PlantSpecies model class
+  - **File**: `src/EtnoPapers.Core/Models/PlantSpecies.cs`
+  - **Acceptance**: Nested class with vernacular names, scientific names, use types
+  - **Properties**: nome_vernacular, nome_cientifico, tipo_uso
 
-- [ ] T025 [P] Define service interface types
-  - **File**: `src/shared/types/services.ts`
-  - **Acceptance**: All service interfaces from contracts/service-interfaces.ts
-  - **Content**: Copy interfaces from specs/main/contracts/service-interfaces.ts
+- [ ] T014 [P] [US1] [US4] Create Community model class
+  - **File**: `src/EtnoPapers.Core/Models/Community.cs`
+  - **Acceptance**: Model for community information
+  - **Properties**: nome, localizacao
 
-- [ ] T026 [P] Define error types
-  - **File**: `src/shared/types/errors.ts`
-  - **Acceptance**: Custom error classes for PDF, OLLAMA, Storage, MongoDB, Extraction
-  - **Content**: Error classes with codes and message templates
+- [ ] T015 [P] Create Configuration model class
+  - **File**: `src/EtnoPapers.Core/Models/Configuration.cs`
+  - **Acceptance**: Holds OLLAMA and MongoDB configuration
+  - **Properties**: ollamaUrl, ollamaModel, ollamaPrompt, mongodbUri, language, windowSize, windowPosition
 
-- [ ] T027 [P] [US4] Implement title normalization utility
-  - **File**: `src/shared/utils/titleNormalizer.ts`
-  - **Acceptance**: Converts titles to proper case, preserves acronyms, handles particles (de, von, etc.)
-  - **Logic**: Capitalize first letter of each word except common particles
+### JSON Serialization (US4)
 
-- [ ] T028 [P] [US4] Implement APA author formatter utility
-  - **File**: `src/shared/utils/authorFormatter.ts`
+- [ ] T016 [US4] Implement JSON serialization for ArticleRecord
+  - **File**: `src/EtnoPapers.Core/Utils/JsonSerializer.cs`
+  - **Acceptance**: Uses Newtonsoft.Json to serialize/deserialize ArticleRecord to/from JSON
+  - **Methods**: SerializeToJson(ArticleRecord), DeserializeFromJson(string), RoundTripTest()
+  - **Testing**: Unit test verifies Electron JSON → C# object → C# JSON produces identical output
+
+- [ ] T017 [US4] Test JSON compatibility with Electron-generated files
+  - **File**: `src/EtnoPapers.Core/Utils/JsonCompatibilityTest.cs`
+  - **Acceptance**: Load sample Electron-generated JSON, verify all fields parse correctly
+  - **Test Data**: Include fixtures with real Electron output
+
+### Utility Functions (US1)
+
+- [ ] T018 [P] Implement TitleNormalizer utility
+  - **File**: `src/EtnoPapers.Core/Utils/TitleNormalizer.cs`
+  - **Acceptance**: Converts titles to proper case, preserves acronyms (DNA, USA), handles particles (de, von, etc.)
+  - **Method**: Normalize(string title)
+  - **Tests**: Unit tests for proper case, acronyms, particles
+
+- [ ] T019 [P] Implement AuthorFormatter utility
+  - **File**: `src/EtnoPapers.Core/Utils/AuthorFormatter.cs`
   - **Acceptance**: Formats author names to APA style (LastName, F.I.), handles particles, suffixes
-  - **Logic**: Split names, format as "Last, First Middle" with initials
+  - **Method**: FormatToAPA(string name)
+  - **Tests**: Unit tests for single/multiple names, particles, suffixes
 
-- [ ] T029 [P] [US4] Implement language detection utility
-  - **File**: `src/shared/utils/languageDetector.ts`
+- [ ] T020 [P] Implement LanguageDetector utility
+  - **File**: `src/EtnoPapers.Core/Utils/LanguageDetector.cs`
   - **Acceptance**: Detects Portuguese, English, Spanish from text samples
-  - **Logic**: Use simple keyword-based detection or small ML library (e.g., franc-min)
+  - **Method**: DetectLanguage(string text)
+  - **Tests**: Test samples in PT, EN, ES
 
-- [ ] T030 [P] Create Zod validation schemas
-  - **File**: `src/shared/validation/schemas.ts`
-  - **Acceptance**: Zod schemas for ArticleRecord, PlantSpecies, Community matching data-model.md
-  - **Content**: Export ArticleRecordSchema, PlantSpeciesSchema, CommunitySchema with all validation rules
+### Validation (US1, US4)
 
-### Configuration Service (US4)
+- [ ] T021 Create validation schemas and validators
+  - **File**: `src/EtnoPapers.Core/Validation/ArticleRecordValidator.cs`
+  - **Acceptance**: Validates ArticleRecord structure, mandatory fields, data types
+  - **Methods**: Validate(ArticleRecord), ValidateMandatoryFields(), GetValidationErrors()
+  - **Validation Rules**: Title not empty, year > 1500, authors not empty, etc.
 
-- [x] T031 [US4] Implement Configuration Service (main process)
-  - **File**: `src/main/services/ConfigurationService.ts`
-  - **Acceptance**: Implements IConfigurationService, uses electron-store, validates config
-  - **Methods**: load(), save(), get(), update(), reset(), loadDefaults()
+### Core Services (US1, US4)
 
-- [x] T032 [US4] Create configuration IPC handlers
-  - **File**: `src/main/ipc/configHandlers.ts`
-  - **Acceptance**: Exposes config operations via IPC (get, update, reset, test connections)
-  - **Channels**: 'config:get', 'config:update', 'config:reset'
+- [ ] T022 [US1] [US4] Implement ConfigurationService
+  - **File**: `src/EtnoPapers.Core/Services/ConfigurationService.cs`
+  - **Acceptance**: Loads/saves configuration to JSON file in Documents/EtnoPapers/config.json
+  - **Methods**: LoadConfiguration(), SaveConfiguration(config), ResetToDefaults(), ValidateConfiguration()
+  - **Features**: Lazy loading, caching, validation
 
-- [x] T033 [US4] Add configuration API to preload script
-  - **File**: `src/preload/index.ts`
-  - **Acceptance**: Exposes configAPI to renderer (get, update, reset methods)
-  - **Security**: Uses contextBridge.exposeInMainWorld with secure API
+- [ ] T023 [US4] Implement DataStorageService
+  - **File**: `src/EtnoPapers.Core/Services/DataStorageService.cs`
+  - **Acceptance**: CRUD operations for local JSON storage (Documents/EtnoPapers/data.json)
+  - **Methods**: Initialize(), LoadAll(), GetById(id), Create(article), Update(article), Delete(id), Count(), CheckLimit()
+  - **Features**: Atomic writes, limit enforcement (1000 records), auto-save
 
-### Logger Service (Foundational)
+- [ ] T024 [US1] Implement PDFProcessingService
+  - **File**: `src/EtnoPapers.Core/Services/PDFProcessingService.cs`
+  - **Acceptance**: Extract text from PDF, get metadata, validate PDF has text
+  - **Methods**: ExtractText(filePath), GetMetadata(filePath), ValidatePDF(filePath), CheckTextLayers(filePath)
+  - **Features**: Stream processing, page-by-page for large files, error handling
 
-- [x] T034 [P] Implement Logger Service (main process)
-  - **File**: `src/main/services/LoggerService.ts`
-  - **Acceptance**: Implements ILoggerService, uses winston, file rotation, different log levels
-  - **Methods**: debug(), info(), warn(), error(), getLogFilePath()
+- [ ] T025 [US1] Implement OLLAMAService
+  - **File**: `src/EtnoPapers.Core/Services/OLLAMAService.cs`
+  - **Acceptance**: REST API integration with local OLLAMA service
+  - **Methods**: CheckHealth(), ExtractMetadata(text, prompt), TranslateToPortuguese(text), GetAvailableModels()
+  - **Features**: Connection testing, retry logic, timeout handling, response parsing
 
-### Electron Main Process Setup
+- [ ] T026 [US4] Implement MongoDBSyncService
+  - **File**: `src/EtnoPapers.Core/Services/MongoDBSyncService.cs`
+  - **Acceptance**: Connect to MongoDB, upload records, batch operations
+  - **Methods**: TestConnection(uri), UploadRecord(record), UploadBatch(records), GetStatus()
+  - **Features**: Connection pooling, retry logic, batch processing
 
-- [x] T035 Create Electron main process entry point
-  - **File**: `src/main/index.ts`
-  - **Acceptance**: Creates BrowserWindow, loads renderer, registers IPC handlers, handles app lifecycle
-  - **Content**: app.whenReady(), createWindow(), register all IPC handlers, ipcMain setup
+- [ ] T027 [US1] Implement ValidationService
+  - **File**: `src/EtnoPapers.Core/Services/ValidationService.cs`
+  - **Acceptance**: Validate extracted data against schema
+  - **Methods**: ValidateRecord(article), CheckMandatoryFields(article), GetValidationErrors(article)
+  - **Integration**: Uses ArticleRecordValidator
 
-- [x] T036 Create settings page component
-  - **File**: `src/renderer/pages/SettingsPage.tsx`
-  - **Acceptance**: Form for OLLAMA config (URL, model, prompt), MongoDB URI, test connection buttons
-  - **Features**: Form validation, connection testing feedback, persistent save
+- [ ] T028 [US1] Implement ExtractionPipelineService (orchestration)
+  - **File**: `src/EtnoPapers.Core/Services/ExtractionPipelineService.cs`
+  - **Acceptance**: Orchestrates PDF → text → AI → validation → storage
+  - **Methods**: ExtractFromPDF(filePath), CancelExtraction(), GetExtractionStatus()
+  - **Features**: Progress tracking, error recovery, atomic operations
 
----
-
-## Phase 2: Core Services & Data Layer (User Story 1 - P1 Part A)
-
-**Goal**: Implement PDF processing, AI integration, and local data storage services
-
-**Why This Phase**: These services are prerequisites for PDF extraction (US1) and record management (US2)
-
-### PDF Processing Service (US1)
-
-- [x] T037 [US1] Implement PDF Processing Service (main process)
-  - **File**: `src/main/services/PDFProcessingService.ts`
-  - **Acceptance**: Implements IPDFProcessingService, extracts text with pdf.js, gets metadata
-  - **Methods**: extractText(), getMetadata(), validatePDF(), checkTextLayers()
-
-- [x] T038 [US1] Create PDF IPC handlers
-  - **File**: `src/main/ipc/pdfHandlers.ts`
-  - **Acceptance**: Exposes PDF operations via IPC
-  - **Channels**: 'pdf:extractText', 'pdf:getMetadata', 'pdf:validate'
-
-- [x] T039 [US1] Add PDF API to preload script
-  - **File**: `src/preload/index.ts`
-  - **Acceptance**: Exposes pdfAPI to renderer with type definitions
-  - **Methods**: extractText(), getMetadata(), validatePDF()
-
-### OLLAMA Service (US1)
-
-- [x] T040 [US1] Implement OLLAMA Service (main process)
-  - **File**: `src/main/services/OLLAMAService.ts`
-  - **Acceptance**: Implements IOLLAMAService, calls OLLAMA REST API, parses responses
-  - **Methods**: checkHealth(), extractMetadata(), translateToPortuguese(), getAvailableModels()
-
-- [x] T041 [US1] Create OLLAMA IPC handlers
-  - **File**: `src/main/ipc/ollamaHandlers.ts`
-  - **Acceptance**: Exposes OLLAMA operations via IPC with progress callbacks
-  - **Channels**: 'ollama:checkHealth', 'ollama:extract', 'ollama:translate'
-
-- [x] T042 [US1] Add OLLAMA API to preload script
-  - **File**: `src/preload/index.ts`
-  - **Acceptance**: Exposes ollamaAPI to renderer with event listeners
-  - **Methods**: checkHealth(), extractMetadata(), translateToPortuguese()
-
-### Data Storage Service (US1, US2)
-
-- [x] T043 [P] [US1] Implement Data Storage Service (main process)
-  - **File**: `src/main/services/DataStorageService.ts`
-  - **Acceptance**: Implements IDataStorageService, uses lowdb, CRUD operations
-  - **Methods**: initialize(), getAll(), getById(), create(), update(), delete(), count(), checkLimit()
-
-- [x] T044 [US1] Create storage IPC handlers
-  - **File**: `src/main/ipc/storageHandlers.ts`
-  - **Acceptance**: Exposes storage operations via IPC
-  - **Channels**: 'storage:getAll', 'storage:getById', 'storage:create', 'storage:update', 'storage:delete'
-
-- [x] T045 [US1] Add storage API to preload script
-  - **File**: `src/preload/index.ts`
-  - **Acceptance**: Exposes storageAPI to renderer
-  - **Methods**: getAll(), getById(), create(), update(), delete()
-
-### Validation Service (US1)
-
-- [x] T046 [P] [US1] Implement Validation Service (main process)
-  - **File**: `src/main/services/ValidationService.ts`
-  - **Acceptance**: Implements IValidationService, uses Zod schemas from T030
-  - **Methods**: validateRecord(), validateExtractedData(), checkMandatoryFields()
-
-### Extraction Pipeline Service (US1)
-
-- [x] T047 [US1] Implement Extraction Pipeline Service (orchestration)
-  - **File**: `src/main/services/ExtractionPipelineService.ts`
-  - **Acceptance**: Implements IExtractionPipelineService, orchestrates PDF → text → AI → validation → storage
-  - **Methods**: extractFromPDF(), cancelExtraction(), getExtractionStatus()
-
-- [x] T048 [US1] Create extraction IPC handlers with progress events
-  - **File**: `src/main/ipc/extractionHandlers.ts`
-  - **Acceptance**: Exposes extraction with progress callbacks and error handling
-  - **Channels**: 'extraction:start', 'extraction:cancel', 'extraction:status'
-  - **Events**: 'extraction:progress' for real-time updates
-
-- [x] T049 [US1] Add extraction API to preload script
-  - **File**: `src/preload/index.ts`
-  - **Acceptance**: Exposes extractionAPI with event listeners for progress and errors
-  - **Methods**: startExtraction(), cancelExtraction(), onProgress(), onError()
-
-- [x] T050 Finalize preload script with all APIs
-  - **File**: `src/preload/index.ts`
-  - **Acceptance**: All APIs exposed, type definitions for window object correct
-  - **Content**: Complete contextBridge with all service APIs (config, pdf, ollama, storage, extraction)
+- [ ] T029 Create LoggerService
+  - **File**: `src/EtnoPapers.Core/Services/LoggerService.cs`
+  - **Acceptance**: File-based logging with rotation, different log levels
+  - **Methods**: Debug(), Info(), Warn(), Error(), GetLogFilePath()
+  - **Configuration**: Logs to %APPDATA%/EtnoPapers/logs/, 7-day retention
 
 ---
 
-## Phase 3: User Interface & Components (User Story 1 - P1 Part B)
+## Phase 2: Windows Native UI Foundation (US2, US1)
 
-**Goal**: Build React UI for PDF upload, extraction, and result display
+**Goal**: Set up WPF application structure, MVVM pattern, and native Windows controls
 
-### UI Foundation
+**Why Second**: Core services are stable; now we need UI framework to build features
 
-- [x] T051 [P] Create React app entry point
-  - **File**: `src/renderer/main.tsx`
-  - **Acceptance**: Renders App component, includes global styles, error boundary
-  - **Content**: ReactDOM.createRoot() with App component, global CSS import
+### WPF Application Setup (US2)
 
-- [x] T052 [P] Create root App component with routing
-  - **File**: `src/renderer/App.tsx`
-  - **Acceptance**: Router setup, layout with sidebar, main content area, status bar
-  - **Content**: React Router configuration, layout structure with outlet
+- [ ] T030 Create WPF Application structure (App.xaml, App.xaml.cs)
+  - **Files**: `src/EtnoPapers.UI/App.xaml`, `App.xaml.cs`
+  - **Acceptance**: Application entry point configured, default resources set, dependency injection setup
+  - **Content**: StartupUri, resource dictionaries, service initialization
 
-- [x] T053 [P] Create Zustand app store
-  - **File**: `src/renderer/stores/useAppStore.ts`
-  - **Acceptance**: Global state for connections (OLLAMA, MongoDB), config, notifications
-  - **State**: ollamaConnected, mongoConnected, config, notifications[], loading
+- [ ] T031 Create MainWindow and MainWindowViewModel (MVVM)
+  - **Files**: `src/EtnoPapers.UI/Views/MainWindow.xaml`, `MainWindow.xaml.cs`, `ViewModels/MainWindowViewModel.cs`
+  - **Acceptance**: Main application window with navigation frame/menu structure
+  - **Pattern**: MainWindow.DataContext = MainWindowViewModel (MVVM binding)
+  - **Features**: Window state preservation (save/restore size, position)
 
-- [x] T054 [P] Create Zustand extraction store
-  - **File**: `src/renderer/stores/useExtractionStore.ts`
-  - **Acceptance**: State for current extraction progress, status, results
-  - **State**: isExtracting, progress (0-100), currentStep, extractedData, error, cancelRequest
+- [ ] T032 [US2] Create WPF Styles and Resource Dictionaries
+  - **Files**: `src/EtnoPapers.UI/Styles/Brushes.xaml`, `ControlStyles.xaml`, `App.xaml`
+  - **Acceptance**: Windows 11 design language colors, button styles, control templates
+  - **Resources**: Color definitions, control styles, font sizes
+  - **Features**: Light/dark theme support (system theme detection)
 
-### Common UI Components
+- [ ] T033 [US2] Implement navigation between pages
+  - **File**: `src/EtnoPapers.UI/Navigation/NavigationService.cs`
+  - **Acceptance**: Navigate between Home, Upload, Records, Settings, About pages
+  - **Pattern**: Page switching via MainWindow frame or content control
+  - **Implementation**: Frame.Navigate() or similar pattern
 
-- [x] T055 [P] Create Button component
-  - **File**: `src/renderer/components/common/Button.tsx`
-  - **Acceptance**: Reusable button with variants (primary, secondary, destructive), disabled state, loading state
-  - **Features**: TypeScript types, accessibility attributes, theme support
+### Core WPF Controls (US2)
 
-- [x] T056 [P] Create Input component
-  - **File**: `src/renderer/components/common/Input.tsx`
-  - **Acceptance**: Text input with label, error state, validation feedback
-  - **Features**: TypeScript types, accessibility, placeholder, required indicator
+- [ ] T034 [P] [US2] Create StatusBar control
+  - **Files**: `src/EtnoPapers.UI/Controls/StatusBar.xaml`, `StatusBar.xaml.cs`
+  - **Acceptance**: Shows OLLAMA and MongoDB connection status with color indicators
+  - **Bindings**: BindsTo AppViewModel.OLLAMAConnected, AppViewModel.MongoDBConnected
+  - **Display**: Green (connected), red (disconnected), refresh button
 
-- [x] T057 [P] Create Select component
-  - **File**: `src/renderer/components/common/Select.tsx`
-  - **Acceptance**: Dropdown select with options, onChange handler, default value
-  - **Features**: TypeScript types, grouped options support, disabled state
+- [ ] T035 [P] Create INotifyPropertyChanged base class for ViewModels
+  - **File**: `src/EtnoPapers.UI/ViewModels/ViewModelBase.cs`
+  - **Acceptance**: Base class implementing INotifyPropertyChanged for all ViewModels
+  - **Methods**: OnPropertyChanged(propertyName), RaisePropertyChanged<T>()
 
-- [x] T058 [P] Create Toast notification component
-  - **File**: `src/renderer/components/common/Toast.tsx`
-  - **Acceptance**: Toast notifications (success, error, warning, info), auto-dismiss
-  - **Features**: Stacked display, accessibility, auto-dismiss timer
+- [ ] T036 [P] Create RelayCommand class for ViewModel commands
+  - **File**: `src/EtnoPapers.UI/Commands/RelayCommand.cs`
+  - **Acceptance**: ICommand implementation for button/menu commands
+  - **Methods**: Execute(), CanExecute(), RaiseCanExecuteChanged()
 
-- [x] T059 [P] Create Modal component
-  - **File**: `src/renderer/components/common/Modal.tsx`
-  - **Acceptance**: Reusable modal dialog with header, body, footer, close button
-  - **Features**: Keyboard escape to close, focus trap, overlay click handling
+- [ ] T037 Create value converters for WPF bindings
+  - **File**: `src/EtnoPapers.UI/Converters/BoolToVisibilityConverter.cs`, `StatusToBrushConverter.cs`, etc.
+  - **Acceptance**: Standard converters for bool→Visibility, status→color, etc.
+  - **Converters**: BoolToVisibilityConverter, StatusToBrushConverter, DateFormatConverter
 
-### Layout Components
+### Home Page (UI foundation)
 
-- [x] T060 [P] Create Sidebar component
-  - **File**: `src/renderer/components/layout/Sidebar.tsx`
-  - **Acceptance**: Navigation links (Home, Upload, Records, Settings, About), active state
-  - **Features**: Responsive, accessibility, active link highlighting
+- [ ] T038 [US2] Create HomePage and HomeViewModel
+  - **Files**: `src/EtnoPapers.UI/Views/HomePage.xaml`, `HomePage.xaml.cs`, `ViewModels/HomeViewModel.cs`
+  - **Acceptance**: Welcome page with quick start guide, connection status, GPU advisory if applicable
+  - **Bindings**: Shows OLLAMA and MongoDB status, application version
+  - **Features**: Contextual help, call-to-action buttons to navigate to Upload/Settings
 
-- [x] T061 [P] Create StatusBar component
-  - **File**: `src/renderer/components/layout/StatusBar.tsx`
-  - **Acceptance**: Displays OLLAMA and MongoDB connection status with indicators
-  - **Features**: Real-time status updates, color indicators (connected/disconnected)
+### Localization Setup
 
-- [x] T062 [P] Create Header component
-  - **File**: `src/renderer/components/layout/Header.tsx`
-  - **Acceptance**: App title/logo, current page indicator
-  - **Features**: Branding, page context display
+- [ ] T039 Create Portuguese localization resources
+  - **File**: `src/EtnoPapers.UI/Localization/Strings.pt-BR.resx`
+  - **Acceptance**: All UI strings in Brazilian Portuguese (buttons, labels, messages)
+  - **Content**: Translate all English defaults to Portuguese
 
-### Upload Page (User Story 1 - P1)
-
-- [x] T063 [US1] Create Upload Page component
-  - **File**: `src/renderer/pages/UploadPage.tsx`
-  - **Acceptance**: File drop zone, upload button (disabled if OLLAMA disconnected), extraction progress display
-  - **Features**: Conditional rendering based on OLLAMA status
-
-- [x] T064 [US1] Create File Drop Zone component
-  - **File**: `src/renderer/components/upload/FileDropZone.tsx`
-  - **Acceptance**: Drag-and-drop area, file selection button, PDF validation
-  - **Validation**: Check file type, show error for non-PDF files
-
-- [x] T065 [US1] Create Extraction Progress component
-  - **File**: `src/renderer/components/upload/ExtractionProgress.tsx`
-  - **Acceptance**: Progress bar, current step indicator, cancel button, time elapsed
-  - **Features**: Real-time updates from extraction store
-
-- [x] T066 [US1] Create Extraction Results component
-  - **File**: `src/renderer/components/upload/ExtractionResults.tsx`
-  - **Acceptance**: Displays extracted data in editable form, save button, duplicate warning if applicable
-  - **Features**: Field-level editing, custom attribute addition, validation on save
-
-- [x] T067 [US1] Create extraction hook
-  - **File**: `src/renderer/hooks/useExtraction.ts`
-  - **Acceptance**: Custom hook manages extraction workflow, updates store, calls APIs
-  - **Methods**: startExtraction(), cancelExtraction(), saveResults()
-
-### Home Page
-
-- [x] T068 Create Home Page component
-  - **File**: `src/renderer/pages/HomePage.tsx`
-  - **Acceptance**: Welcome message, quick start guide, connection status summary, GPU advisory if applicable
-  - **Features**: Contextual help, status indicators
-
-### About Page
-
-- [x] T069 Create About Page component
-  - **File**: `src/renderer/pages/AboutPage.tsx`
-  - **Acceptance**: Displays app name, version, author (Eduardo Dalcin), institution, email
-  - **Content**: Fixed information matching spec requirements
+- [ ] T040 Create English localization resources
+  - **File**: `src/EtnoPapers.UI/Localization/Strings.en-US.resx`
+  - **Acceptance**: All UI strings in English
+  - **Content**: English translations
 
 ---
 
-## Phase 4: Record Management (User Story 2 - P2)
+## Phase 3: PDF Upload & Extraction UI (US1, US2)
+
+**Goal**: Implement upload workflow, extraction progress display, and results editing
+
+**Why Third**: Core features depend on PDF extraction - this is primary workflow
+
+### Upload Page (US1, US2)
+
+- [ ] T041 [US1] [US2] Create UploadPage and UploadViewModel
+  - **Files**: `src/EtnoPapers.UI/Views/UploadPage.xaml`, `UploadPage.xaml.cs`, `ViewModels/UploadViewModel.cs`
+  - **Acceptance**: Page with file upload area, extraction progress, results editing
+  - **Bindings**: ViewModel manages extraction state, progress updates, errors
+  - **Layout**: Drop zone, upload button, progress bar, results form
+
+- [ ] T042 [US1] [US2] Create file drop zone control
+  - **File**: `src/EtnoPapers.UI/Controls/FileDropZone.xaml`
+  - **Acceptance**: Drag-and-drop area for PDF files, file selection button
+  - **Validation**: Accept .pdf only, show error for other file types
+  - **Size validation**: Reject files >50MB
+
+- [ ] T043 [US1] Create extraction progress display
+  - **File**: `src/EtnoPapers.UI/Controls/ExtractionProgressPanel.xaml`
+  - **Acceptance**: Shows current step (PDF loading, text extraction, AI processing, validation, saving)
+  - **Bindings**: Progress percentage, current step, time elapsed
+  - **Features**: Cancel button, error display
+
+- [ ] T044 [US1] Create extraction results editing form
+  - **File**: `src/EtnoPapers.UI/Controls/ExtractionResultsForm.xaml`
+  - **Acceptance**: Editable form for extracted data (title, authors, year, abstract, etc.)
+  - **Features**: Field editing, custom attribute addition, validation on save
+  - **Bindings**: Bind to extracted ArticleRecord, enable save button
+
+- [ ] T045 [US1] Create custom attribute editor control
+  - **File**: `src/EtnoPapers.UI/Controls/CustomAttributeEditor.xaml`
+  - **Acceptance**: Add/remove custom key-value pairs
+  - **Features**: Add button, delete button per item, dynamic binding
+
+### Upload Workflow Logic (US1)
+
+- [ ] T046 [US1] Create useExtraction hook equivalent (UploadViewModel logic)
+  - **File**: `src/EtnoPapers.UI/ViewModels/UploadViewModel.cs`
+  - **Acceptance**: Methods for uploading, starting extraction, handling progress, saving results
+  - **Methods**: SelectFile(), StartExtraction(), CancelExtraction(), SaveResults()
+  - **State**: IsExtracting, Progress, CurrentStep, ExtractedData, Error, AllowSave
+
+- [ ] T047 [US1] [US2] Implement PDF upload validation
+  - **File**: `src/EtnoPapers.Core/Utils/PDFValidator.cs`
+  - **Acceptance**: Validate PDF file type (magic numbers, not extension), size limits
+  - **Methods**: ValidatePDFFile(filePath), GetFileSize(filePath)
+  - **Checks**: File type, file size <50MB, file readable
+
+- [ ] T048 [US1] Implement duplicate detection
+  - **File**: `src/EtnoPapers.Core/Services/DuplicateDetectionService.cs`
+  - **Acceptance**: Compare extracted title/authors/year with existing records, warn if match found
+  - **Methods**: FindPotentialDuplicates(article), DisplayDuplicateWarning()
+  - **UI**: Show side-by-side comparison, offer merge or cancel option
+
+### Database Integration (US1, US4)
+
+- [ ] T049 [US1] [US4] Integrate DataStorageService with UploadViewModel
+  - **File**: `src/EtnoPapers.UI/ViewModels/UploadViewModel.cs` (update)
+  - **Acceptance**: Call DataStorageService.Create() to save extraction results
+  - **Features**: Handle save success/failure, update UI feedback
+
+---
+
+## Phase 4: Record Management UI (US1, US2)
 
 **Goal**: Implement CRUD interface for managing local records
 
-**Independent Test**: Can be tested with mock records without PDF extraction or cloud sync
+**Why Fourth**: Depends on working data storage; completes local workflow
 
-### Records Store & Hooks
+### Records Page (US1, US2)
 
-- [x] T070 [US2] Create Zustand records store
-  - **File**: `src/renderer/stores/useRecordsStore.ts`
-  - **Acceptance**: State for records list, selected IDs, filters, loading state
-  - **State**: records[], selectedIds[], filters, isLoading, error
+- [ ] T050 [US1] [US2] Create RecordsPage and RecordsViewModel
+  - **Files**: `src/EtnoPapers.UI/Views/RecordsPage.xaml`, `RecordsPage.xaml.cs`, `ViewModels/RecordsViewModel.cs`
+  - **Acceptance**: Page with record list/grid, filter/search, CRUD action toolbar
+  - **Bindings**: Load records on page load, bind to GridDataSource
+  - **Actions**: Edit, delete (bulk select), sync
 
-- [x] T071 [US2] Create records management hook
-  - **File**: `src/renderer/hooks/useRecords.ts`
-  - **Acceptance**: Custom hook for CRUD operations, loads records on mount
-  - **Methods**: loadRecords(), createRecord(), editRecord(), deleteRecord(), deleteMultiple()
+- [ ] T051 [US1] Create virtualized record grid
+  - **File**: `src/EtnoPapers.UI/Controls/VirtualizedRecordGrid.xaml`
+  - **Acceptance**: WPF DataGrid with virtualization (only render visible items) for 1000+ records
+  - **Performance**: Enable virtual scrolling, complete operations in <200ms
+  - **Columns**: Title, Authors, Year, Biome, Last Modified, Sync Status
+  - **Selection**: Multi-select checkbox
 
-### Records Page Components
+- [ ] T052 [US1] [US2] Create record filter controls
+  - **File**: `src/EtnoPapers.UI/Controls/RecordFilters.xaml`
+  - **Acceptance**: Filters for year range, author, biome, species presence, search text
+  - **Binding**: Two-way binding to RecordsViewModel filters
+  - **Features**: Debounced search (300ms), clear filters button
 
-- [x] T072 [US2] Create Records Page component
-  - **File**: `src/renderer/pages/RecordsPage.tsx`
-  - **Acceptance**: Grid/list view of records, search/filter, bulk actions toolbar
-  - **Features**: Record display, selection UI, action buttons
+- [ ] T053 [US1] Create edit record dialog
+  - **File**: `src/EtnoPapers.UI/Views/EditRecordDialog.xaml`
+  - **Acceptance**: Modal dialog with full record editing form
+  - **Binding**: Pre-populated from selected record
+  - **Features**: Save button, cancel, validation on save
 
-- [x] T073 [US2] Create Record Card component
-  - **File**: `src/renderer/components/records/RecordCard.tsx`
-  - **Acceptance**: Displays title, authors, year, sync status, actions (edit, delete, select)
-  - **Features**: Compact display, action buttons, selection checkbox
+- [ ] T054 [US1] Create delete confirmation dialog
+  - **File**: `src/EtnoPapers.UI/Views/DeleteConfirmDialog.xaml`
+  - **Acceptance**: Confirmation dialog for destructive actions
+  - **Display**: Show record count for bulk delete, confirm action
+  - **Features**: Cancel option, irreversible warning
 
-- [x] T074 [US2] Create Record Grid component
-  - **File**: `src/renderer/components/records/RecordGrid.tsx`
-  - **Acceptance**: Virtual scrolling grid of RecordCard components for performance
-  - **Features**: Handles 100+ records with <200ms interactions (from SC-003a)
+- [ ] T055 [US1] Create new record dialog
+  - **File**: `src/EtnoPapers.UI/Views/NewRecordDialog.xaml`
+  - **Acceptance**: Modal for manual record creation (empty form)
+  - **Features**: Form validation, save creates new record
 
-- [x] T075 [US2] Create Record Filters component
-  - **File**: `src/renderer/components/records/RecordFilters.tsx`
-  - **Acceptance**: Filter by year range, author, biome, species presence
-  - **Features**: Real-time filtering, debounced search
+### Record Management Logic (US1)
 
-- [x] T076 [US2] Create Record Form component
-  - **File**: `src/renderer/components/records/RecordForm.tsx`
-  - **Acceptance**: Editable form for all fields, custom attribute addition, validation
-  - **Features**: Field-level editing, add/remove custom attributes, validation feedback
+- [ ] T056 [US1] Implement RecordsViewModel
+  - **File**: `src/EtnoPapers.UI/ViewModels/RecordsViewModel.cs`
+  - **Acceptance**: Load records, filter, CRUD operations
+  - **Methods**: LoadRecords(), CreateRecord(data), EditRecord(id, data), DeleteRecord(id), DeleteMultiple(ids), ApplyFilters()
+  - **State**: Records[], SelectedIds[], Filters, IsLoading, Error
 
-- [x] T077 [US2] Implement create record modal
-  - **File**: `src/renderer/components/records/CreateRecordModal.tsx`
-  - **Acceptance**: Modal with empty RecordForm, creates new record on save
-  - **Features**: Form validation before save, success/error feedback
-
-- [x] T078 [US2] Implement edit record modal
-  - **File**: `src/renderer/components/records/EditRecordModal.tsx`
-  - **Acceptance**: Modal with pre-filled RecordForm, updates record on save
-  - **Features**: Pre-population from store, change detection, success feedback
-
-- [x] T079 [US2] Implement delete confirmation modal
-  - **File**: `src/renderer/components/records/DeleteConfirmModal.tsx`
-  - **Acceptance**: Confirmation dialog before deletion, shows record count for bulk delete
-  - **Features**: Clear action consequences, cancel option
-
-- [x] T080 [US2] Create connection status hook
-  - **File**: `src/renderer/hooks/useConnections.ts`
-  - **Acceptance**: Custom hook checks OLLAMA and MongoDB status on mount, updates store
-  - **Features**: Periodic polling, error handling
+- [ ] T057 [US1] [US2] Integrate storage service with RecordsViewModel
+  - **File**: `src/EtnoPapers.UI/ViewModels/RecordsViewModel.cs` (update)
+  - **Acceptance**: Call DataStorageService for all CRUD operations
+  - **Features**: Handle success/failure, update UI, show validation errors
 
 ---
 
-## Phase 5: Cloud Synchronization (User Story 3 - P3)
+## Phase 5: MongoDB Synchronization (US1, US4)
 
-**Goal**: Implement MongoDB synchronization with batch upload and local deletion
+**Goal**: Implement cloud sync for selected records
 
-**Independent Test**: Can be tested with test MongoDB by selecting mock records and verifying upload
+**Why Fifth**: Optional in MVP but important for data backup
 
-### MongoDB Service
+### Sync Page (US1, US4)
 
-- [x] T081 [US3] Implement MongoDB Sync Service (main process)
-  - **File**: `src/main/services/MongoDBSyncService.ts`
-  - **Acceptance**: Implements IMongoDBSyncService, connects to MongoDB, batch uploads
-  - **Methods**: testConnection(), uploadRecord(), uploadBatch(), getStatus(), deleteAfterSync()
+- [ ] T058 [US1] [US4] Create sync selection UI
+  - **Files**: `src/EtnoPapers.UI/Controls/SyncPanel.xaml`, `SyncPanel.xaml.cs`
+  - **Acceptance**: Show selected records, sync button, connection status
+  - **Display**: Record preview, selected count, MongoDB status
+  - **Features**: Connection test button, error display
 
-- [x] T082 [US3] Create MongoDB sync IPC handlers
-  - **File**: `src/main/ipc/syncHandlers.ts`
-  - **Acceptance**: Exposes sync operations via IPC with progress events
-  - **Channels**: 'sync:testConnection', 'sync:uploadBatch', 'sync:getStatus'
+- [ ] T059 [US1] [US4] Create sync progress display
+  - **File**: `src/EtnoPapers.UI/Controls/SyncProgressPanel.xaml`
+  - **Acceptance**: Progress bar, per-record status (pending, success, failed), cancel button
+  - **Bindings**: Update as sync progresses
+  - **Features**: Error details for failed records, retry options
 
-- [x] T083 [US3] Add sync API to preload script
-  - **File**: `src/preload/index.ts`
-  - **Acceptance**: Exposes syncAPI to renderer with event listeners
-  - **Methods**: testConnection(), uploadRecords(), onProgress()
+- [ ] T060 [US1] [US4] Create sync reminder notification
+  - **File**: `src/EtnoPapers.UI/Controls/SyncReminder.xaml`
+  - **Acceptance**: Notification if records count >500 or 7+ days since last sync
+  - **Features**: Dismissible, non-intrusive
 
-### Sync UI Components
+### Sync Workflow (US1, US4)
 
-- [x] T084 [US3] Create Sync Panel component
-  - **File**: `src/renderer/components/sync/SyncPanel.tsx`
-  - **Acceptance**: Shows selected records, sync button, connection status
-  - **Features**: Record preview, confirmation, status display
+- [ ] T061 [US1] [US4] Create SyncViewModel
+  - **File**: `src/EtnoPapers.UI/ViewModels/SyncViewModel.cs`
+  - **Acceptance**: Manage sync workflow, state, progress
+  - **Methods**: SelectRecords(ids), StartSync(), CancelSync(), GetSyncStatus()
+  - **State**: SelectedRecords[], IsSyncing, Progress, FailedRecords, LastSyncTime
 
-- [x] T085 [US3] Create Sync Progress component
-  - **File**: `src/renderer/components/sync/SyncProgress.tsx`
-  - **Acceptance**: Progress bar, per-record status (success/failed), cancel button
-  - **Features**: Real-time progress updates, error details
-
-- [x] T086 [US3] Add sync functionality to Records Page
-  - **File**: `src/renderer/pages/RecordsPage.tsx` (update)
-  - **Acceptance**: Checkbox selection, "Sync Selected" button in toolbar, opens SyncPanel
-  - **Features**: Multi-select support, bulk sync action
-
-- [x] T087 [US3] Implement sync reminder notification
-  - **File**: `src/renderer/components/SyncReminder.tsx`
-  - **Acceptance**: Shows notification if records count > 500 or X days since last sync
-  - **Features**: Dismissible, smart timing
+- [ ] T062 [US4] Integrate MongoDBSyncService with SyncViewModel
+  - **File**: `src/EtnoPapers.UI/ViewModels/SyncViewModel.cs` (update)
+  - **Acceptance**: Call MongoDBSyncService.UploadBatch(), delete local on success
+  - **Features**: Handle network failures gracefully, keep records local on error
 
 ---
 
-## Phase 6: Testing & Quality Assurance
+## Phase 6: Settings & Configuration (US1, US4)
 
-**Goal**: Comprehensive test coverage and quality validation
+**Goal**: Implement configuration UI for OLLAMA and MongoDB
 
-### Unit Tests
+**Why Sixth**: Can be developed early since service exists; used by all workflows
 
-- [ ] T088 [P] Write unit tests for title normalization
-  - **File**: `tests/unit/utils/titleNormalizer.test.ts`
-  - **Acceptance**: Test cases for proper case, acronyms, particles, edge cases
-  - **Coverage**: >90% for titleNormalizer.ts
+### Settings Page (US1, US4)
 
-- [ ] T089 [P] Write unit tests for APA author formatting
-  - **File**: `tests/unit/utils/authorFormatter.test.ts`
-  - **Acceptance**: Test cases for single/multiple names, particles, suffixes
-  - **Coverage**: >90% for authorFormatter.ts
+- [ ] T063 [US1] [US4] Create SettingsPage and SettingsViewModel
+  - **Files**: `src/EtnoPapers.UI/Views/SettingsPage.xaml`, `SettingsPage.xaml.cs`, `ViewModels/SettingsViewModel.cs`
+  - **Acceptance**: Form for OLLAMA config, MongoDB URI, language selection
+  - **Bindings**: Load current config, save on apply
+  - **Sections**: AI Configuration, Database Configuration, Application Settings
 
-- [ ] T090 [P] Write unit tests for language detection
-  - **File**: `tests/unit/utils/languageDetector.test.ts`
-  - **Acceptance**: Test samples in PT, EN, ES correctly identified
-  - **Coverage**: >85% for languageDetector.ts
+- [ ] T064 [US1] Create OLLAMA configuration form
+  - **File**: `src/EtnoPapers.UI/Controls/OLLAMAConfigForm.xaml`
+  - **Acceptance**: Input fields for OLLAMA URL (default: http://localhost:11434), model name, custom prompt
+  - **Features**: Test connection button, connection status display
+  - **Validation**: Valid URL format, non-empty model
 
-- [ ] T091 [P] Write unit tests for Validation Service
-  - **File**: `tests/unit/services/ValidationService.test.ts`
-  - **Acceptance**: Test valid/invalid records, mandatory field checks
-  - **Coverage**: >85% for ValidationService.ts
+- [ ] T065 [US4] Create MongoDB configuration form
+  - **File**: `src/EtnoPapers.UI/Controls/MongoDBConfigForm.xaml`
+  - **Acceptance**: Input field for MongoDB URI
+  - **Features**: Test connection button, connection status display, validate URI format
+  - **Security**: Mask password display, clear on reset
 
-- [ ] T092 [P] Write unit tests for Logger Service
-  - **File**: `tests/unit/services/LoggerService.test.ts`
-  - **Acceptance**: Test log levels, file creation, rotation
-  - **Coverage**: >80% for LoggerService.ts
+- [ ] T066 [US1] [US4] Create connection test UI
+  - **File**: `src/EtnoPapers.UI/Controls/ConnectionTestButton.xaml`
+  - **Acceptance**: Button that tests OLLAMA/MongoDB connection, shows result (spinner, success, error)
+  - **Binding**: Disabled when testing, shows status message
+  - **Timeout**: 5 second timeout for connection test
 
-### Integration Tests
+- [ ] T067 Create application settings form
+  - **File**: `src/EtnoPapers.UI/Controls/AppSettingsForm.xaml`
+  - **Acceptance**: Language selection (Portuguese/English), window size/position options
+  - **Features**: Save preferences, apply immediately
 
-- [ ] T093 Write integration test for PDF extraction
-  - **File**: `tests/integration/pdfProcessing.test.ts`
-  - **Acceptance**: Test with real PDF fixtures, verify text extraction accuracy
-  - **Fixtures**: Include test PDFs in `tests/fixtures/`
+### Settings Logic (US1, US4)
 
-- [ ] T094 Write integration test for extraction pipeline
-  - **File**: `tests/integration/extractionPipeline.test.ts`
-  - **Acceptance**: End-to-end test: PDF → text → AI (mocked) → validation → storage
-  - **Mocks**: Mock OLLAMA responses
+- [ ] T068 [US1] [US4] Implement SettingsViewModel
+  - **File**: `src/EtnoPapers.UI/ViewModels/SettingsViewModel.cs`
+  - **Acceptance**: Load configuration, apply changes, test connections
+  - **Methods**: LoadConfiguration(), SaveConfiguration(), TestOLLAMAConnection(), TestMongoDBConnection()
+  - **State**: OLLAMAUrl, OLLAMAModel, OLLAMAPrompt, MongoDBUri, Language, ConnectionStatus
 
-- [ ] T095 Write integration test for storage operations
-  - **File**: `tests/integration/storageOperations.test.ts`
-  - **Acceptance**: Test CRUD operations, file persistence, limit enforcement
+- [ ] T069 [US1] [US4] Integrate ConfigurationService with SettingsViewModel
+  - **File**: `src/EtnoPapers.UI/ViewModels/SettingsViewModel.cs` (update)
+  - **Acceptance**: Load/save configuration from ConfigurationService
+  - **Features**: Validation before save, default values, persistent storage
+
+---
+
+## Phase 7: Performance & Testing
+
+**Goal**: Optimize performance and validate all features
+
+**Why Seventh**: After all features implemented, benchmark and test
+
+### Performance Optimization (US3)
+
+- [ ] T070 [US3] Create startup performance benchmark
+  - **File**: `src/EtnoPapers.UI/Services/PerformanceBenchmark.cs`
+  - **Acceptance**: Measure startup time from app launch to main window visible
+  - **Target**: <2 seconds (primary success criterion)
+  - **Logging**: Log startup stages and durations
+
+- [ ] T071 [US3] Create record management performance test
+  - **File**: `src/EtnoPapers.UI/Services/RecordManagementBenchmark.cs`
+  - **Acceptance**: Measure time for sort 1000 records, filter, search, pagination
+  - **Target**: <200ms per operation
+  - **Logging**: Log operation times
+
+- [ ] T072 [US3] Create memory usage profiling setup
+  - **File**: `src/EtnoPapers.UI/Services/MemoryProfiler.cs`
+  - **Acceptance**: Measure idle memory usage after loading 1000 records
+  - **Target**: <150 MB
+  - **Method**: Use GC.GetTotalMemory() or performance counters
+
+- [ ] T073 [US3] Optimize startup by lazy-loading
+  - **File**: `src/EtnoPapers.UI/ViewModels/MainWindowViewModel.cs` (update)
+  - **Acceptance**: Don't load records on startup; load on Records page first access
+  - **Features**: Lazy loading, progress indication during load
+
+- [ ] T074 [US3] Optimize record grid virtual scrolling
+  - **File**: `src/EtnoPapers.UI/Controls/VirtualizedRecordGrid.xaml` (update)
+  - **Acceptance**: Ensure DataGrid virtualization is enabled, no rendering of off-screen items
+  - **Testing**: Load 1000+ records, verify <200ms interactions
+
+### Unit Tests (US1, US4)
+
+- [ ] T075 [P] Write unit tests for TitleNormalizer
+  - **File**: `tests/EtnoPapers.Core.Tests/Utils/TitleNormalizerTests.cs`
+  - **Coverage**: >90% - test proper case, acronyms, particles, edge cases
+  - **Framework**: xUnit
+
+- [ ] T076 [P] Write unit tests for AuthorFormatter
+  - **File**: `tests/EtnoPapers.Core.Tests/Utils/AuthorFormatterTests.cs`
+  - **Coverage**: >90% - test single/multiple names, particles, suffixes, APA format
+  - **Framework**: xUnit
+
+- [ ] T077 [P] Write unit tests for LanguageDetector
+  - **File**: `tests/EtnoPapers.Core.Tests/Utils/LanguageDetectorTests.cs`
+  - **Coverage**: >85% - test PT, EN, ES detection accuracy
+  - **Framework**: xUnit
+
+- [ ] T078 [P] Write unit tests for ArticleRecordValidator
+  - **File**: `tests/EtnoPapers.Core.Tests/Validation/ArticleRecordValidatorTests.cs`
+  - **Coverage**: >85% - test valid/invalid records, mandatory field checks
+  - **Framework**: xUnit
+
+### Integration Tests (US1, US4)
+
+- [ ] T079 Write integration test for JSON serialization
+  - **File**: `tests/EtnoPapers.Core.Tests/Integration/JsonSerializationTests.cs`
+  - **Acceptance**: Load Electron-generated JSON, deserialize, serialize back, verify identical
+  - **Test Data**: Include sample JSON from Electron version
+  - **Framework**: xUnit
+
+- [ ] T080 Write integration test for DataStorageService
+  - **File**: `tests/EtnoPapers.Core.Tests/Integration/DataStorageServiceTests.cs`
+  - **Acceptance**: CRUD operations, JSON persistence, limit enforcement
   - **Setup**: Use temp directory for test JSON files
+  - **Framework**: xUnit
 
-- [ ] T096 Write integration test for MongoDB sync
-  - **File**: `tests/integration/mongodbSync.test.ts`
-  - **Acceptance**: Test with MongoDB memory server, verify upload and deletion
-  - **Setup**: Use mongodb-memory-server for isolated testing
+- [ ] T081 Write integration test for extraction pipeline
+  - **File**: `tests/EtnoPapers.Core.Tests/Integration/ExtractionPipelineTests.cs`
+  - **Acceptance**: End-to-end: PDF → text → validation → storage (with mocked OLLAMA)
+  - **Mocks**: Mock OLLAMAService to return test responses
+  - **Framework**: xUnit
 
-### E2E Tests
+- [ ] T082 Write integration test for MongoDB sync
+  - **File**: `tests/EtnoPapers.Core.Tests/Integration/MongoDBSyncServiceTests.cs`
+  - **Acceptance**: Test MongoDB connection, batch upload with test database
+  - **Setup**: Use MongoDB test container or memory server
+  - **Framework**: xUnit
 
-- [ ] T097 Write E2E test for configuration workflow
-  - **File**: `tests/e2e/configuration.spec.ts`
-  - **Acceptance**: Test setting OLLAMA config, MongoDB URI, connection testing
-  - **Playwright**: Full app launch and interaction
+### UI Acceptance Testing (US1, US2)
 
-- [ ] T098 Write E2E test for PDF upload and extraction
-  - **File**: `tests/e2e/uploadAndExtract.spec.ts`
-  - **Acceptance**: Test file selection, extraction progress, result editing, save
-  - **Setup**: Mock OLLAMA service or use test instance
-
-- [ ] T099 Write E2E test for record management
-  - **File**: `tests/e2e/manageRecords.spec.ts`
-  - **Acceptance**: Test create, view, edit, delete records
-  - **Verification**: Check local JSON file for changes
-
-- [ ] T100 Write E2E test for MongoDB synchronization
-  - **File**: `tests/e2e/syncToMongoDB.spec.ts`
-  - **Acceptance**: Test record selection, sync, verify local deletion
-  - **Setup**: Use test MongoDB instance
-
-### Component Tests
-
-- [ ] T101 [P] Write component tests for common components
-  - **Files**: `tests/unit/components/Button.test.tsx`, `Input.test.tsx`, etc.
-  - **Acceptance**: Test rendering, props, user interactions for Button, Input, Select, Toast, Modal
-  - **Coverage**: 100% for common components
-
-- [ ] T102 [P] Write component tests for layout components
-  - **Files**: `tests/unit/components/layout/*.test.tsx`
-  - **Acceptance**: Test Sidebar, StatusBar, Header rendering and behavior
-  - **Coverage**: >85% for layout components
-
-- [ ] T103 Write component tests for Settings Page
-  - **File**: `tests/unit/pages/SettingsPage.test.tsx`
-  - **Acceptance**: Test configuration form, connection testing, save
-  - **Mocks**: Mock config API
-
-- [ ] T104 Write component tests for Upload Page
-  - **File**: `tests/unit/pages/UploadPage.test.tsx`
-  - **Acceptance**: Test file upload, progress display, result editing
-  - **Mocks**: Mock extraction API
-
-- [ ] T105 Write component tests for Records Page
-  - **File**: `tests/unit/pages/RecordsPage.test.tsx`
-  - **Acceptance**: Test record display, filtering, selection, CRUD actions
-  - **Mocks**: Mock storage API
+- [ ] T083 Create UI acceptance test checklist
+  - **File**: `tests/UI_ACCEPTANCE_TEST_CHECKLIST.md`
+  - **Scenarios**:
+    - Upload PDF → Extract → Edit → Save
+    - View records → Filter → Edit → Delete
+    - Configure OLLAMA → Test → Save
+    - Configure MongoDB → Test → Sync
+    - Verify Windows native controls, keyboard shortcuts, taskbar integration
 
 ---
 
-## Phase 7: Polish, Error Handling & UX Refinements
+## Phase 8: Build, Installer & Release
 
-**Goal**: Production-ready error handling, notifications, and user experience improvements
+**Goal**: Create professional Windows installer and release package
 
-### Error Handling
+**Why Eighth**: After all features complete and tested
 
-- [ ] T106 Implement global error boundary for React
-  - **File**: `src/renderer/components/ErrorBoundary.tsx`
-  - **Acceptance**: Catches React errors, displays fallback UI, logs errors
-  - **Features**: Error boundary with recovery suggestions
+### Project File Configuration
 
-- [ ] T107 Implement error notification system
-  - **File**: `src/renderer/services/NotificationService.ts`
-  - **Acceptance**: Centralized notification management, error → user-friendly messages
-  - **Methods**: success(), error(), warning(), info()
+- [ ] T084 Configure EtnoPapers.UI as startup project
+  - **File**: `EtnoPapers.sln`
+  - **Acceptance**: UI project set as startup in solution
+  - **Command**: Right-click project → Set as Startup Project
 
-- [ ] T108 Add error handling to all service calls
-  - **Files**: All `src/renderer/hooks/*.ts`
-  - **Acceptance**: Try-catch blocks, user-friendly error messages, logging
-  - **Pattern**: Consistent error handling across all hooks
+- [ ] T085 Configure version information
+  - **File**: `src/EtnoPapers.UI/EtnoPapers.UI.csproj`
+  - **Acceptance**: Version set to 1.0.0, product name, company, copyright
+  - **Properties**: AssemblyVersion, FileVersion, ProductVersion, Company
 
-- [ ] T109 Implement retry logic for OLLAMA calls
-  - **File**: `src/main/services/OLLAMAService.ts` (update)
-  - **Acceptance**: Retry up to 3 times on network errors with exponential backoff
-  - **Features**: User-friendly retry feedback
+### Installer Creation
 
-- [ ] T110 Implement retry logic for MongoDB operations
-  - **File**: `src/main/services/MongoDBSyncService.ts` (update)
-  - **Acceptance**: Retry transient failures, keep records local on persistent failure
-  - **Features**: User-friendly failure messages
+- [ ] T086 Create Windows installer using WiX or NSIS
+  - **File**: `build/installer.wxs` (or `.nsi` for NSIS)
+  - **Acceptance**: Installer configuration created, can build to .msi or .exe
+  - **Features**: Install to Program Files, Start Menu shortcuts, .NET 8 prerequisite check
+  - **Tool**: WiX Toolset or NSIS (choose based on preference)
 
-### UX Improvements
+- [ ] T087 Create .NET 8 prerequisite check script
+  - **File**: `build/check-dotnet.ps1`
+  - **Acceptance**: PowerShell script checks for .NET 8 runtime, prompts user to install if missing
+  - **Distribution**: Include with installer
 
-- [ ] T111 Add loading states to all async operations
-  - **Files**: All page components
-  - **Acceptance**: Spinner/skeleton during loading, disabled buttons during operations
-  - **Pattern**: Consistent loading UI pattern
+- [ ] T088 Create installer asset files
+  - **Files**: `build/icon.ico`, `build/banner.bmp`, `build/LICENSE.txt`
+  - **Acceptance**: Professional icons, installer banner, license file
+  - **Content**: Brand images, MITL/GPL license text as appropriate
 
-- [ ] T112 Add empty states for Records Page
-  - **File**: `src/renderer/components/records/EmptyState.tsx`
-  - **Acceptance**: Helpful message when no records, call-to-action to upload PDF
-  - **Features**: Contextual guidance
+### Build Scripts
 
-- [ ] T113 Implement keyboard shortcuts
-  - **File**: `src/renderer/hooks/useKeyboardShortcuts.ts`
-  - **Acceptance**: Ctrl+N (new record), Ctrl+S (save), Ctrl+F (search)
-  - **Features**: Help modal showing shortcuts
+- [ ] T089 Create production build script
+  - **File**: `build/build-release.ps1`
+  - **Acceptance**: Builds solution in Release mode, creates installer
+  - **Commands**: `dotnet build -c Release`, installer creation
+  - **Output**: Produces `dist/EtnoPapers-1.0.0.exe` and `dist/EtnoPapers-1.0.0.msi`
 
-- [ ] T114 Add confirmation dialogs for destructive actions
-  - **Files**: Records Page, Settings Page
-  - **Acceptance**: Confirm before delete record(s), reset config
-  - **Pattern**: Use Modal component consistently
+### Documentation
 
-- [ ] T115 Implement search/filter debouncing
-  - **File**: `src/renderer/hooks/useDebounce.ts`
-  - **Acceptance**: Custom debounce hook, 300ms delay
-  - **Features**: Efficient filtering
+- [ ] T090 Create installation guide (Portuguese)
+  - **File**: `docs/INSTALLATION_PT-BR.md`
+  - **Acceptance**: Step-by-step installation instructions for non-technical users
+  - **Content**: Download link, system requirements (.NET 8, Windows 10+), installation steps, troubleshooting
 
-- [ ] T116 Add tooltips for UI elements
-  - **File**: `src/renderer/components/common/Tooltip.tsx`
-  - **Acceptance**: Reusable tooltip component, accessible
-  - **Features**: Show/hide on hover, keyboard accessible
-
-### Performance Optimizations
-
-- [ ] T117 Implement virtual scrolling for record list
-  - **File**: `src/renderer/components/records/RecordGrid.tsx` (update)
-  - **Acceptance**: Use react-window or similar, render only visible items
-  - **Performance**: Support 1000+ records with <200ms interactions (SC-003a)
-
-- [ ] T118 Optimize PDF processing with streaming
-  - **File**: `src/main/services/PDFProcessingService.ts` (update)
-  - **Acceptance**: Stream large PDFs, process page-by-page
-  - **Features**: Progress updates for large files
-
-- [ ] T119 Add auto-save for extraction results
-  - **File**: `src/renderer/pages/UploadPage.tsx` (update)
-  - **Acceptance**: Auto-save edited extraction results every 30 seconds
-  - **Pattern**: Debounced auto-save with status indicator
-
-### Internationalization & Localization
-
-- [ ] T120 Setup i18n infrastructure
-  - **File**: `src/renderer/services/i18nService.ts`
-  - **Acceptance**: i18n library configured, language selection stored
-  - **Languages**: Portuguese (PT-BR), English (EN)
-
-- [ ] T121 Create Portuguese locale file
-  - **File**: `resources/locales/pt-BR.json`
-  - **Acceptance**: All UI strings translated to Brazilian Portuguese
-  - **Scope**: All user-facing text
-
-- [ ] T122 Create English locale file
-  - **File**: `resources/locales/en-US.json`
-  - **Acceptance**: All UI strings in English
-  - **Scope**: Complete translation
-
-- [ ] T123 Implement language switching
-  - **File**: `src/renderer/components/settings/LanguageSelector.tsx`
-  - **Acceptance**: Toggle between Portuguese and English, immediate UI update
-  - **Features**: Persist language selection
-
----
-
-## Phase 8: Installer & Distribution
-
-**Goal**: Create professional Windows installer and deployment packages
-
-### Installer Configuration
-
-- [ ] T124 Configure electron-builder for Windows installer
-  - **File**: `electron-builder.config.js` (update)
-  - **Acceptance**: NSIS installer configured, auto-updater setup, file associations
-  - **Features**: Professional installer UI, start menu shortcuts, uninstall support
-
-- [ ] T125 Create installer assets
-  - **Files**: `resources/icons/*.ico`, `resources/installers/*`
-  - **Acceptance**: App icons (256x256, 64x64, 32x32), installer banner, license file
-  - **Content**: Professional branding, clear license terms
-
-- [ ] T126 Create installation guide documentation
-  - **File**: `docs/INSTALLATION.md` (Portuguese)
-  - **Acceptance**: Step-by-step installation instructions, OLLAMA prerequisites, MongoDB setup
-  - **Content**: Clear, non-technical language
-
----
-
-## Phase 9: Final Integration & Release
-
-**Goal**: Verify all components work together, performance validation, release preparation
-
-### Integration Tests
-
-- [ ] T127 Run full E2E test suite
-  - **Command**: `pnpm test:e2e`
-  - **Acceptance**: All E2E tests pass, no flaky tests
-  - **Coverage**: Configuration → extraction → record management → sync workflow
-
-- [ ] T128 Performance validation
-  - **File**: `tests/performance/benchmarks.ts`
-  - **Acceptance**: Verify performance goals met (PDF <2min, UI <200ms, storage <50ms)
-  - **Success Criteria**: All SC-001 through SC-010 validated
-
-- [ ] T129 Build and package Windows installer
-  - **Command**: `pnpm dist`
-  - **Acceptance**: Installer created, size <200MB, installs successfully on Windows 10+
-  - **Features**: Code signing ready (optional)
-
-- [ ] T130 Create release notes
+- [ ] T091 Create release notes
   - **File**: `CHANGELOG.md`
-  - **Acceptance**: Document features, bug fixes, known issues, installation requirements
+  - **Acceptance**: Document version 1.0.0 features, known issues, installation requirements
   - **Format**: Markdown, user-friendly language
 
 ---
 
-## User Story Dependencies
+## Phase 9: Launch & Post-Release
 
-```
-US4 (Configure Settings) [P1]
-  ↓ (required for)
-US1 (Extract Metadata) [P1]
-  ↓ (feeds into)
-US2 (Manage Records) [P2]
-  ↓ (enables)
-US3 (Sync to MongoDB) [P3]
-```
+**Goal**: Release application and set up support infrastructure
 
-**MVP Path**: US4 → US1 → US2 (minimal viable product excludes cloud sync)
+**Why Last**: After all phases complete
+
+### GitHub Release
+
+- [ ] T092 Create GitHub release
+  - **File**: GitHub Release page
+  - **Acceptance**: v1.0.0 release created with installer attachments
+  - **Content**: Release notes, download links, installation instructions, known issues
+
+- [ ] T093 Update README.md for release
+  - **File**: `README.md`
+  - **Acceptance**: Update with download link, installation instructions, feature list
+  - **Sections**: Features, Installation, Usage, Troubleshooting, Support Contact
+
+### Support Infrastructure
+
+- [ ] T094 Create user support email template
+  - **File**: `docs/SUPPORT_EMAIL_TEMPLATE.md`
+  - **Acceptance**: Template for responding to user bug reports and support requests
+  - **Content**: Troubleshooting steps, log collection instructions, contact info
+
+- [ ] T095 Set up issue tracking
+  - **File**: GitHub Issues configuration
+  - **Acceptance**: Create labels (bug, feature-request, documentation), enable discussions
+  - **Template**: Issue template for bug reports
+
+### Post-Release Monitoring
+
+- [ ] T096 Set up crash reporting (optional)
+  - **File**: `src/EtnoPapers.UI/Services/CrashReporter.cs`
+  - **Acceptance**: Optional Sentry or similar integration for crash reports
+  - **User Control**: Opt-in only, can be disabled in settings
+
+- [ ] T097 Create monitoring dashboard setup
+  - **File**: `docs/MONITORING_SETUP.md`
+  - **Acceptance**: Instructions for setting up error tracking/monitoring
+  - **Tools**: Sentry (optional), application logs review
 
 ---
 
-## Parallel Execution Opportunities
+## Dependencies & Execution Order
 
-### Phase 0 (Setup) - Fully Parallelizable
-Tasks T001-T022 can run in parallel (different files, no dependencies):
-- T001-T007: Dependency installation [P]
-- T008-T017: Configuration files [P]
-- T018-T021: Directory structure [P]
+### User Story Dependency Chain
 
-### Phase 1 (Foundational) - Partially Parallelizable
-- T023-T030: Type definitions and utilities [P] (no dependencies)
-- T031-T036: Configuration service (depends on T023-T030)
+```
+US4 (Data Compatibility) ← Blocks everything
+  ↓
+US1 (Feature Parity) ← Depends on US4
+  ↓
+US2 (Windows Native) ← Depends on US1
+  ↓
+US3 (Performance) ← Depends on US1, US2 (validation)
+  ↓
+Release
+```
 
-### Phase 2 (Core Services) - Partially Parallelizable
-- T037-T039: PDF service [P]
-- T040-T042: OLLAMA service [P]
-- T043-T045: Storage service [P]
-- T046: Validation (depends on T030)
-- T047-T050: Pipeline orchestration (depends on T037-T045)
+**Execution Path**:
+1. Phase 0 (Setup) - Initialize solution
+2. Phase 1 (Foundational) - Core services & data models (supports US4, US1)
+3. Phase 2 (UI Foundation) - MVVM, WPF controls (supports US2)
+4. Phase 3 (Extraction UI) - Upload workflow (US1 + US2)
+5. Phase 4 (Record Management) - CRUD interface (US1 + US2)
+6. Phase 5 (MongoDB Sync) - Cloud backup (US4)
+7. Phase 6 (Settings) - Configuration (US4)
+8. Phase 7 (Testing & Performance) - Validate US1, US2, US3
+9. Phase 8-9 (Release) - Build and launch
 
-### Phase 3 (UI) - Partially Parallelizable
-- T051-T054: UI foundation [P]
-- T055-T062: Reusable components [P] (depend on T051-T054)
-- T063-T069: Page components (depend on T055-T062 and Phase 2 services)
+### Parallel Opportunities
 
-**Recommended Parallel Groups** (for team of 3-4 developers):
-1. **Developer A**: Phase 0 setup tasks
-2. **Developer B**: Phase 1 (Foundational) config service
-3. **Developer C**: Phase 2 (Core Services) - PDF, OLLAMA, Storage
-4. **Developer D**: Phase 3 (UI) - Components and pages
+**Phase 0 (Setup)**:
+- T002, T003, T004 can run in parallel (different projects)
+- T005-T008 can run in parallel (different project files)
+- T009-T011 can run in parallel (different directories)
+
+**Phase 1 (Foundational)**:
+- T012-T020 can run in parallel (independent models/utilities)
+- T022-T029 services can be started in parallel, but ExtractionPipelineService (T028) depends on T024, T025, T027
+
+**Phase 2 (UI Foundation)**:
+- T034, T035, T036, T037 can run in parallel (different controls)
+- T039-T040 localization files can run in parallel
+
+**Phase 3-7**:
+- UI pages (Upload, Records, etc.) can start in parallel once MainWindow exists
+- Tests can start once services are implemented
 
 ---
 
@@ -868,63 +765,65 @@ Tasks T001-T022 can run in parallel (different files, no dependencies):
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Total Tasks | 130 | ✅ |
-| Setup Phase (T001-T022) | 22 | ✅ |
-| Foundational Phase (T023-T036) | 14 | ✅ |
-| US1 Phase (T037-T069) | 33 | ✅ |
-| US2 Phase (T070-T087) | 18 | ✅ |
-| US3 Phase (T081-T087) | 7 | ✅ |
-| Testing Phase (T088-T105) | 18 | ✅ |
-| Polish Phase (T106-T123) | 18 | ✅ |
-| Release Phase (T124-T130) | 7 | ✅ |
-| Tasks with [P] parallel marker | 32 | ✅ |
-| Tasks with [US#] story label | 95 | ✅ |
+| Total Tasks | 97 | ✅ |
+| Setup Phase (T001-T011) | 11 | ✅ |
+| Foundational Phase (T012-T029) | 18 | ✅ |
+| US1 Phase (T030-T049) | 20 | ✅ |
+| US2 Phase (incorporated in T030-T074) | Integrated | ✅ |
+| US4 Phase (incorporated in T012-T069) | Integrated | ✅ |
+| US3 Phase (T070-T074) | 5 | ✅ |
+| Testing Phase (T075-T083) | 9 | ✅ |
+| Build & Release (T084-T097) | 14 | ✅ |
+| Tasks with [P] parallel marker | 25 | ✅ |
+| Tasks with [US#] story label | 74 | ✅ |
 | Format Compliance | 100% | ✅ |
-
----
-
-## Checklist Format Validation
-
-All 130 tasks follow the required format:
-- ✅ All start with `- [ ]` (markdown checkbox)
-- ✅ All have sequential Task ID (T001...T130)
-- ✅ All user story tasks have [US#] label
-- ✅ Parallelizable tasks marked with [P]
-- ✅ All have clear description with file path
-
-**Example Task Structure**:
-```
-- [ ] T001 [P] Initialize Node.js project with pnpm in root directory
-  - **File**: `package.json`
-  - **Acceptance**: Criteria...
-  - **Commands**: ...
-```
 
 ---
 
 ## Implementation Strategy
 
-### MVP Scope (Phases 0-4, Excludes US3)
-**Estimated Effort**: 6-8 weeks (4 developers)
-- Setup & infrastructure
-- Configuration service
-- PDF extraction pipeline
-- Local record management
-- Core UI components
+### MVP Scope (Phases 0-6, Core Features)
+**Estimated Effort**: 8-12 weeks (1-2 developers)
+- Setup & infrastructure (Phase 0)
+- Core services & data models (Phase 1)
+- WPF UI foundation (Phase 2)
+- PDF extraction workflow (Phase 3)
+- Record management (Phase 4)
+- MongoDB synchronization (Phase 5)
+- Settings & configuration (Phase 6)
+
+**Deliverable**: Fully functional C# WPF application with 100% feature parity with Electron
 
 ### Full Product (All Phases)
-**Estimated Effort**: 10-12 weeks (4 developers)
-- Includes MongoDB sync
-- Full testing coverage
-- Performance optimization
-- i18n and localization
-- Installer and release
+**Estimated Effort**: 12-16 weeks (1-2 developers)
+- Includes comprehensive testing (Phase 7)
+- Professional installer & release (Phase 8-9)
+- Performance validation & benchmarking
+- User documentation
+- Support infrastructure
 
-### Recommended First Week
-- Complete Phase 0 (setup) - Day 1-2
-- Complete Phase 1 (foundational) - Day 3-5
-- Begin Phase 2 (core services) - Day 5-end of week
+### Recommended First Week (Phases 0-1)
+**Tasks**: T001-T029
+- Day 1-2: Solution setup, projects, dependencies (T001-T011)
+- Day 3-4: Data models, JSON serialization (T012-T017)
+- Day 5: Utility functions and validation (T018-T021)
+- Day 5-end: Core services (T022-T029)
+- **Result**: Runnable project with testable services, ready for UI development
 
 ---
 
-**Ready to execute. Each task is specific enough for independent completion. Begin with Phase 0 setup tasks (can run in parallel).**
+## Checklist Format Validation
+
+All 97 tasks follow the required format:
+- ✅ All start with `- [ ]` (markdown checkbox)
+- ✅ All have sequential Task ID (T001...T097)
+- ✅ Story labels ([US#]) present for phases 3-6
+- ✅ Parallelizable tasks marked with [P]
+- ✅ All have clear description with file path
+- ✅ Clear acceptance criteria per task
+
+---
+
+**Ready to execute. Each task is specific enough for independent completion.**
+
+**Start with Phase 0 (T001-T011): Project initialization and dependency installation.**
