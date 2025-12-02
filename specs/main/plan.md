@@ -40,7 +40,7 @@ EtnoPapers is a Windows desktop application built with Electron, React, and Type
 
 **Performance Goals**:
 - PDF extraction: <2 minutes for typical 20-30 page paper
-- UI responsiveness: <100ms for all interactions
+- UI responsiveness for record management: <200ms for all interactions (sorting, filtering, pagination, search) with 100+ records [CLARIFIED]
 - Local storage operations: <50ms
 - MongoDB sync: <5 seconds per record (network dependent)
 
@@ -106,6 +106,22 @@ EtnoPapers is a Windows desktop application built with Electron, React, and Type
 - Service interfaces follow separation of concerns
 - No unnecessary complexity introduced
 - All technical decisions traceable to requirements
+
+---
+
+## Clarifications Integrated from Specification Phase
+
+The following design decisions from `/speckit.clarify` session (2025-12-02) are incorporated into this plan:
+
+1. **Data Model Cardinality**: Unlimited arrays for plant species, authors, and communities per article. No validation limits; AI extraction logic is responsible for reasonable content.
+
+2. **No-Text PDF Handling**: Display error message with recovery guidance ("This PDF appears to be scanned. Please use the original digital file or apply OCR preprocessing.") and prevent further processing until user uploads a different file. [Implements FR-010a]
+
+3. **Record Management Performance**: All interactions (sorting, filtering, pagination, search) must complete in under 200ms for 100+ records. [Implements SC-003a, requires virtual scrolling in Phase 6]
+
+4. **Duplicate Article Detection**: Display warning with side-by-side comparison of new extraction vs. existing record (matching on title, authors, year), offering user options to cancel or merge records. [Implements FR-010b]
+
+5. **GPU Information Message**: Display on Home page when OLLAMA is configured but GPU is not detected. Contextual and non-intrusive. [Implements FR-036]
 
 ---
 
