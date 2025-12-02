@@ -1,61 +1,66 @@
-# Implementation Plan: EtnoPapers Desktop Application
+# Implementation Plan: EtnoPapers Desktop Migration - Electron to C# WPF
 
 **Branch**: `main` (single-branch workflow)
-**Date**: 2025-12-01
+**Date**: 2025-12-02
 **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification for ethnobotanical metadata extraction desktop application
+**Input**: Feature specification for migrating EtnoPapers from Electron to C# WPF
 
 ## Summary
 
-EtnoPapers is a Windows desktop application built with Electron, React, and TypeScript that enables ethnobotany researchers to extract metadata from PDF scientific papers using local AI (OLLAMA), manage records locally, and synchronize to MongoDB for backup and collaboration.
+EtnoPapers is being refactored from a Node.js/TypeScript/Electron-based desktop application to a native Windows desktop application using C# and Windows Presentation Foundation (WPF). This migration maintains **100% functional parity** with the original Electron version while improving performance, native Windows integration, and reducing resource consumption.
 
-**Core Value Proposition**: Transform manual, time-consuming metadata extraction into an automated, AI-powered workflow that reduces hours of work to minutes while maintaining data quality and researcher control.
+**Core Value Proposition**: Transform the existing EtnoPapers application into a native Windows experience that loads faster, uses fewer resources, integrates seamlessly with Windows conventions, and provides a more professional user experience for ethnobotany researchers.
 
-**Technical Approach**: Local-first desktop application using Electron for cross-platform desktop capabilities, pdf.js for text extraction, OLLAMA for AI-powered metadata extraction, lowdb for local JSON storage, and MongoDB for cloud backup.
+**Migration Approach**: Refactor Electron TypeScript code → C# WPF, maintaining identical data structures (JSON files, MongoDB documents), AI integration (OLLAMA), and user workflows.
 
 ---
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.3+ / Node.js 20 LTS
+**Language/Version**: C# 12 / .NET 8.0 LTS
+
 **Primary Dependencies**:
-- **Electron 28+**: Desktop application framework
-- **React 18**: UI library
-- **pdf.js**: PDF text extraction
-- **OLLAMA**: External AI service (localhost REST API)
-- **lowdb**: Local JSON database
-- **mongodb**: Official MongoDB driver
-- **Zustand**: State management
-- **Tailwind CSS + shadcn/ui**: UI styling and components
+- **.NET 8.0**: Framework
+- **WPF**: Windows Presentation Foundation (built-in to .NET)
+- **C#**: Primary language
+- **XAML**: UI markup language for WPF
+- **MongoDB .NET Driver**: MongoDB integration (identical to Electron version)
+- **OLLAMA**: External AI service (localhost REST API) - unchanged
+- **Newtonsoft.Json (Json.NET)**: JSON serialization for data compatibility with Electron version
+- **xUnit**: Unit testing framework
+- **Moq**: Mocking library for tests
+- **WiX Toolset or NSIS**: Windows installer creation
 
 **Storage**:
-- **Local**: JSON file via lowdb (`Documents/EtnoPapers/data.json`)
-- **Remote**: MongoDB (Atlas cloud or local server)
+- **Local**: JSON file (identical structure to Electron version, same file path) → `Documents/EtnoPapers/data.json`
+- **Remote**: MongoDB (Atlas cloud or local server) - unchanged
+- **Configuration**: JSON configuration file → `Documents/EtnoPapers/config.json`
 
-**Testing**: Vitest (unit/integration), React Testing Library (components), Playwright (E2E)
+**Testing**: xUnit (unit/integration), manual UI testing (WPF testing is primarily manual), plus integration tests with MongoDB
 
-**Target Platform**: Windows 10+ (primary), with foundation for macOS/Linux future support
+**Target Platform**: Windows 10+ (primary, exclusive)
 
-**Project Type**: Desktop application (Electron)
+**Project Type**: WPF Desktop Application (native Windows)
 
 **Performance Goals**:
-- PDF extraction: <2 minutes for typical 20-30 page paper
-- UI responsiveness for record management: <200ms for all interactions (sorting, filtering, pagination, search) with 100+ records [CLARIFIED]
-- Local storage operations: <50ms
-- MongoDB sync: <5 seconds per record (network dependent)
+- Startup time: < 2 seconds (vs. Electron ~5-10 seconds) ← **Primary migration benefit**
+- Idle memory: < 150 MB (vs. Electron ~300-500 MB) ← **Primary migration benefit**
+- Record management interactions: < 200ms for 1000+ records (sorting, filtering, pagination, search)
+- PDF extraction: identical to current implementation (delegated to OLLAMA, not performance-critical for app)
+- MongoDB sync: < 5 seconds per record (network dependent)
 
 **Constraints**:
-- Windows-only installer initially
-- OLLAMA must be pre-installed by user
-- Local storage limited to 1000 records
-- PDFs must be text-based (no OCR support in v1.0)
-- Single user per installation (no multi-user support)
+- Windows-only application (WPF is Windows-only)
+- OLLAMA must be pre-installed by user (unchanged)
+- Local storage limited to 1000 records (unchanged)
+- PDFs must be text-based (no OCR support - unchanged)
+- Single user per installation (unchanged)
 
 **Scale/Scope**:
-- Target users: 100-1000 ethnobotany researchers
-- Typical dataset: 50-500 papers per researcher
-- Installation base: 100-500 active installations initially
-- Expected PDF size: 1-50 MB, 10-100 pages
+- Target users: 100-1000 ethnobotany researchers (unchanged)
+- Typical dataset: 50-500 papers per researcher (unchanged)
+- Installation base: 100-500 active installations initially (unchanged)
+- Expected PDF size: 1-50 MB, 10-100 pages (unchanged)
 
 ---
 
@@ -63,65 +68,59 @@ EtnoPapers is a Windows desktop application built with Electron, React, and Type
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**Constitution Status**: The project constitution is currently a template and has not been filled out with specific principles. For this implementation, we adopt standard desktop application development practices:
+**Constitution File Status**: `.specify/memory/constitution.md` is a template (not filled in with actual principles).
+
+**For this C# WPF migration project, we adopt these principles**:
 
 ### Adopted Principles for This Project
 
-1. **User-First Design**
-   - Prioritize user experience and workflow efficiency
-   - All features must directly support researcher tasks
-   - Error messages must be actionable and non-technical
+1. **Functional Parity**
+   - 100% feature compatibility with Electron version
+   - Identical user workflows, data formats, AI integration
+   - Zero data loss during migration
+   - Users can transition seamlessly
 
-2. **Local-First Architecture**
-   - Application works fully offline (except MongoDB sync)
-   - Local data is primary; cloud is backup
-   - No data sent to external services except user-configured MongoDB
+2. **Native Windows Design**
+   - WPF native controls throughout (no web-like emulation)
+   - Windows 11 design language compliance
+   - Windows keyboard shortcuts (Ctrl+S, Alt+F4, Tab navigation)
+   - Windows file dialogs, drag-and-drop, notifications
 
-3. **Test-Driven Development (Encouraged)**
-   - Critical paths require tests (extraction pipeline, data validation, sync logic)
-   - UI components should have basic rendering tests
-   - Integration tests for service interactions
-   - **Note**: Full TDD (tests before implementation) is encouraged but not strictly enforced for this project
+3. **Performance First**
+   - Startup < 2 seconds (hard requirement)
+   - Idle memory < 150 MB (hard requirement)
+   - UI responsiveness < 200ms (hard requirement)
+   - These metrics justify the entire migration
 
-4. **Simplicity & Maintainability**
-   - Use standard patterns and libraries
-   - Avoid premature optimization
-   - Code should be readable and well-documented
-   - Complexity requires justification
+4. **Data Integrity**
+   - JSON file format identical to Electron version
+   - MongoDB documents unchanged
+   - Configuration compatibility maintained
+   - Migration path documented and tested
 
-5. **Privacy & Security**
-   - No telemetry or analytics without explicit user consent
-   - PDF files never leave user's machine (except as text to local OLLAMA)
-   - MongoDB credentials stored locally with optional encryption
-   - No unnecessary data collection
+5. **Simplicity & Maintainability**
+   - Standard WPF patterns and best practices
+   - MVVM architectural pattern (standard WPF)
+   - Clear separation of concerns (Data Layer, Service Layer, UI Layer)
+   - No unnecessary complexity
+
+6. **Quality Assurance**
+   - Unit tests for business logic
+   - Integration tests for data layer and MongoDB
+   - Manual acceptance testing for UI and workflows
+   - Performance benchmarking before release
 
 ### Phase 0 Gate: ✅ **PASSED**
-- Technology choices justified in research.md
-- All dependencies have clear rationale
-- Architecture supports user requirements
-- Privacy and security considered
+- Technology choices justified (C# WPF selected in `/speckit.specify`)
+- Performance targets defined (SC-002, SC-003)
+- Data compatibility strategy clear (identical JSON/MongoDB)
+- Architecture approach documented
 
 ### Phase 1 Gate: ✅ **PASSED**
-- Data model matches requirements
-- Service interfaces follow separation of concerns
-- No unnecessary complexity introduced
+- Data model matches Electron version (JSON structure unchanged)
+- Service interfaces defined for refactored code
+- No unnecessary complexity added
 - All technical decisions traceable to requirements
-
----
-
-## Clarifications Integrated from Specification Phase
-
-The following design decisions from `/speckit.clarify` session (2025-12-02) are incorporated into this plan:
-
-1. **Data Model Cardinality**: Unlimited arrays for plant species, authors, and communities per article. No validation limits; AI extraction logic is responsible for reasonable content.
-
-2. **No-Text PDF Handling**: Display error message with recovery guidance ("This PDF appears to be scanned. Please use the original digital file or apply OCR preprocessing.") and prevent further processing until user uploads a different file. [Implements FR-010a]
-
-3. **Record Management Performance**: All interactions (sorting, filtering, pagination, search) must complete in under 200ms for 100+ records. [Implements SC-003a, requires virtual scrolling in Phase 6]
-
-4. **Duplicate Article Detection**: Display warning with side-by-side comparison of new extraction vs. existing record (matching on title, authors, year), offering user options to cancel or merge records. [Implements FR-010b]
-
-5. **GPU Information Message**: Display on Home page when OLLAMA is configured but GPU is not detected. Contextual and non-intrusive. [Implements FR-036]
 
 ---
 
@@ -131,14 +130,14 @@ The following design decisions from `/speckit.clarify` session (2025-12-02) are 
 
 ```text
 specs/main/
-├── spec.md              # Feature specification
+├── spec.md              # Feature specification (C# WPF migration)
 ├── plan.md              # This file (implementation plan)
 ├── research.md          # Technology decisions and rationale
-├── data-model.md        # Complete data model with validation
+├── data-model.md        # Data structures (JSON format - unchanged from Electron)
 ├── quickstart.md        # Developer onboarding guide
 ├── contracts/           # Service interface contracts
-│   └── service-interfaces.ts
-└── tasks.md             # Task breakdown (NOT yet created - use /speckit.tasks)
+│   └── service-interfaces.ts (reference; will need C# equivalents)
+└── tasks.md             # Task breakdown (to be generated via /speckit.tasks)
 ```
 
 ### Source Code (repository root)
@@ -146,138 +145,127 @@ specs/main/
 ```text
 etnopapers/
 ├── src/
-│   ├── main/                      # Electron main process (Node.js)
-│   │   ├── index.ts               # Entry point, window creation
-│   │   ├── services/              # Business logic services
-│   │   │   ├── PDFProcessingService.ts
-│   │   │   ├── OLLAMAService.ts
-│   │   │   ├── DataStorageService.ts
-│   │   │   ├── MongoDBSyncService.ts
-│   │   │   ├── ConfigurationService.ts
-│   │   │   ├── ExtractionPipelineService.ts
-│   │   │   ├── ValidationService.ts
-│   │   │   └── LoggerService.ts
-│   │   └── ipc/                   # IPC handlers (expose services to renderer)
-│   │       ├── pdfHandlers.ts
-│   │       ├── ollamaHandlers.ts
-│   │       ├── storageHandlers.ts
-│   │       ├── syncHandlers.ts
-│   │       └── configHandlers.ts
+│   ├── EtnoPapers.Core/                    # Business logic (C# class library)
+│   │   ├── Services/                       # Service implementations
+│   │   │   ├── ConfigurationService.cs     # Settings (app.config, JSON)
+│   │   │   ├── DataStorageService.cs       # Local JSON file management
+│   │   │   ├── PDFProcessingService.cs     # PDF text extraction (iTextSharp/Spire)
+│   │   │   ├── OLLAMAService.cs            # REST API integration with local OLLAMA
+│   │   │   ├── MongoDBSyncService.cs       # MongoDB upload/sync
+│   │   │   ├── ExtractionPipelineService.cs # Orchestration: PDF→text→AI→validation→storage
+│   │   │   ├── ValidationService.cs        # Data validation against schema
+│   │   │   └── LoggerService.cs            # File-based logging
+│   │   ├── Models/                         # Data classes matching Electron JSON schema
+│   │   │   ├── ArticleRecord.cs
+│   │   │   ├── PlantSpecies.cs
+│   │   │   ├── Community.cs
+│   │   │   ├── SyncStatus.cs
+│   │   │   └── Configuration.cs
+│   │   ├── Utils/                          # Utility functions
+│   │   │   ├── TitleNormalizer.cs          # Proper case conversion
+│   │   │   ├── AuthorFormatter.cs          # APA format conversion
+│   │   │   ├── LanguageDetector.cs         # Portuguese/English detection
+│   │   │   └── DateParser.cs               # Date parsing utilities
+│   │   └── Validation/                     # Validation logic
+│   │       └── ArticleRecordValidator.cs   # Zod-equivalent validation
 │   │
-│   ├── renderer/                  # React UI (browser environment)
-│   │   ├── App.tsx                # Root component with routing
-│   │   ├── main.tsx               # React entry point
-│   │   ├── components/            # Reusable UI components
-│   │   │   ├── layout/
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   ├── StatusBar.tsx
-│   │   │   │   └── Header.tsx
-│   │   │   ├── common/
-│   │   │   │   ├── Button.tsx
-│   │   │   │   ├── Input.tsx
-│   │   │   │   ├── Select.tsx
-│   │   │   │   ├── Toast.tsx
-│   │   │   │   └── Modal.tsx
-│   │   │   ├── records/
-│   │   │   │   ├── RecordCard.tsx
-│   │   │   │   ├── RecordGrid.tsx
-│   │   │   │   ├── RecordForm.tsx
-│   │   │   │   └── RecordFilters.tsx
-│   │   │   ├── upload/
-│   │   │   │   ├── FileDropZone.tsx
-│   │   │   │   ├── ExtractionProgress.tsx
-│   │   │   │   └── ExtractionResults.tsx
-│   │   │   └── sync/
-│   │   │       ├── SyncPanel.tsx
-│   │   │       └── SyncProgress.tsx
-│   │   ├── pages/                 # Page-level components
-│   │   │   ├── HomePage.tsx
-│   │   │   ├── UploadPage.tsx
-│   │   │   ├── RecordsPage.tsx
-│   │   │   ├── SettingsPage.tsx
-│   │   │   └── AboutPage.tsx
-│   │   ├── stores/                # Zustand state stores
-│   │   │   ├── useAppStore.ts
-│   │   │   ├── useRecordsStore.ts
-│   │   │   └── useExtractionStore.ts
-│   │   ├── services/              # Frontend service clients (call IPC)
-│   │   │   ├── PDFServiceClient.ts
-│   │   │   ├── OLLAMAServiceClient.ts
-│   │   │   ├── StorageServiceClient.ts
-│   │   │   ├── SyncServiceClient.ts
-│   │   │   └── ConfigServiceClient.ts
-│   │   ├── hooks/                 # Custom React hooks
-│   │   │   ├── useRecords.ts
-│   │   │   ├── useExtraction.ts
-│   │   │   └── useConnections.ts
-│   │   └── utils/                 # UI utility functions
-│   │       ├── formatters.ts
-│   │       ├── validators.ts
-│   │       └── i18n.ts
+│   ├── EtnoPapers.UI/                      # WPF User Interface
+│   │   ├── Views/                          # XAML Windows and UserControls
+│   │   │   ├── MainWindow.xaml             # Main application window
+│   │   │   ├── MainWindow.xaml.cs
+│   │   │   ├── HomePage.xaml               # Home/Dashboard page
+│   │   │   ├── HomePage.xaml.cs
+│   │   │   ├── UploadPage.xaml             # PDF upload and extraction
+│   │   │   ├── UploadPage.xaml.cs
+│   │   │   ├── RecordsPage.xaml            # Record management (CRUD)
+│   │   │   ├── RecordsPage.xaml.cs
+│   │   │   ├── SettingsPage.xaml           # Configuration page
+│   │   │   ├── SettingsPage.xaml.cs
+│   │   │   ├── AboutPage.xaml              # About / Author info
+│   │   │   └── AboutPage.xaml.cs
+│   │   ├── ViewModels/                     # MVVM ViewModels
+│   │   │   ├── MainWindowViewModel.cs
+│   │   │   ├── HomeViewModel.cs
+│   │   │   ├── UploadViewModel.cs
+│   │   │   ├── RecordsViewModel.cs
+│   │   │   ├── SettingsViewModel.cs
+│   │   │   └── AboutViewModel.cs
+│   │   ├── Controls/                       # Reusable WPF User Controls
+│   │   │   ├── StatusBar.xaml              # Connection status indicator
+│   │   │   ├── StatusBar.xaml.cs
+│   │   │   ├── ProgressPanel.xaml          # Extraction progress display
+│   │   │   ├── ProgressPanel.xaml.cs
+│   │   │   ├── RecordGrid.xaml             # Virtualized record grid
+│   │   │   └── RecordGrid.xaml.cs
+│   │   ├── Styles/                         # XAML styles and brushes
+│   │   │   ├── Brushes.xaml                # Color definitions
+│   │   │   └── ControlStyles.xaml          # Control templates
+│   │   ├── Converters/                     # IValueConverter implementations
+│   │   │   ├── BoolToVisibilityConverter.cs
+│   │   │   ├── StatusToBrushConverter.cs
+│   │   │   └── DateFormatConverter.cs
+│   │   ├── Resources/                      # Application resources
+│   │   │   ├── App.xaml                    # Global application resources
+│   │   │   └── App.xaml.cs                 # Code-behind
+│   │   └── Localization/                   # i18n translations
+│   │       ├── Strings.pt-BR.resx          # Portuguese strings
+│   │       └── Strings.en-US.resx          # English strings
 │   │
-│   ├── shared/                    # Shared between main and renderer
-│   │   ├── types/                 # TypeScript interfaces
-│   │   │   ├── article.ts
-│   │   │   ├── config.ts
-│   │   │   ├── errors.ts
-│   │   │   └── services.ts
-│   │   └── utils/                 # Shared utilities
-│   │       ├── titleNormalizer.ts
-│   │       ├── authorFormatter.ts
-│   │       └── languageDetector.ts
-│   │
-│   └── preload/                   # Electron preload scripts
-│       └── index.ts               # Expose IPC to renderer securely
+│   └── EtnoPapers.sln                      # Visual Studio solution file
 │
 ├── tests/
-│   ├── unit/                      # Unit tests
-│   │   ├── services/
-│   │   ├── components/
-│   │   └── utils/
-│   ├── integration/               # Integration tests
-│   │   ├── extraction-pipeline.test.ts
-│   │   ├── sync-workflow.test.ts
-│   │   └── storage-operations.test.ts
-│   ├── e2e/                       # Playwright E2E tests
-│   │   ├── upload-and-extract.spec.ts
-│   │   ├── manage-records.spec.ts
-│   │   └── sync-to-mongodb.spec.ts
-│   └── fixtures/                  # Test data
-│       ├── test-paper.pdf
-│       └── mock-extraction.json
+│   ├── EtnoPapers.Core.Tests/              # Unit and integration tests
+│   │   ├── Services/
+│   │   │   ├── ConfigurationServiceTests.cs
+│   │   │   ├── DataStorageServiceTests.cs
+│   │   │   ├── PDFProcessingServiceTests.cs
+│   │   │   ├── OLLAMAServiceTests.cs
+│   │   │   ├── MongoDBSyncServiceTests.cs
+│   │   │   ├── ExtractionPipelineTests.cs
+│   │   │   └── ValidationServiceTests.cs
+│   │   └── Utils/
+│   │       ├── TitleNormalizerTests.cs
+│   │       ├── AuthorFormatterTests.cs
+│   │       ├── LanguageDetectorTests.cs
+│   │       └── DateParserTests.cs
+│   │
+│   └── EtnoPapers.UI.Tests/                # UI Integration tests (manual + automation)
+│       ├── Workflows/
+│       │   ├── ExtractionWorkflowTest.cs   # PDF upload → extraction → save
+│       │   ├── RecordManagementTest.cs     # CRUD operations
+│       │   └── SyncWorkflowTest.cs         # MongoDB sync workflow
+│       └── Performance/
+│           ├── StartupPerformanceTest.cs   # Verify < 2 seconds
+│           └── RecordManagementPerformanceTest.cs # Verify < 200ms interactions
 │
-├── resources/                     # Application resources
-│   ├── icons/                     # App icons (Windows ICO, etc.)
-│   ├── installers/                # Installer configuration
-│   └── locales/                   # i18n translation files
-│       ├── pt-BR.json
-│       └── en-US.json
+├── docs/                                   # Project documentation
+│   ├── estrutura.json                      # Data structure reference (unchanged from Electron)
+│   ├── etnopapers.png                      # Application logo
+│   └── promptInicial.txt                   # Original project description
 │
-├── docs/                          # Project documentation
-│   ├── estrutura.json             # Data structure reference
-│   ├── etnopapers.png             # Application logo
-│   ├── etnopapers_white.png       # Logo variant
-│   └── promptInicial.txt          # Original project description
+├── build/                                  # Build scripts and installer config
+│   ├── installer.wxs                       # WiX installer source (or NSIS config)
+│   └── install-dotnet.ps1                  # PowerShell script to check .NET 8
 │
-├── specs/                         # Feature specifications (SpecKit)
-│   └── main/                      # Current feature
+├── specs/                                  # Feature specifications (SpecKit)
+│   └── main/                               # Current migration feature
 │
-├── .specify/                      # SpecKit framework
-├── .claude/                       # Claude Code configuration
-├── electron-builder.config.js     # Installer configuration
-├── vite.config.ts                 # Vite build configuration
-├── vitest.config.ts               # Vitest test configuration
-├── playwright.config.ts           # Playwright E2E configuration
-├── tsconfig.json                  # TypeScript configuration
-├── package.json                   # Dependencies and scripts
-├── pnpm-lock.yaml                 # Dependency lock file
-├── .gitignore                     # Git ignore rules
-├── README.md                      # User documentation (Portuguese)
-└── CLAUDE.md                      # Development guide
+├── .specify/                               # SpecKit framework
+├── .claude/                                # Claude Code configuration
+├── EtnoPapers.sln                          # Visual Studio solution
+├── .gitignore                              # Git ignore rules
+├── README.md                               # User documentation (Portuguese)
+├── CLAUDE.md                               # Development guide
+└── TESTING_GUIDE.md                        # Testing approach documentation
 
 ```
 
-**Structure Decision**: Single project structure (Option 1 from template) with clear separation between Electron main process (`src/main/`) and React renderer process (`src/renderer/`). This matches standard Electron application patterns and keeps the codebase organized by execution context. Shared code lives in `src/shared/` to avoid duplication.
+**Structure Decision**:
+- Separate class libraries for Core (business logic) and UI (WPF)
+- MVVM pattern for WPF (industry standard)
+- Clear separation between data layer, service layer, and presentation layer
+- Matches standard .NET enterprise application structure
+- Enables independent testing of business logic from UI
 
 ---
 
@@ -287,147 +275,245 @@ etnopapers/
 
 This section intentionally left empty - no constitution violations to justify.
 
-All architectural decisions follow standard desktop application practices:
-- Electron for desktop: Industry standard for cross-platform desktop apps
-- Service-oriented architecture: Standard separation of concerns
-- IPC communication: Required by Electron architecture
-- Local + cloud storage: Matches user requirements for offline work + backup
+All architectural decisions follow standard WPF and .NET practices:
+- C# for core logic: Industry standard for Windows desktop development
+- WPF for UI: Microsoft-recommended framework for native Windows applications
+- MVVM pattern: Decouples UI from business logic, standard WPF practice
+- Service-oriented architecture: Testability and maintainability
+- Local + cloud storage: Identical to Electron version
 
 ---
 
 ## Implementation Phases Overview
 
-### Phase 0: Research & Technology Decisions ✅ COMPLETE
-**Artifact**: `research.md`
+### Phase 0: Project Setup & Core Infrastructure ✅ COMPLETE (in progress)
+**Artifact**: Repository reorganized, Electron code removed, C# project structure created
 
-Key decisions documented:
-- Electron + React + TypeScript stack
-- pdf.js for extraction
-- OLLAMA REST API integration
-- lowdb for local storage
-- MongoDB official driver
-- Zustand for state management
-- Vitest + Playwright for testing
+**Completed**:
+- ✅ Removed Electron/Node.js/TypeScript artifacts
+- ✅ Created C# project directory structure (src/EtnoPapers.Core, src/EtnoPapers.UI, tests/)
+- ✅ Spec and plan updated for C# WPF migration
 
-### Phase 1: Design & Contracts ✅ COMPLETE
-**Artifacts**: `data-model.md`, `contracts/`, `quickstart.md`
+**Next**: Generate initial task breakdown
 
-Delivered:
-- Complete TypeScript data model with Zod validation
-- Service interfaces for all main process services
-- IPC contract patterns
-- Developer onboarding guide
-- Data transformation logic
+### Phase 1: Core Services & Data Layer (P1)
+**Dependencies**: Phase 0 complete
+**Deliverables**:
+- Data model classes matching Electron JSON schema
+- Core services (Configuration, Storage, PDF, OLLAMA, Validation)
+- JSON serialization for Electron compatibility
+- MongoDB driver integration
+- Logger service
 
-### Phase 2: Task Breakdown ⏳ NEXT STEP
-**Artifact**: `tasks.md` (use `/speckit.tasks` command)
+**Why First**: All other features depend on working data layer and service infrastructure
 
-Will break implementation into:
-- P1 tasks: Core MVP (extraction + local storage)
-- P2 tasks: Record management CRUD
-- P3 tasks: MongoDB synchronization
-- P1 tasks: Configuration and setup
+### Phase 2: WPF UI Foundation (P1)
+**Dependencies**: Phase 1 complete
+**Deliverables**:
+- MainWindow shell with navigation
+- ViewModels for MVVM pattern
+- Reusable WPF controls and styles
+- Localization setup (Portuguese/English)
 
-### Phase 3: Implementation ⏳ PENDING
-**Command**: `/speckit.implement`
+**Why Second**: UI can be built in parallel with some Phase 1 services, but needs data models to be stable
 
-Execute tasks following TDD principles where applicable.
+### Phase 3: PDF Upload & Extraction UI (P1)
+**Dependencies**: Phase 1 (services) + Phase 2 (UI framework)
+**Deliverables**:
+- Upload page with file dialog and drag-and-drop
+- Extraction progress display
+- Results editing form
+- Save to local storage
+
+**Why This Order**: Core MVP feature - researchers need PDF extraction
+
+### Phase 4: Record Management UI (P2)
+**Dependencies**: Phase 1 (storage service) + Phase 2 (UI framework)
+**Deliverables**:
+- Records page with virtualized DataGrid (1000+ records)
+- Filter/search/sort functionality (< 200ms requirement)
+- CRUD dialogs (create, edit, delete)
+- Confirmation modals for destructive actions
+
+**Why This Order**: Secondary MVP feature - complete local workflow before cloud sync
+
+### Phase 5: MongoDB Synchronization (P3)
+**Dependencies**: Phase 1 (MongoDB service) + Phase 4 (record selection)
+**Deliverables**:
+- Sync panel for record selection and batch upload
+- Progress tracking during upload
+- Local deletion after successful sync
+- Sync reminder notifications
+- Offline-first workflow maintenance
+
+**Why This Order**: Optional in MVP but important for data backup
+
+### Phase 6: Settings & Configuration (P1)
+**Dependencies**: Phase 1 (configuration service) + Phase 2 (UI framework)
+**Deliverables**:
+- Settings page for OLLAMA configuration
+- MongoDB connection URI input
+- Connection testing buttons
+- Configuration persistence
+- GPU detection and advisory message
+
+**Why This Order**: Prerequisites user setup; can be built early since relatively simple
+
+### Phase 7: Testing & Quality Assurance
+**Dependencies**: Phases 1-6 complete
+**Deliverables**:
+- Unit tests for all services
+- Integration tests for data layer and MongoDB
+- UI automation tests for critical workflows
+- Performance benchmarking
+- Manual acceptance testing
+
+### Phase 8: Build, Installer & Release
+**Dependencies**: All phases complete + all tests passing
+**Deliverables**:
+- WiX or NSIS installer configuration
+- .NET 8 runtime dependency bundling
+- Code signing (optional)
+- Windows installer (.msi or .exe)
+- Release documentation
+
+### Phase 9: Launch & Post-Release
+**Dependencies**: Phase 8 complete
+**Deliverables**:
+- GitHub release with installer
+- User documentation update
+- Support setup
+- Monitoring for crash reports
 
 ---
 
 ## Architectural Patterns
 
-### Service Layer Pattern
+### MVVM (Model-View-ViewModel) Pattern
 
-All business logic encapsulated in services with clear interfaces:
+**WPF Standard Pattern**:
 
 ```
-UI Component → Service Client (renderer) → IPC → Handler → Service (main)
+View (XAML) ↔ ViewModel (C# class) ↔ Model (Data classes)
+    ↓
+  Binding to properties and commands
 ```
 
 **Benefits**:
-- Testable in isolation
-- Clear boundaries between layers
-- Easy to mock for testing
-- Can swap implementations
+- UI logic separated from presentation
+- Easy to unit test ViewModels (no WPF dependencies)
+- Data binding handles UI updates
+- Supports reactive programming
+
+**Implementation**:
+- Each XAML page has corresponding ViewModel
+- ViewModel exposes properties (with INotifyPropertyChanged)
+- ViewModel exposes commands (ICommand implementations)
+- View binds to ViewModel (DataContext)
+
+### Service Layer Pattern
+
+**Architecture**:
+
+```
+ViewModel → Service Interface → Service Implementation (Core library)
+```
+
+**Benefits**:
+- Testable in isolation (mock services)
+- Clear separation of concerns
+- Easy to swap implementations
+- Business logic independent of UI framework
+
+**Implementation**:
+- All services in EtnoPapers.Core
+- UI project references Core for service interfaces
+- Dependency injection setup in App.xaml.cs
 
 ### Local-First Data Flow
 
 ```
-User Action → Update Local Store → Update UI Immediately → Background Sync (if needed)
+User Action → Update ViewModel → Update Local Storage → Background MongoDB Sync (if enabled)
 ```
 
 **Benefits**:
-- Fast, responsive UI
-- Works offline
-- User maintains control
-- Sync is explicit user action
-
-### Event-Driven Communication
-
-```
-Main Process ↔ IPC Events ↔ Renderer Process
-```
-
-**Security**: Preload script exposes only safe, validated APIs to renderer.
+- Fast, responsive UI (no waiting for network)
+- Works fully offline
+- User maintains control over sync
+- MongoDB is backup, not primary storage
 
 ---
 
 ## Key Technical Challenges & Solutions
 
-### Challenge 1: Large PDF Processing
+### Challenge 1: Maintain 100% Data Format Compatibility
 
-**Problem**: 100+ page PDFs could block UI and consume memory
-
-**Solution**:
-- Stream processing in main process (background)
-- Progress updates via IPC events
-- Timeout after 60 seconds
-- Memory limits enforced
-- User can cancel extraction
-
-### Challenge 2: OLLAMA Response Parsing
-
-**Problem**: AI responses may be inconsistent or malformed JSON
+**Problem**: C# application must read/write JSON files identically to Electron version, or existing users lose data
 
 **Solution**:
-- Retry logic with prompt refinement
-- Zod schema validation for all extracted data
-- Fallback to manual entry if extraction fails
-- Save raw response for debugging
-- Confidence scores to flag uncertain extractions
+- Use Newtonsoft.Json (Json.NET) for serialization
+- Define C# data classes matching Electron JSON exactly
+- Unit tests verify JSON round-trip (C# → JSON → C# → identical)
+- Same file paths as Electron (`Documents/EtnoPapers/data.json`)
+- Test with actual Electron-generated JSON files
 
-### Challenge 3: MongoDB Connection Reliability
+### Challenge 2: PDF Text Extraction in C#
 
-**Problem**: Network issues, authentication failures, timeouts
-
-**Solution**:
-- Connection health checks before upload
-- Retry logic with exponential backoff
-- Keep records local on failure
-- Clear error messages with actionable guidance
-- Test connection button in settings
-
-### Challenge 4: Abstract Translation
-
-**Problem**: Abstracts must always be in Portuguese, but papers may be in English
+**Problem**: Different library from Electron (pdf.js) - must produce identical text extraction
 
 **Solution**:
-- Language detection heuristics
-- If not Portuguese, request translation from OLLAMA
-- User can review and edit translation
-- Cache translated abstracts to avoid re-translation
+- Evaluate C# libraries: iTextSharp, Spire.Pdf, PdfSharp, Syncfusion PDF
+- Compare extraction quality with existing Electron output
+- Create test suite with real research papers
+- Fallback mechanism if text extraction fails (same as Electron)
 
-### Challenge 5: Data Validation
+### Challenge 3: OLLAMA Integration Unchanged
 
-**Problem**: Extracted data may be incomplete or invalid
+**Problem**: OLLAMA REST API must work identically from C# as it does from Node.js
 
 **Solution**:
-- Zod schemas for runtime validation
-- Mandatory field checks before save
-- Visual indicators for missing optional fields
-- Suggestions for common format errors (e.g., scientific names)
-- User can save incomplete records with warnings
+- Use HttpClient for REST API calls (standard .NET)
+- Maintain identical prompts and parameters
+- Handle responses identically (JSON parsing, error handling)
+- Connection testing before extraction (same as Electron)
+- Timeout handling (same defaults)
+
+### Challenge 4: Performance Targets (Startup < 2s, Memory < 150MB)
+
+**Problem**: Must meet hard performance requirements that justify migration cost
+
+**Solution**:
+- Measure baseline Electron performance first (establish baseline)
+- Profile WPF app startup with dotTrace/PerfView
+- Identify and eliminate bottlenecks
+- Lazy-load resources (only when needed)
+- Load large record sets with virtualization
+- Use .NET performance best practices (avoid allocations, async/await, etc.)
+- Benchmarking tests before release (T128 in tasks)
+
+### Challenge 5: Windows Integration (Native Controls, Dialogs, etc.)
+
+**Problem**: Must feel like native Windows application, not cross-platform emulation
+
+**Solution**:
+- Use WPF built-in controls only (no custom cross-platform UI)
+- File dialogs: System.Windows.Forms.OpenFileDialog (Windows-native)
+- Drag-and-drop: XAML native support
+- Windows notifications: ToastNotificationManager (Windows Runtime)
+- Keyboard shortcuts: WPF InputBindings
+- Window state preservation: WPF built-in (SaveWindowSize/RestoreWindowSize)
+- Taskbar integration: WPF native
+
+### Challenge 6: Test Framework for WPF
+
+**Problem**: WPF UI testing is difficult - no jsdom equivalent like React Testing Library
+
+**Solution**:
+- Unit tests for ViewModels (no WPF dependency)
+- Integration tests for services (xUnit + Moq)
+- UI automation tests for critical workflows (UIAutomation or similar)
+- Manual acceptance testing for UX validation
+- Performance tests for startup time and memory
 
 ---
 
@@ -436,50 +522,57 @@ Main Process ↔ IPC Events ↔ Renderer Process
 ### Data Privacy
 - **No external data transmission** except to user-configured MongoDB
 - **PDFs processed locally**, never uploaded
-- **Immediately delete PDFs** after extraction
+- **Immediately delete PDFs** after extraction (identical to Electron)
 - **No telemetry** or usage tracking
 
 ### Credential Storage
-- MongoDB URI stored in electron-store (encrypted file)
+- MongoDB URI stored in `config.json` (user Documents folder, restricted permissions)
 - OLLAMA requires no authentication (localhost only)
-- Configuration file permissions restricted to current user
+- Configuration file accessible only to current user (Windows file permissions)
 
 ### Input Validation
 - File type verification (magic numbers, not just extension)
 - Size limits (50 MB max per PDF)
-- Sanitize all extracted text before display (prevent XSS)
+- Sanitize all extracted text before display (prevent code injection)
 - Validate MongoDB URIs before connection attempt
+- JSON schema validation before storage
 
 ### Process Isolation
-- Main process (privileged) separated from renderer (untrusted)
-- Preload script exposes minimal, validated API surface
-- Content Security Policy (CSP) restricts renderer capabilities
+- WPF runs in single process (unlike Electron's multi-process architecture)
+- All code runs in same security context as logged-in user
+- No sandboxing (unlike Electron renderer isolation)
 
 ---
 
 ## Performance Optimizations
 
+### Startup Performance
+- Lazy-load record data (don't load all records at startup)
+- Lazy-load MongoDB driver (only load if user configures sync)
+- Use background threads for connection testing
+- Skip slow operations until user triggers them
+
 ### UI Responsiveness
-- Virtual scrolling for record lists (render only visible items)
+- Virtual scrolling for record lists (only render visible items)
 - Debounce search/filter inputs (300ms)
-- Lazy load record details on demand
-- Pagination for large datasets
+- Background threads for long-running operations
+- Progress feedback during extraction and sync
 
 ### PDF Processing
-- Stream text extraction (don't load entire file to memory)
-- Worker threads for CPU-intensive operations
-- Progress callbacks every 5%
-- Cancellable operations
+- Stream PDF reading (don't load entire file to memory)
+- Page-by-page processing for large PDFs
+- Cancellable operations (user can abort)
+- Memory limits enforced
 
 ### Local Storage
-- Single JSON file for simplicity (lowdb handles atomicity)
-- In-memory index for fast searches
+- Single JSON file (lowdb equivalent not available in .NET; roll custom or use JSON serialization)
+- In-memory index for fast searches (DataTable or LINQ)
 - Auto-save with debouncing (30 seconds)
-- Compact storage on app exit
+- Compact storage (remove whitespace)
 
 ### MongoDB Sync
 - Batch uploads (up to 10 concurrent)
-- Connection pooling
+- Connection pooling (MongoDB driver handles)
 - Parallel uploads with progress tracking
 - Automatic retry on transient failures
 
@@ -511,15 +604,15 @@ Need help? Click here for setup guide.
 ### Technical Errors
 
 **Logging Strategy**:
-- All errors logged to file with full stack trace
+- All errors logged to file (`%APPDATA%/EtnoPapers/logs/`) with full stack trace
 - User-facing message shown in UI (simplified)
 - Option to view details or copy error for support
 
 **Log Levels**:
-- `error`: Unexpected failures requiring user action
-- `warn`: Degraded functionality but operation continues
-- `info`: Normal operations (startup, config changes, sync)
-- `debug`: Detailed trace for troubleshooting
+- `Error`: Unexpected failures requiring user action
+- `Warn`: Degraded functionality but operation continues
+- `Info`: Normal operations (startup, config changes, sync)
+- `Debug`: Detailed trace for troubleshooting
 
 **Log Location**: `%APPDATA%/EtnoPapers/logs/app-YYYY-MM-DD.log`
 
@@ -528,7 +621,7 @@ Need help? Click here for setup guide.
 **Graceful Degradation**:
 - If OLLAMA unavailable: Show message, disable upload button
 - If MongoDB unreachable: Allow local work, show sync unavailable
-- If extraction fails: Provide manual entry form
+- If extraction fails: Provide manual entry form (identical to Electron)
 - If validation fails: Highlight errors, allow saving with warnings
 
 ---
@@ -539,14 +632,14 @@ Need help? Click here for setup guide.
 - **pt-BR** (Brazilian Portuguese): Default, primary
 - **en-US** (English): Secondary, for international users
 
-**Translation Approach**:
-- react-i18next for UI strings
-- JSON translation files in `resources/locales/`
+**Implementation Approach**:
+- .NET resource files (.resx) for UI strings (standard WPF approach)
+- Separate satellite assemblies for each language
 - Language setting in configuration (persisted)
-- Dynamic language switching without restart
+- No restart required for language switching
 
 **What's Translated**:
-- All UI text (buttons, labels, headings)
+- All UI text (buttons, labels, headings, menus)
 - Error messages
 - Validation messages
 - Settings descriptions
@@ -562,101 +655,83 @@ Need help? Click here for setup guide.
 
 ## Testing Strategy
 
-### Unit Tests (Vitest)
+### Unit Tests (xUnit)
 
 **Coverage Goals**: >80% for:
-- Utility functions (formatters, validators, normalizers)
-- Data model validation logic
+- Utility functions (TitleNormalizer, AuthorFormatter, LanguageDetector)
+- Validation logic (ArticleRecordValidator)
 - Service business logic (mocked dependencies)
 
 **Example**:
-```typescript
-describe('normalizeTitle', () => {
-  it('converts to proper case', () => {
-    expect(normalizeTitle('uso DE plantas')).toBe('Uso de Plantas')
-  })
+```csharp
+[Fact]
+public void NormalizeTitle_ConvertsToProperCase()
+{
+    // Arrange
+    var input = "uso DE plantas";
 
-  it('preserves acronyms', () => {
-    expect(normalizeTitle('uso de DNA em plantas')).toBe('Uso de DNA em Plantas')
-  })
-})
+    // Act
+    var result = TitleNormalizer.Normalize(input);
+
+    // Assert
+    Assert.Equal("Uso de Plantas", result);
+}
 ```
 
-### Component Tests (React Testing Library)
-
-**Coverage Goals**: All user-facing components
-
-**Test Focus**:
-- Rendering with props
-- User interactions (clicks, inputs)
-- State updates
-- Error states
-
-**Example**:
-```typescript
-describe('RecordCard', () => {
-  it('displays article title and authors', () => {
-    render(<RecordCard record={mockRecord} />)
-    expect(screen.getByText(mockRecord.titulo)).toBeInTheDocument()
-    expect(screen.getByText(mockRecord.autores[0])).toBeInTheDocument()
-  })
-})
-```
-
-### Integration Tests (Vitest)
+### Integration Tests (xUnit + Moq)
 
 **Coverage Goals**: Critical workflows
 
 **Test Scenarios**:
-- End-to-end extraction pipeline (PDF → text → AI → validation → storage)
-- MongoDB sync workflow (select → upload → delete local)
-- Configuration persistence (save → restart → load)
+- Data storage: CRUD operations, JSON persistence, limit enforcement
+- OLLAMA integration: Connection test, extraction with mocked responses
+- MongoDB sync: Connection test, batch upload with test MongoDB instance
+- Extraction pipeline: PDF → text → validation → storage end-to-end
+- Configuration: Save, load, persistence across restarts
 
 **Example**:
-```typescript
-describe('Extraction Pipeline', () => {
-  it('extracts metadata from PDF end-to-end', async () => {
-    const pdfPath = './fixtures/test-paper.pdf'
-    const result = await extractionPipeline.extractFromPDF(pdfPath)
+```csharp
+[Fact]
+public async Task ExtractionPipeline_ExtractsMetadataFromPdf()
+{
+    // Arrange
+    var pdfPath = @".\fixtures\test-paper.pdf";
+    var service = new ExtractionPipelineService(...);
 
-    expect(result.titulo).toBeTruthy()
-    expect(result.autores.length).toBeGreaterThan(0)
-    expect(result.ano).toBeGreaterThan(1500)
-    expect(result.resumo).toBeTruthy()
-  })
-})
+    // Act
+    var result = await service.ExtractFromPdfAsync(pdfPath);
+
+    // Assert
+    Assert.NotNull(result.Titulo);
+    Assert.NotEmpty(result.Autores);
+    Assert.True(result.Ano > 1500);
+    Assert.NotNull(result.Resumo);
+}
 ```
 
-### E2E Tests (Playwright)
+### UI Integration Tests
 
 **Coverage Goals**: Complete user journeys
 
 **Test Scenarios**:
-1. **Upload & Extract**: Upload PDF → View extraction → Edit data → Save
-2. **Manage Records**: View records → Filter → Edit → Delete
-3. **Sync to MongoDB**: Select records → Configure MongoDB → Upload → Verify deletion
-4. **Configuration**: Set OLLAMA prompt → Set MongoDB URI → Test connections
+1. **Startup**: Application starts in < 2 seconds, loads configuration
+2. **Extraction Workflow**: Open upload page → Select PDF → Extraction completes → Edit results → Save
+3. **Record Management**: View records → Filter/search → Edit → Delete with confirmation
+4. **MongoDB Sync**: Select records → Configure MongoDB → Upload → Verify local deletion
+5. **Settings**: Change OLLAMA config → Change MongoDB URI → Test connections
 
-**Example**:
-```typescript
-test('complete extraction workflow', async ({ page }) => {
-  await page.goto('/')
+**Testing Approach**:
+- Manual testing with checklist (simple but reliable for WPF)
+- UIAutomation for critical paths (if needed)
+- Performance measurement (stopwatch timing for startup/responsiveness)
 
-  // Upload PDF
-  await page.click('[data-testid="upload-page-link"]')
-  await page.setInputFiles('input[type="file"]', './fixtures/test-paper.pdf')
+### Performance Tests
 
-  // Wait for extraction
-  await page.waitForSelector('[data-testid="extraction-complete"]')
-
-  // Edit extracted data
-  await page.fill('[data-testid="titulo-input"]', 'Edited Title')
-  await page.click('[data-testid="save-button"]')
-
-  // Verify saved
-  await expect(page.locator('[data-testid="success-toast"]')).toBeVisible()
-})
-```
+**Benchmarks**:
+- Startup time: Measure from application launch to main window visible
+- Memory usage: Measure after loading 1000 records
+- Record management responsiveness: Sort 1000 records, measure time
+- PDF extraction: Extract text from 50-page PDF, measure time
 
 ---
 
@@ -665,42 +740,47 @@ test('complete extraction workflow', async ({ page }) => {
 ### Development Build
 
 ```bash
-pnpm dev
+dotnet build
 ```
 
-- Hot reload for renderer
-- DevTools enabled
-- Source maps for debugging
-- Loose error checking
+- Debug symbols enabled
+- Optimizations disabled
+- Full error checking
+- Verbose logging
 
 ### Production Build
 
 ```bash
-pnpm build
+dotnet publish -c Release -r win-x64
 ```
 
-- Minified bundles
-- Tree-shaking
-- No DevTools
-- Strict error checking
+- Optimizations enabled
+- Debug symbols stripped
+- Minimal binary size
+- IL trimming for smaller output
 
 ### Installer Creation
 
 ```bash
-pnpm dist
+# Using WiX Toolset
+wix build installer.wxs -o dist\
+
+# OR using NSIS (more common for .NET)
+makensis installer.nsi
 ```
 
 **Outputs** (Windows):
-- `dist/EtnoPapers-Setup-1.0.0.exe`: NSIS installer (recommended)
+- `dist/EtnoPapers-1.0.0-Setup.exe`: NSIS installer (recommended)
 - `dist/EtnoPapers-1.0.0.msi`: Windows Installer format
-- `dist/EtnoPapers-1.0.0-win.zip`: Portable version
+- `dist/EtnoPapers-1.0.0-portable.zip`: Portable version (no installation)
 
 **Installer Features**:
 - Install to Program Files
 - Start Menu shortcut
 - Desktop shortcut (optional)
 - Uninstaller
-- File associations (future)
+- Check for .NET 8 runtime (install if missing)
+- File associations (optional for future)
 - Auto-update capability (future)
 
 ### Code Signing (Future)
@@ -713,19 +793,19 @@ For production releases, sign Windows installer with Authenticode certificate to
 
 ### Initial Release (v1.0.0)
 
-**Distribution Method**: Manual download from website/GitHub releases
+**Distribution Method**: Manual download from GitHub releases
 
 **Installation Steps for Users**:
 1. Download installer (.exe or .msi)
-2. Run installer
-3. Install OLLAMA separately (prerequisite)
-4. Launch EtnoPapers
-5. Configure OLLAMA and MongoDB in settings
+2. Run installer (automatically checks for .NET 8)
+3. Launch EtnoPapers
+4. Configure OLLAMA (prerequisite: already installed)
+5. Configure MongoDB in settings (optional)
 
 ### Future Releases
 
 **Auto-Update** (v1.1.0+):
-- electron-updater for automatic updates
+- WinUpdate or custom update mechanism
 - Check for updates on startup
 - Download in background
 - Install on restart
@@ -733,12 +813,14 @@ For production releases, sign Windows installer with Authenticode certificate to
 
 ### Release Checklist
 
-- [ ] All tests passing
-- [ ] Version bumped in package.json
+- [ ] All tests passing (unit, integration, UI)
+- [ ] Performance benchmarks met (startup < 2s, memory < 150MB)
+- [ ] Version bumped in AssemblyInfo.cs and .csproj
 - [ ] CHANGELOG.md updated
 - [ ] README.md updated (if needed)
-- [ ] Build installers for Windows
-- [ ] Test installation on clean Windows machine
+- [ ] Build Windows installers (.exe and .msi)
+- [ ] Test installation on clean Windows 10 machine
+- [ ] Test with existing Electron-generated JSON files
 - [ ] Create GitHub release with installers attached
 - [ ] Update website with download links
 - [ ] Announce release to users
@@ -751,7 +833,6 @@ For production releases, sign Windows installer with Authenticode certificate to
 
 **Locations**:
 - Application logs: `%APPDATA%/EtnoPapers/logs/`
-- Electron logs: Same directory
 - Crash reports: `%APPDATA%/EtnoPapers/crashes/`
 
 **Log Rotation**:
@@ -759,12 +840,16 @@ For production releases, sign Windows installer with Authenticode certificate to
 - Max 10 MB per day
 - Compress old logs
 
+**Log Access**:
+- Users can view logs through Help menu
+- Logs included in error reports for support
+
 ### Metrics (Optional - Future)
 
 **Privacy-Respecting Metrics** (opt-in):
 - Usage patterns (features used, not content)
 - Error rates (types, not details)
-- Performance metrics (extraction times, crash rates)
+- Performance metrics (startup times, crash rates)
 - No PII collected
 
 ### Error Tracking (Optional - Future)
@@ -782,15 +867,15 @@ For production releases, sign Windows installer with Authenticode certificate to
 ### Documentation
 
 **For Users** (README.md in Portuguese):
-- Installation guide
-- Usage instructions
+- Installation guide (how to install .NET 8, OLLAMA, the app)
+- Usage instructions (identical to Electron version)
 - Troubleshooting common issues
-- Contact information
+- Contact information (edalcin@jbrj.gov.br)
 
 **For Developers**:
 - This implementation plan
-- Quickstart guide
-- API documentation (JSDoc comments)
+- Quickstart guide (how to set up dev environment)
+- API documentation (XML comments in code)
 - Architecture decision records
 
 ### Support Channels
@@ -801,8 +886,8 @@ For production releases, sign Windows installer with Authenticode certificate to
 
 ### Known Limitations (v1.0.0)
 
-- Windows-only installer
-- No OCR for scanned PDFs
+- Windows-only installer (no macOS/Linux)
+- No OCR for scanned PDFs (unchanged from Electron)
 - No batch processing (one PDF at a time)
 - No collaborative features
 - No data visualization
@@ -814,20 +899,22 @@ For production releases, sign Windows installer with Authenticode certificate to
 
 ### v1.1.0 - Polish & Refinement
 - Auto-update capability
-- Performance optimizations
+- Performance optimizations (if benchmarks not met)
 - Bug fixes from user feedback
 - Enhanced error messages
+- Additional language support (Spanish, etc.)
 
 ### v1.2.0 - Productivity Features
 - Batch PDF processing
 - Export to CSV/Excel
 - Advanced search and filtering
 - Custom field templates
+- Saved search filters
 
 ### v1.3.0 - Extended Platform Support
-- macOS installer
+- macOS version (via MAUI or Qt)
 - Linux AppImage
-- Shared MongoDB collections (collaboration)
+- Shared MongoDB collections (basic collaboration)
 
 ### v2.0.0 - Advanced Features
 - OCR for scanned PDFs
@@ -840,18 +927,17 @@ For production releases, sign Windows installer with Authenticode certificate to
 
 ## Success Criteria (from Spec)
 
-**Technical Success Metrics**:
-- ✅ Extract metadata from PDF in <2 minutes (90% of cases)
-- ✅ 90%+ accuracy for mandatory fields
-- ✅ Support 100+ local records without degradation
-- ✅ 95%+ sync success rate to MongoDB
-- ✅ <1% crash rate per session
-- ✅ 95%+ successful installations on Windows 10+
-
-**User Success Metrics**:
-- ✅ 80%+ task completion rate (upload → extract → save → sync)
-- ✅ 90%+ user satisfaction (post-launch survey)
-- ✅ 50%+ reduction in manual metadata entry time
+**Migration Success Metrics**:
+- ✅ SC-001: WPF version successfully completes all test cases (100% functional parity)
+- ✅ SC-002: Startup time < 2 seconds (vs. Electron ~5-10 seconds)
+- ✅ SC-003: Idle memory < 150 MB (vs. Electron ~300-500 MB)
+- ✅ SC-004: Users can migrate from Electron to WPF by copying JSON/config files
+- ✅ SC-005: WPF handles 1000+ records with operations < 200ms
+- ✅ SC-006: 100% of Electron-generated JSON loads without corruption
+- ✅ SC-007: WPF version looks and feels like native Windows 10/11 application
+- ✅ SC-008: Application installs and runs on Windows 10+ with .NET 8
+- ✅ SC-009: PDF extraction output identical between Electron and WPF
+- ✅ SC-010: MongoDB sync success rate ≥ 95%
 
 ---
 
@@ -859,43 +945,46 @@ For production releases, sign Windows installer with Authenticode certificate to
 
 | Risk | Impact | Probability | Mitigation |
 |------|--------|-------------|------------|
-| **OLLAMA API changes** | High | Medium | Version detection, abstraction layer, fallback prompts |
-| **Low extraction accuracy** | High | Medium | Prompt engineering, user review workflow, confidence scores |
-| **User config errors** | Medium | High | Validation, connection testing, helpful error messages, defaults |
-| **MongoDB connection issues** | Medium | Medium | Offline-first design, retry logic, clear status indicators |
-| **Performance with large PDFs** | Medium | Low | Streaming, timeouts, file size limits, progress feedback |
-| **Data loss** | High | Low | Auto-save, backup reminders, crash recovery |
-| **Installation failures** | Medium | Low | Detailed installer logs, troubleshooting guide, prerequisite checks |
-| **Windows version compatibility** | Low | Low | Target Windows 10+, test on multiple versions |
+| **PDF library quality differs from pdf.js** | High | Medium | Test with diverse PDFs, fallback to manual entry, choose library with good reviews |
+| **Performance targets not met** | High | Low | Profiling early, optimization expertise, budget extra time for tuning |
+| **JSON compatibility issues** | High | Low | Unit tests for round-trip, test with real Electron data, schema validation |
+| **OLLAMA integration breaks** | Medium | Low | Version detection, abstraction layer, fallback prompts, detailed error messages |
+| **MongoDB driver version incompatibility** | Medium | Low | Pin stable versions, test with multiple MongoDB versions, abstraction layer |
+| **User migration friction** | Medium | Medium | Clear upgrade instructions, data backup before migration, support channel |
+| **WPF adoption/hiring challenges** | Low | Low | C# has large developer pool, WPF documentation available, training resources |
+| **Performance regression in database access** | Medium | Low | Benchmarking before release, optimize queries, lazy-load data |
 
 ---
 
 ## Conclusion
 
-This implementation plan provides a comprehensive blueprint for building EtnoPapers v1.0.0. The architecture balances:
+This implementation plan provides a comprehensive blueprint for migrating EtnoPapers from Electron to C# WPF while maintaining 100% functional parity. The architecture balances:
 
-- **User needs**: Fast, reliable metadata extraction with researcher control
-- **Technical feasibility**: Proven technologies with clear integration patterns
-- **Maintainability**: Standard patterns, clear boundaries, comprehensive tests
-- **Extensibility**: Plugin-ready extraction pipeline, custom fields, modular services
+- **User needs**: Fast, responsive application that feels native to Windows
+- **Technical feasibility**: Proven technologies (.NET 8, WPF, MongoDB driver)
+- **Performance goals**: Startup < 2s, memory < 150MB (primary migration benefits)
+- **Data integrity**: Identical JSON/MongoDB compatibility, zero data loss
+- **Maintainability**: Standard patterns, clear architecture, comprehensive tests
+- **Extensibility**: Modular services, plugin-ready extraction pipeline
 
 **Next Steps**:
-1. Run `/speckit.tasks` to generate detailed task breakdown
-2. Review tasks and prioritize implementation order
-3. Set up development environment (follow quickstart.md)
-4. Begin implementation following TDD principles
-5. Iterate based on testing and user feedback
+1. Run `/speckit.tasks` to generate detailed task breakdown for C# WPF
+2. Review and prioritize tasks
+3. Set up Visual Studio development environment
+4. Begin implementation following Phase 0 setup tasks
+5. Iterate based on testing and performance benchmarking
 
 **Estimated Timeline**:
-- Core MVP (P1): 4-6 weeks
-- CRUD + Sync (P2-P3): 3-4 weeks
-- Testing + Polish: 2-3 weeks
-- **Total**: 9-13 weeks for v1.0.0
+- Phase 0-2 (Setup + Core services): 3-4 weeks
+- Phase 3-5 (UI + Features): 4-6 weeks
+- Phase 6-7 (Settings + Testing): 2-3 weeks
+- Phase 8-9 (Release): 1-2 weeks
+- **Total**: 10-15 weeks for v1.0.0 with team of 1-2 developers
 
 This plan is living documentation and will be updated as implementation progresses and requirements evolve.
 
 ---
 
-**Plan Complete** ✅
+**Plan Ready** ✅
 
-Ready for task breakdown with `/speckit.tasks`.
+Ready for task generation with `/speckit.tasks`.
