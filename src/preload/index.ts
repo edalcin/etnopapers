@@ -9,6 +9,7 @@ import { pdfAPI } from './pdfAPI';
 import { ollamaAPI } from './ollamaAPI';
 import { storageAPI } from './storageAPI';
 import { extractionAPI } from './extractionAPI';
+import { syncAPI } from './syncAPI';
 
 /**
  * Expose APIs to renderer process
@@ -20,6 +21,7 @@ contextBridge.exposeInMainWorld('etnopapers', {
   ollama: ollamaAPI,
   storage: storageAPI,
   extraction: extractionAPI,
+  sync: syncAPI,
 });
 
 /**
@@ -33,6 +35,7 @@ declare global {
       ollama: typeof ollamaAPI;
       storage: typeof storageAPI;
       extraction: typeof extractionAPI;
+      sync: typeof syncAPI;
     };
   }
 }

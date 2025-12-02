@@ -451,59 +451,59 @@ Tasks are organized by user story priority and implementation phase. Each task i
 
 ### Records Store & Hooks
 
-- [ ] T070 [US2] Create Zustand records store
+- [x] T070 [US2] Create Zustand records store
   - **File**: `src/renderer/stores/useRecordsStore.ts`
   - **Acceptance**: State for records list, selected IDs, filters, loading state
   - **State**: records[], selectedIds[], filters, isLoading, error
 
-- [ ] T071 [US2] Create records management hook
+- [x] T071 [US2] Create records management hook
   - **File**: `src/renderer/hooks/useRecords.ts`
   - **Acceptance**: Custom hook for CRUD operations, loads records on mount
   - **Methods**: loadRecords(), createRecord(), editRecord(), deleteRecord(), deleteMultiple()
 
 ### Records Page Components
 
-- [ ] T072 [US2] Create Records Page component
+- [x] T072 [US2] Create Records Page component
   - **File**: `src/renderer/pages/RecordsPage.tsx`
   - **Acceptance**: Grid/list view of records, search/filter, bulk actions toolbar
   - **Features**: Record display, selection UI, action buttons
 
-- [ ] T073 [US2] Create Record Card component
+- [x] T073 [US2] Create Record Card component
   - **File**: `src/renderer/components/records/RecordCard.tsx`
   - **Acceptance**: Displays title, authors, year, sync status, actions (edit, delete, select)
   - **Features**: Compact display, action buttons, selection checkbox
 
-- [ ] T074 [US2] Create Record Grid component
+- [x] T074 [US2] Create Record Grid component
   - **File**: `src/renderer/components/records/RecordGrid.tsx`
   - **Acceptance**: Virtual scrolling grid of RecordCard components for performance
   - **Features**: Handles 100+ records with <200ms interactions (from SC-003a)
 
-- [ ] T075 [US2] Create Record Filters component
+- [x] T075 [US2] Create Record Filters component
   - **File**: `src/renderer/components/records/RecordFilters.tsx`
   - **Acceptance**: Filter by year range, author, biome, species presence
   - **Features**: Real-time filtering, debounced search
 
-- [ ] T076 [US2] Create Record Form component
+- [x] T076 [US2] Create Record Form component
   - **File**: `src/renderer/components/records/RecordForm.tsx`
   - **Acceptance**: Editable form for all fields, custom attribute addition, validation
   - **Features**: Field-level editing, add/remove custom attributes, validation feedback
 
-- [ ] T077 [US2] Implement create record modal
+- [x] T077 [US2] Implement create record modal
   - **File**: `src/renderer/components/records/CreateRecordModal.tsx`
   - **Acceptance**: Modal with empty RecordForm, creates new record on save
   - **Features**: Form validation before save, success/error feedback
 
-- [ ] T078 [US2] Implement edit record modal
+- [x] T078 [US2] Implement edit record modal
   - **File**: `src/renderer/components/records/EditRecordModal.tsx`
   - **Acceptance**: Modal with pre-filled RecordForm, updates record on save
   - **Features**: Pre-population from store, change detection, success feedback
 
-- [ ] T079 [US2] Implement delete confirmation modal
+- [x] T079 [US2] Implement delete confirmation modal
   - **File**: `src/renderer/components/records/DeleteConfirmModal.tsx`
   - **Acceptance**: Confirmation dialog before deletion, shows record count for bulk delete
   - **Features**: Clear action consequences, cancel option
 
-- [ ] T080 [US2] Create connection status hook
+- [x] T080 [US2] Create connection status hook
   - **File**: `src/renderer/hooks/useConnections.ts`
   - **Acceptance**: Custom hook checks OLLAMA and MongoDB status on mount, updates store
   - **Features**: Periodic polling, error handling
@@ -518,39 +518,39 @@ Tasks are organized by user story priority and implementation phase. Each task i
 
 ### MongoDB Service
 
-- [ ] T081 [US3] Implement MongoDB Sync Service (main process)
+- [x] T081 [US3] Implement MongoDB Sync Service (main process)
   - **File**: `src/main/services/MongoDBSyncService.ts`
   - **Acceptance**: Implements IMongoDBSyncService, connects to MongoDB, batch uploads
   - **Methods**: testConnection(), uploadRecord(), uploadBatch(), getStatus(), deleteAfterSync()
 
-- [ ] T082 [US3] Create MongoDB sync IPC handlers
+- [x] T082 [US3] Create MongoDB sync IPC handlers
   - **File**: `src/main/ipc/syncHandlers.ts`
   - **Acceptance**: Exposes sync operations via IPC with progress events
   - **Channels**: 'sync:testConnection', 'sync:uploadBatch', 'sync:getStatus'
 
-- [ ] T083 [US3] Add sync API to preload script
+- [x] T083 [US3] Add sync API to preload script
   - **File**: `src/preload/index.ts`
   - **Acceptance**: Exposes syncAPI to renderer with event listeners
   - **Methods**: testConnection(), uploadRecords(), onProgress()
 
 ### Sync UI Components
 
-- [ ] T084 [US3] Create Sync Panel component
+- [x] T084 [US3] Create Sync Panel component
   - **File**: `src/renderer/components/sync/SyncPanel.tsx`
   - **Acceptance**: Shows selected records, sync button, connection status
   - **Features**: Record preview, confirmation, status display
 
-- [ ] T085 [US3] Create Sync Progress component
+- [x] T085 [US3] Create Sync Progress component
   - **File**: `src/renderer/components/sync/SyncProgress.tsx`
   - **Acceptance**: Progress bar, per-record status (success/failed), cancel button
   - **Features**: Real-time progress updates, error details
 
-- [ ] T086 [US3] Add sync functionality to Records Page
+- [x] T086 [US3] Add sync functionality to Records Page
   - **File**: `src/renderer/pages/RecordsPage.tsx` (update)
   - **Acceptance**: Checkbox selection, "Sync Selected" button in toolbar, opens SyncPanel
   - **Features**: Multi-select support, bulk sync action
 
-- [ ] T087 [US3] Implement sync reminder notification
+- [x] T087 [US3] Implement sync reminder notification
   - **File**: `src/renderer/components/SyncReminder.tsx`
   - **Acceptance**: Shows notification if records count > 500 or X days since last sync
   - **Features**: Dismissible, smart timing
