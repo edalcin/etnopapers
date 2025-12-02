@@ -50,7 +50,9 @@
       "Bash(git branch:*)",
       "Bash(rm:*)",
       "Bash(mkdir:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "SlashCommand(/speckit.tasks)",
+      "SlashCommand(/speckit.analyze)"
     ],
     "deny": [],
     "ask": []
