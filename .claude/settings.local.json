@@ -65,7 +65,8 @@
       "Bash(powershell -ExecutionPolicy Bypass -File \"test-app.ps1\")",
       "Bash(powershell -ExecutionPolicy Bypass -File:*)",
       "Bash(timeout 20 powershell:*)",
-      "Bash(timeout 10 dotnet run:*)"
+      "Bash(timeout 10 dotnet run:*)",
+      "Bash(dotnet publish:*)"
     ],
     "deny": [],
     "ask": []

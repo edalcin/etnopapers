@@ -204,10 +204,9 @@ namespace EtnoPapers.UI.ViewModels
                         progressWindow.Close();
 
                         // Open edit dialog for user to fill missing fields
-                        var editDialog = new Views.EditRecordDialog
+                        var editDialog = new Views.EditRecordDialog(ExtractedData)
                         {
-                            Owner = System.Windows.Application.Current.MainWindow,
-                            DataContext = ExtractedData
+                            Owner = System.Windows.Application.Current.MainWindow
                         };
 
                         if (editDialog.ShowDialog() == true)
