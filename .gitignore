@@ -23,11 +23,16 @@ obj/
 
 # Build outputs
 dist/
-build/
+# build/ - Allow build directory for WiX and scripts, exclude only artifacts below
 out/
 release/
 packages/
 *.nupkg
+
+# Build artifacts (WiX and general)
+build/bin/
+build/obj/
+build/artifacts/
 
 # NuGet
 .nuget/

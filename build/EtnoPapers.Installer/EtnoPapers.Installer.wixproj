@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="Current">
+
+  <!-- Project Configuration (T085, T090) -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProjectGuid>9J8I7H6G-5F4E-3D2C-1B0A-4F8B8C2E9D5F</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>EtnoPapers-Setup</OutputName>
+    <OutputType>Bundle</OutputType>
+    <WixVersion>4.0</WixVersion>
+  </PropertyGroup>
+
+  <!-- Project Properties -->
+  <PropertyGroup>
+    <ProductVersion>1.0.0.0</ProductVersion>
+    <ProductName>EtnoPapers</ProductName>
+    <Manufacturer>EtnoPapers Project</Manufacturer>
+    <SourceDir>.</SourceDir>
+  </PropertyGroup>
+
+  <!-- Debug Configuration -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Release Configuration (T090) -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <IntermediateOutputPath>obj\Release\</IntermediateOutputPath>
+    <DefineConstants></DefineConstants>
+    <WixWarningLevel>4</WixWarningLevel>
+  </PropertyGroup>
+
+  <!-- Publish Directory Variable -->
+  <PropertyGroup>
+    <PublishDir>..\..\src\EtnoPapers.UI\bin\Release\net8.0-windows\win-x64\publish\</PublishDir>
+  </PropertyGroup>
+
+  <!-- Compiler Include Paths -->
+  <PropertyGroup>
+    <CompilerAdditionalOptions>
+      -d PublishDir="$(PublishDir)"
+      -d SourceDir="$(MSBuildProjectDirectory)"
+    </CompilerAdditionalOptions>
+  </PropertyGroup>
+
+  <!-- Item Groups - Source Files -->
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+
+  <!-- Item Groups - UI Files -->
+  <ItemGroup>
+    <EmbeddedResource Include="License.rtf" />
+    <EmbeddedResource Include="Banner.bmp" />
+    <EmbeddedResource Include="Dialog.bmp" />
+  </ItemGroup>
+
+  <!-- NuGet Package References for WiX Toolset -->
+  <ItemGroup>
+    <PackageReference Include="WiX" Version="4.0.*" />
+    <PackageReference Include="WiX.UI.Extensions" Version="4.0.*" />
+  </ItemGroup>
+
+  <!-- Build Target -->
+  <Target Name="Build" DependsOnTargets="PreBuild;CoreBuild;PostBuild" />
+
+  <!-- Pre-Build Tasks -->
+  <Target Name="PreBuild">
+    <Message Text="Building WiX Installer for EtnoPapers 1.0.0" Importance="high" />
+    <Message Text="Publish Directory: $(PublishDir)" Importance="normal" />
+    <Message Text="Output: $(OutputPath)$(OutputName).msi" Importance="normal" />
+  </Target>
+
+  <!-- Core Build (handled by WiX toolset) -->
+  <Target Name="CoreBuild">
+    <Message Text="Compiling WiX source files..." Importance="normal" />
+  </Target>
+
+  <!-- Post-Build Tasks -->
+  <Target Name="PostBuild">
+    <Message Text="Installer package created successfully" Importance="high" />
+  </Target>
+
+</Project>

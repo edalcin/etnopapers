@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+
+  <!-- Product Definition (T085-T086) -->
+  <Product Id="*"
+           Name="EtnoPapers 1.0.0"
+           Language="1033"
+           Version="1.0.0.0"
+           Manufacturer="EtnoPapers Project"
+           UpgradeCode="4F6B3E2D-1A9C-4F8B-8C2E-9D5F3A1B0C2E">
+
+    <Package InstallerVersion="200"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="EtnoPapers - Ethnobotanical Paper Analysis Tool"
+             Comments="Automated extraction and cataloging of ethnobotanical metadata from scientific papers" />
+
+    <!-- Media Definition -->
+    <Media Id="1" Cabinet="EtnoPapers.cab" EmbedCab="yes" />
+
+    <!-- Installation Scope - System-wide -->
+    <ALLUSERS>1</ALLUSERS>
+
+    <!-- Feature Hierarchy (T086) -->
+    <Feature Id="ProductFeature" Title="EtnoPapers 1.0.0" Level="1" Description="Complete EtnoPapers application">
+      <ComponentRef Id="MainApplicationComponent" />
+      <ComponentRef Id="DesktopShortcutComponent" />
+      <ComponentRef Id="StartMenuComponent" />
+      <ComponentRef Id="FilesComponent" />
+    </Feature>
+
+    <!-- Installation Directories (T088) -->
+    <InstallScope>perMachine</InstallScope>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="EtnoPapers" />
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="EtnoPapers" />
+      </Directory>
+
+      <Directory Id="DesktopFolder" Name="Desktop" />
+
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="UserDataFolder" Name="EtnoPapers" />
+      </Directory>
+    </Directory>
+
+    <!-- Main Application Files Component (T088) -->
+    <Component Id="FilesComponent" Directory="INSTALLFOLDER" Guid="5F4E3D2C-1B0A-4F8B-8C2E-9D5F3A1B0C2D">
+      <File Id="EtnoPapersExe" Name="EtnoPapers.exe" Source="$(var.PublishDir)EtnoPapers.exe" KeyPath="yes">
+        <Shortcut Id="DesktopShortcut"
+                  Directory="DesktopFolder"
+                  Name="EtnoPapers"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="EtnoPapersIcon.ico"
+                  IconIndex="0"
+                  Advertise="yes" />
+      </File>
+
+      <!-- Runtime and Dependencies -->
+      <File Id="EtnoPapersUIDll" Name="EtnoPapers.UI.dll" Source="$(var.PublishDir)EtnoPapers.UI.dll" />
+      <File Id="EtnoPapersCoreDll" Name="EtnoPapers.Core.dll" Source="$(var.PublishDir)EtnoPapers.Core.dll" />
+
+      <!-- License File -->
+      <File Id="LicenseFile" Name="LICENSE.md" Source="$(var.SourceDir)..\..\LICENSE.md" />
+      <File Id="ReadmeFile" Name="README.md" Source="$(var.SourceDir)..\..\README.md" />
+    </Component>
+
+    <!-- Start Menu Shortcut Component (T088) -->
+    <Component Id="StartMenuComponent" Directory="ApplicationProgramsFolder" Guid="6G5F4E3D-2C1B-0A4F-8B8C-2E9D5F3A1B0C">
+      <Shortcut Id="StartMenuShortcut"
+                Target="[INSTALLFOLDER]EtnoPapers.exe"
+                Name="EtnoPapers"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="EtnoPapersIcon.ico"
+                IconIndex="0" />
+      <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\EtnoPapers" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- Desktop Shortcut Component (T088) -->
+    <Component Id="DesktopShortcutComponent" Directory="DesktopFolder" Guid="7H6G5F4E-3D2C-1B0A-4F8B-8C2E9D5F3A1B">
+      <Shortcut Id="DesktopShortcutMain"
+                Target="[INSTALLFOLDER]EtnoPapers.exe"
+                Name="EtnoPapers"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="EtnoPapersIcon.ico"
+                IconIndex="0" />
+      <RegistryValue Root="HKCU" Key="Software\EtnoPapers" Name="desktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- Main Application Component -->
+    <Component Id="MainApplicationComponent" Directory="INSTALLFOLDER" Guid="8I7H6G5F-4E3D-2C1B-0A4F-8B8C2E9D5F3A">
+      <RegistryKey Root="HKLM" Key="SOFTWARE\EtnoPapers">
+        <RegistryValue Name="DisplayName" Type="string" Value="EtnoPapers 1.0.0" />
+        <RegistryValue Name="DisplayVersion" Type="string" Value="1.0.0" />
+        <RegistryValue Name="Publisher" Type="string" Value="EtnoPapers Project" />
+        <RegistryValue Name="InstallLocation" Type="string" Value="[INSTALLFOLDER]" />
+        <RegistryValue Name="URLInfoAbout" Type="string" Value="https://github.com/etnopayers/etnopayers" />
+      </RegistryKey>
+    </Component>
+
+    <!-- Registry Entries (T089) -->
+    <Registry Id="UninstallRegistry" Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\EtnoPapers">
+      <RegistryValue Name="DisplayName" Type="string" Value="EtnoPapers 1.0.0" />
+      <RegistryValue Name="DisplayVersion" Type="string" Value="1.0.0" />
+      <RegistryValue Name="Publisher" Type="string" Value="EtnoPapers Project" />
+      <RegistryValue Name="UninstallString" Type="string" Value="[SystemFolder]msiexec.exe /x [ProductCode]" />
+      <RegistryValue Name="InstallLocation" Type="string" Value="[INSTALLFOLDER]" />
+    </Registry>
+
+    <!-- File Association for PDF Files (T089) -->
+    <Registry Id="PDFAssociation" Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice">
+      <RegistryValue Name="Progid" Type="string" Value="EtnoPapers.pdf" />
+    </Registry>
+
+    <!-- System Requirements Check (T085) -->
+    <Condition Message="This application requires Windows 10 or later to be installed.">
+      <![CDATA[Installed OR (VersionNT >= 603)]]>
+    </Condition>
+
+    <!-- .NET Framework Requirement Check -->
+    <Condition Message="This application requires .NET 8.0 Desktop Runtime. Please install it from https://dotnet.microsoft.com/download">
+      <![CDATA[Installed OR NETFRAMEWORK8DETECTED]]>
+    </Condition>
+
+    <!-- Upgrade Behavior -->
+    <MajorUpgrade DownloadUrl="https://github.com/etnopayers/etnopayers/releases"
+                  AllowDowngrades="no"
+                  AllowSameVersionUpgrades="yes" />
+
+    <!-- User Interface (T087) -->
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Dialog.bmp" />
+
+  </Product>
+</Wix>

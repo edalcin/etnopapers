@@ -4,6 +4,16 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- Version and Product Information (T084) -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+    <Product>EtnoPapers</Product>
+    <Company>EtnoPapers Project</Company>
+    <Description>Core services and data models for EtnoPapers</Description>
+    <Copyright>Copyright © 2024 EtnoPapers Contributors</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
