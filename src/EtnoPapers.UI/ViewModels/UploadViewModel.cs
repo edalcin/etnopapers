@@ -20,6 +20,7 @@ namespace EtnoPapers.UI.ViewModels
         private readonly OLLAMAService _ollamaService;
         private readonly ValidationService _validationService;
         private readonly LoggerService _loggerService;
+        private readonly ConfigurationService _configService;
         private RelayCommand _startExtractionCommand;
 
         private string _selectedFilePath = "";
@@ -35,9 +36,16 @@ namespace EtnoPapers.UI.ViewModels
         {
             _storageService = new DataStorageService();
             _pdfService = new PDFProcessingService();
-            _ollamaService = new OLLAMAService();
+            _configService = new ConfigurationService();
             _validationService = new ValidationService();
             _loggerService = new LoggerService();
+
+            // Load OLLAMA configuration
+            var config = _configService.LoadConfiguration();
+            var ollamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
+            var ollamaModel = config?.OllamaModel ?? "llama2";
+
+            _ollamaService = new OLLAMAService(ollamaUrl, ollamaModel);
             _extractionService = new ExtractionPipelineService(
                 _pdfService,
                 _ollamaService,
@@ -51,7 +59,7 @@ namespace EtnoPapers.UI.ViewModels
             SaveResultsCommand = new RelayCommand(_ => SaveResults(), _ => AllowSave && !IsExtracting);
             ClearCommand = new RelayCommand(_ => Clear());
 
-            _loggerService.Info("UploadViewModel initialized");
+            _loggerService.Info($"UploadViewModel initialized with OLLAMA: {ollamaUrl}, Model: {ollamaModel}");
         }
 
         #region Properties
