@@ -59,7 +59,8 @@
       "Bash(dotnet add:*)",
       "Bash(dotnet build:*)",
       "Bash(ConvertFrom-Json)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(dotnet test:*)"
     ],
     "deny": [],
     "ask": []
