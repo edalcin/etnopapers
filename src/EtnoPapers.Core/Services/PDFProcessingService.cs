@@ -11,6 +11,19 @@ namespace EtnoPapers.Core.Services
     /// </summary>
     public class PDFProcessingService
     {
+        static PDFProcessingService()
+        {
+            // Register encoding provider for extended encodings (MacRoman, etc.)
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            }
+            catch
+            {
+                // Ignore if already registered
+            }
+        }
+
         /// <summary>
         /// Extracts all text from a PDF file.
         /// </summary>
@@ -27,10 +40,25 @@ namespace EtnoPapers.Core.Services
                 {
                     for (int page = 1; page <= reader.NumberOfPages; page++)
                     {
-                        var pageText = PdfTextExtractor.GetTextFromPage(reader, page);
-                        text.AppendLine(pageText);
+                        try
+                        {
+                            var pageText = PdfTextExtractor.GetTextFromPage(reader, page);
+                            if (!string.IsNullOrWhiteSpace(pageText))
+                            {
+                                text.AppendLine(pageText);
+                            }
+                        }
+                        catch (Exception pageEx)
+                        {
+                            // Log page error but continue with other pages
+                            System.Diagnostics.Debug.WriteLine($"Warning: Failed to extract text from page {page}: {pageEx.Message}");
+                        }
                     }
                 }
+
+                // If no text was extracted, throw error
+                if (text.Length == 0)
+                    throw new InvalidOperationException("No text content found in PDF. The file may be scanned or empty.");
 
                 return text.ToString();
             }
