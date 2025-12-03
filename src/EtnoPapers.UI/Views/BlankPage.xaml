@@ -1,0 +1,14 @@
+<Page x:Class="EtnoPapers.UI.Views.BlankPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="BlankPage"
+      Background="White">
+
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="Página em Construção" FontSize="24" Foreground="#0078D4" TextAlignment="Center" Margin="0,0,0,20"/>
+            <TextBlock Text="Esta página será implementada em breve" FontSize="14" TextAlignment="Center" Foreground="#505050"/>
+        </StackPanel>
+    </Grid>
+
+</Page>

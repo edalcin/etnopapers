@@ -50,6 +50,35 @@ namespace EtnoPapers.UI.Views
             if (sender is Button btn)
             {
                 System.Diagnostics.Debug.WriteLine("Button clicked: " + btn.Name);
+
+                // Navegar para página apropriada
+                string pageName = btn.Name switch
+                {
+                    "BtnHome" => "Home",
+                    "BtnUpload" => "Upload",
+                    "BtnRecords" => "Records",
+                    "BtnSync" => "Sync",
+                    "BtnSettings" => "Settings",
+                    _ => "Home"
+                };
+
+                NavigateToPage(pageName);
+            }
+        }
+
+        private void NavigateToPage(string pageName)
+        {
+            try
+            {
+                // Criar URI para a página
+                string pageUri = $"/Views/BlankPage.xaml"; // Por enquanto, usar página em branco
+
+                MainFrame.Source = new System.Uri(pageUri, System.UriKind.Relative);
+                System.Diagnostics.Debug.WriteLine($"Navigated to: {pageName}");
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Navigation error: {ex.Message}");
             }
         }
 
