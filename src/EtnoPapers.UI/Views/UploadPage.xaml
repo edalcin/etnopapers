@@ -1,8 +1,12 @@
 <Page x:Class="EtnoPapers.UI.Views.UploadPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:converters="clr-namespace:EtnoPapers.UI.Converters"
       Background="White"
       Foreground="Black">
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Page.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="40">
@@ -23,11 +27,24 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Selected File Display -->
+                    <TextBlock Text="{Binding SelectedFilePath, StringFormat='Arquivo: {0}'}" FontSize="12" Foreground="#505050" Margin="0,0,0,12" TextWrapping="Wrap"/>
+
                     <!-- Buttons -->
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Selecionar Arquivo" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White"/>
-                        <Button Content="Iniciar Extração" Padding="16,8" Background="#0078D4" Foreground="White"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button Content="Selecionar Arquivo" Command="{Binding SelectFileCommand}" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White"/>
+                        <Button Content="Iniciar Extração" Command="{Binding StartExtractionCommand}" Padding="16,8" Background="#0078D4" Foreground="White"/>
                     </StackPanel>
+
+                    <!-- Extraction Progress -->
+                    <StackPanel Visibility="{Binding IsExtracting, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,12">
+                        <TextBlock Text="{Binding CurrentStep}" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                        <ProgressBar Value="{Binding ExtractionProgress}" Height="8"/>
+                        <TextBlock Text="{Binding ExtractionProgress, StringFormat='{}Progresso: {0}%'}" FontSize="11" Foreground="#8A8A8A" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Error Display -->
+                    <TextBlock Text="{Binding ErrorMessage}" FontSize="12" Foreground="#D32F2F" TextWrapping="Wrap" Visibility="{Binding HasExtractionError, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </StackPanel>
             </Border>
 

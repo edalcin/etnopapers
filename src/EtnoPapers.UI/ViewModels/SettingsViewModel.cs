@@ -355,6 +355,15 @@ namespace EtnoPapers.UI.ViewModels
 
                 MongodbTestStatus = "Testando...";
 
+                // Save MongoDB URI before testing so MainWindow can find it
+                try
+                {
+                    var config = _configService.LoadConfiguration();
+                    config.MongodbUri = MongodbUri.Trim();
+                    _configService.SaveConfiguration(config);
+                }
+                catch { /* Ignore save errors, test anyway */ }
+
                 var isConnected = await _mongodbService.TestConnectionAsync(MongodbUri);
 
                 if (isConnected)
