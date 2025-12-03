@@ -1,9 +1,226 @@
 <Page x:Class="EtnoPapers.UI.Views.SyncPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      Background="{StaticResource Background}">
-    <StackPanel Margin="40" VerticalAlignment="Top">
-        <TextBlock Text="Sincronização MongoDB" Style="{StaticResource Heading1}"/>
-        <TextBlock Text="Página de sincronização será implementada em Phase 5" Style="{StaticResource Body}" Margin="0,16,0,0"/>
-    </StackPanel>
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:converters="clr-namespace:EtnoPapers.UI.Converters"
+      mc:Ignorable="d"
+      Background="{StaticResource Background}"
+      Foreground="{StaticResource Text}">
+
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40">
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="Sincronização MongoDB" Style="{StaticResource Heading1}" Margin="0,0,0,8"/>
+                <TextBlock Text="Selecione registros para sincronizar e fazer backup na nuvem"
+                           Style="{StaticResource Caption}"
+                           Foreground="{StaticResource TextSecondary}"/>
+            </StackPanel>
+
+            <!-- Sync Reminder -->
+            <Border Background="#FFF0F3E0"
+                    BorderBrush="#FFCDD829"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="16"
+                    Margin="0,0,0,24"
+                    Visibility="{Binding ShowSyncReminder, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="⚠️ Lembrança" Style="{StaticResource Heading2}" Margin="0,0,12,0"/>
+                        <Button Content="✕"
+                                Style="{StaticResource DefaultButtonStyle}"
+                                Padding="4,0"
+                                Background="Transparent"
+                                Foreground="{StaticResource TextSecondary}"
+                                Click="DismissSyncReminder_Click"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding SyncReminderMessage}"
+                               Style="{StaticResource Body}"
+                               TextWrapping="Wrap"
+                               Foreground="{StaticResource Text}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Error Display -->
+            <Border Background="#FFE7E4E7"
+                    BorderBrush="{StaticResource Error}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="16"
+                    Margin="0,0,0,24"
+                    Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Style="{StaticResource Body}"
+                           TextWrapping="Wrap"
+                           Foreground="{StaticResource Error}"/>
+            </Border>
+
+            <!-- MongoDB Connection Status -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24"
+                    Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Status da Conexão MongoDB" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <!-- Connection Status Indicator -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Style="{StaticResource Body}" Margin="0,0,12,0" VerticalAlignment="Center">
+                            <Run Text="Status:"/>
+                        </TextBlock>
+                        <Border Background="{StaticResource Surface}"
+                                CornerRadius="12"
+                                Padding="12,6"
+                                Margin="0,0,16,0">
+                            <TextBlock Text="{Binding CurrentSyncStatus}"
+                                       Style="{StaticResource Caption}"
+                                       Foreground="{StaticResource TextSecondary}"/>
+                        </Border>
+
+                        <Button Content="Testar Conexão"
+                                Command="{Binding TestConnectionCommand}"
+                                Style="{StaticResource DefaultButtonStyle}"
+                                Padding="12,6"
+                                Margin="0,0,8,0"/>
+
+                        <!-- Connection Status Indicator (colored dot) -->
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center"
+                                 Fill="{StaticResource Success}"
+                                 Visibility="{Binding IsMongoDBConnected, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center"
+                                 Fill="{StaticResource Error}"
+                                 Visibility="{Binding IsMongoDBConnected, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+                    </StackPanel>
+
+                    <!-- Last Sync Time -->
+                    <TextBlock Style="{StaticResource Caption}"
+                               Foreground="{StaticResource TextSecondary}"
+                               Margin="0,0,0,16">
+                        <Run Text="Última sincronização:"/>
+                        <Run Text="{Binding LastSyncTime, StringFormat='dd/MM/yyyy HH:mm:ss'}"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- Records for Sync -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24"
+                    Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Registros Disponíveis para Sincronização" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <!-- Available Records List -->
+                    <ListBox ItemsSource="{Binding AvailableRecords}"
+                             SelectionMode="Multiple"
+                             Height="200"
+                             Margin="0,0,0,16"
+                             Background="{StaticResource Background}"
+                             BorderBrush="{StaticResource Border}"
+                             BorderThickness="1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Titulo}"
+                                          Foreground="{StaticResource Text}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Selected Count -->
+                    <TextBlock Text="{Binding SelectedRecordCount, StringFormat={}Registros selecionados: {0}}"
+                               Style="{StaticResource Caption}"
+                               Foreground="{StaticResource TextSecondary}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Sync Progress -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24"
+                    Margin="0,0,0,24"
+                    Visibility="{Binding IsSyncing, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Text="Progresso da Sincronização" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <ProgressBar Value="{Binding SyncProgress}" Height="8" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding SyncProgress, StringFormat={}Progresso: {0}%}"
+                                   Style="{StaticResource Caption}"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   Margin="0,0,12,0"/>
+                        <TextBlock Text="{Binding CurrentSyncStatus}"
+                                   Style="{StaticResource Body}"
+                                   Foreground="{StaticResource Text}"/>
+                    </StackPanel>
+
+                    <Button Content="Cancelar Sincronização"
+                            Command="{Binding CancelSyncCommand}"
+                            Style="{StaticResource DefaultButtonStyle}"
+                            Padding="12,6"
+                            Width="200"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Action Buttons -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                <Button Content="Carregar Registros"
+                        Command="{Binding LoadRecordsCommand}"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="16,8"
+                        Margin="0,0,8,0"/>
+
+                <Button Content="Iniciar Sincronização"
+                        Command="{Binding StartSyncCommand}"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="16,8"
+                        Margin="0,0,8,0"/>
+
+                <Button Content="Limpar Seleção"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="16,8"
+                        Background="Transparent"
+                        Foreground="{StaticResource Primary}"
+                        Click="ClearSelection_Click"/>
+            </StackPanel>
+
+            <!-- Info Box -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                <StackPanel>
+                    <TextBlock Text="ℹ️ Informações" Style="{StaticResource Heading2}" Margin="0,0,0,8"/>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="• Os registros são sincronizados com MongoDB e depois deletados localmente"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="• Configure a URI do MongoDB nas Configurações antes de sincronizar"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="• A sincronização pode levar alguns minutos dependendo do número de registros"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap">
+                        <Run Text="• Recomenda-se sincronizar quando houver mais de 500 registros locais"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </Page>
