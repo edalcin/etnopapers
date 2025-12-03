@@ -6,6 +6,22 @@
       Foreground="Black">
     <Page.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <!-- Style for buttons with enabled/disabled states -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#CCCCCC"/>
+                    <Setter Property="Foreground" Value="#808080"/>
+                    <Setter Property="Opacity" Value="0.6"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="True">
+                    <Setter Property="Opacity" Value="1"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Page.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -33,7 +49,7 @@
                     <!-- Buttons -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <Button Content="Selecionar Arquivo" Command="{Binding SelectFileCommand}" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White"/>
-                        <Button Content="Iniciar Extração" Command="{Binding StartExtractionCommand}" Padding="16,8" Background="#0078D4" Foreground="White"/>
+                        <Button Content="Iniciar Extração" Command="{Binding StartExtractionCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,0,0" Background="#0078D4"/>
                     </StackPanel>
 
                     <!-- Extraction Progress -->

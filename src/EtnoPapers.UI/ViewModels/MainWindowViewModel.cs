@@ -86,6 +86,9 @@ namespace EtnoPapers.UI.ViewModels
         {
             try
             {
+                // Small delay to ensure file system writes are complete
+                await Task.Delay(100);
+
                 // Check OLLAMA connection
                 var ollamaConnected = await _ollamaService.CheckHealthAsync();
                 OllamaConnected = ollamaConnected;
@@ -96,10 +99,12 @@ namespace EtnoPapers.UI.ViewModels
                 {
                     var mongodbConnected = await _mongodbService.TestConnectionAsync(config.MongodbUri);
                     MongodbConnected = mongodbConnected;
+                    _loggerService.Info($"MongoDB connection test: {mongodbConnected}, URI: {config.MongodbUri}");
                 }
                 else
                 {
                     MongodbConnected = false;
+                    _loggerService.Info("MongoDB URI not configured");
                 }
 
                 _loggerService.Info($"Connection check completed - OLLAMA: {OllamaConnected}, MongoDB: {MongodbConnected}");
