@@ -63,10 +63,10 @@ function Write-Error {
 }
 
 # Script start
-Write-Host "`n╔════════════════════════════════════════════╗"
-Write-Host "║      EtnoPapers Release Build Script      ║"
-Write-Host "║              Version $Version                ║"
-Write-Host "╚════════════════════════════════════════════╝`n"
+Write-Host "`n==============================================="
+Write-Host "  EtnoPapers Release Build Script"
+Write-Host "  Version $Version"
+Write-Host "===============================================`n"
 
 # Verify we're in the right directory
 if (-not (Test-Path "EtnoPapers.sln")) {
@@ -186,19 +186,19 @@ Write-Success "Checksums calculated: checksums.txt"
 Write-Info "Step 9: Generating build report..."
 $reportFile = "$OutputDir/BUILD_REPORT.txt"
 @"
-╔════════════════════════════════════════════╗
-║      EtnoPapers Build Report - v$Version     ║
-╚════════════════════════════════════════════╝
+===============================================
+EtnoPapers Build Report - v$Version
+===============================================
 
 BUILD INFORMATION
-─────────────────
+-----------------
 Date Built: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 Configuration: $Configuration
 Target Framework: .NET 8.0
 Runtime: win-x64
 
 ARTIFACTS GENERATED
-──────────────────
+------------------
 1. Self-Contained Deployment
    Location: $publishDir
    Size: $(if (Test-Path $publishDir) { [math]::Round((Get-ChildItem $publishDir -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB, 2) } else { 'N/A' }) MB
@@ -212,20 +212,20 @@ ARTIFACTS GENERATED
    Algorithm: SHA256
 
 TEST RESULTS
-────────────
+------------
 Unit Tests: 74 tests
 Integration Tests: 16 tests
 Total: 90+ tests
-Status: ✓ PASSED
+Status: PASSED
 
 PERFORMANCE METRICS
-───────────────────
+-------------------
 Startup Time: < 2 seconds
 Record Operations: < 200ms
 Memory Usage (Idle): < 150MB
 
 NEXT STEPS
-──────────
+----------
 1. Review RELEASE_NOTES.md
 2. Test on clean Windows system
 3. Review RELEASE_CHECKLIST.md
@@ -233,15 +233,15 @@ NEXT STEPS
 5. Verify downloads and checksums
 
 BUILD COMPLETED SUCCESSFULLY
-────────────────────────────
+---------------------------
 "@ | Out-File $reportFile
 
 Write-Success "Build report generated: BUILD_REPORT.txt"
 
 # Final summary
-Write-Host "`n╔════════════════════════════════════════════╗"
-Write-Host "║         BUILD COMPLETED SUCCESSFULLY       ║"
-Write-Host "╚════════════════════════════════════════════╝`n"
+Write-Host "`n==============================================="
+Write-Host "  BUILD COMPLETED SUCCESSFULLY"
+Write-Host "===============================================`n"
 
 Write-Info "Output Directory: $(Resolve-Path $OutputDir)"
 Write-Info "Artifacts:"

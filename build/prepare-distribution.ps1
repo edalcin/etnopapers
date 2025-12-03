@@ -61,10 +61,10 @@ function Write-Error-Custom {
 }
 
 # Main script
-Write-Host "`n╔════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║     Distribution Preparation (T095)        ║" -ForegroundColor Cyan
-Write-Host "║            Version $Version               ║" -ForegroundColor Cyan
-Write-Host "╚════════════════════════════════════════════╝`n" -ForegroundColor Cyan
+Write-Host "`n===============================================" -ForegroundColor Cyan
+Write-Host "  Distribution Preparation (T095)" -ForegroundColor Cyan
+Write-Host "  Version $Version" -ForegroundColor Cyan
+Write-Host "===============================================`n" -ForegroundColor Cyan
 
 # Resolve paths
 $BuildDir = Resolve-Path $BuildDirectory -ErrorAction SilentlyContinue
@@ -385,9 +385,9 @@ Write-Host "
 
 # ======== COMPLETION ========
 
-Write-Host "`n╔════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "║    Distribution Preparation Complete (T095) ║" -ForegroundColor Green
-Write-Host "╚════════════════════════════════════════════╝`n" -ForegroundColor Green
+Write-Host "`n===============================================" -ForegroundColor Green
+Write-Host "  Distribution Preparation Complete (T095)" -ForegroundColor Green
+Write-Host "===============================================`n" -ForegroundColor Green
 
 Write-Success "All distribution artifacts validated and ready"
 Write-Success "Proceed to T096 (Final Verification & Sign-Off)"
