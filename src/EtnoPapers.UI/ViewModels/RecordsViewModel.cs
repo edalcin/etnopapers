@@ -39,7 +39,6 @@ namespace EtnoPapers.UI.ViewModels
             _filteredRecords = new ObservableCollection<ArticleRecord>();
 
             LoadRecordsCommand = new RelayCommand(_ => LoadRecords());
-            CreateRecordCommand = new RelayCommand(_ => CreateRecord(), _ => !IsLoading);
             DeleteRecordsCommand = new RelayCommand(_ => DeleteSelectedRecords(), _ => !IsLoading && SelectedRecords.Count > 0);
             ApplyFiltersCommand = new RelayCommand(_ => ApplyFilters());
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
@@ -118,7 +117,6 @@ namespace EtnoPapers.UI.ViewModels
         #region Commands
 
         public ICommand LoadRecordsCommand { get; }
-        public ICommand CreateRecordCommand { get; }
         public ICommand DeleteRecordsCommand { get; }
         public ICommand ApplyFiltersCommand { get; }
         public ICommand ClearFiltersCommand { get; }
@@ -162,42 +160,6 @@ namespace EtnoPapers.UI.ViewModels
             finally
             {
                 IsLoading = false;
-            }
-        }
-
-        /// <summary>
-        /// Creates a new record (opens dialog in UI layer).
-        /// This method is called from UI; actual record creation happens via EditRecord.
-        /// </summary>
-        public void CreateRecord()
-        {
-            try
-            {
-                _loggerService.Info("CreateRecord called from ViewModel");
-
-                var dialog = new Views.NewRecordDialog
-                {
-                    Owner = System.Windows.Application.Current.MainWindow
-                };
-
-                if (dialog.ShowDialog() == true && dialog.CreatedRecord != null)
-                {
-                    if (SaveNewRecord(dialog.CreatedRecord))
-                    {
-                        _loggerService.Info($"New record created successfully: {dialog.CreatedRecord.Id}");
-                        System.Windows.MessageBox.Show(
-                            "Registro criado com sucesso!",
-                            "Sucesso",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Information);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                HasError = true;
-                ErrorMessage = $"Erro ao criar novo registro: {ex.Message}";
-                _loggerService.Error($"Error creating new record: {ex.Message}", ex);
             }
         }
 
