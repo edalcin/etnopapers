@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Windows 11 Design Language Colors -->
+
+    <!-- Primary Colors -->
+    <SolidColorBrush x:Key="Primary" Color="#0078D4"/>
+    <SolidColorBrush x:Key="PrimaryHover" Color="#106EBE"/>
+    <SolidColorBrush x:Key="PrimaryPressed" Color="#005A9E"/>
+
+    <!-- Neutral Colors (Light Mode) -->
+    <SolidColorBrush x:Key="BackgroundLight" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceLight" Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="TextPrimary" Color="#000000"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#505050"/>
+    <SolidColorBrush x:Key="TextTertiary" Color="#8A8A8A"/>
+    <SolidColorBrush x:Key="BorderLight" Color="#E0E0E0"/>
+
+    <!-- Neutral Colors (Dark Mode) -->
+    <SolidColorBrush x:Key="BackgroundDark" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="SurfaceDark" Color="#2B2B2B"/>
+    <SolidColorBrush x:Key="TextDark" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TextSecondaryDark" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="BorderDark" Color="#454545"/>
+
+    <!-- Default (Light Mode) -->
+    <SolidColorBrush x:Key="Background" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Surface" Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="Text" Color="#000000"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#505050"/>
+    <SolidColorBrush x:Key="TextTertiary" Color="#8A8A8A"/>
+    <SolidColorBrush x:Key="Border" Color="#E0E0E0"/>
+
+    <!-- Status Colors -->
+    <SolidColorBrush x:Key="Success" Color="#107C10"/>
+    <SolidColorBrush x:Key="Warning" Color="#FFB900"/>
+    <SolidColorBrush x:Key="Error" Color="#D13438"/>
+    <SolidColorBrush x:Key="Info" Color="#0078D4"/>
+
+    <!-- Connected/Disconnected -->
+    <SolidColorBrush x:Key="Connected" Color="#107C10"/>
+    <SolidColorBrush x:Key="Disconnected" Color="#D13438"/>
+
+</ResourceDictionary>

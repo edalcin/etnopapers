@@ -1,0 +1,99 @@
+<Page x:Class="EtnoPapers.UI.Views.HomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      mc:Ignorable="d"
+      Background="{StaticResource Background}"
+      Foreground="{StaticResource Text}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40" Background="{StaticResource Background}">
+            <!-- Welcome Section -->
+            <TextBlock Text="Bem-vindo ao EtnoPapers" Style="{StaticResource Heading1}"/>
+
+            <TextBlock Text="{Binding WelcomeMessage}" Style="{StaticResource Body}" TextWrapping="Wrap" Margin="0,0,0,20"/>
+
+            <!-- Quick Stats -->
+            <Border Background="{StaticResource Surface}" Padding="20" CornerRadius="8" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Estatísticas" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Records Count -->
+                        <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                            <TextBlock Text="Registros Locais" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="{Binding RecordCount}" Style="{StaticResource Heading2}" Foreground="{StaticResource Primary}"/>
+                        </StackPanel>
+
+                        <!-- Version -->
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Versão do Aplicativo" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="{Binding ApplicationVersion}" Style="{StaticResource Heading2}" Foreground="{StaticResource Primary}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Getting Started -->
+            <Border Background="{StaticResource Surface}" Padding="20" CornerRadius="8" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Comece por aqui" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <TextBlock Style="{StaticResource Body}" TextWrapping="Wrap">
+                        <Run Text="1. "/>
+                        <Run Text="Configure OLLAMA" FontWeight="SemiBold"/>
+                        <Run Text=" - Acesse Configurações e defina a URL do OLLAMA (padrão: http://localhost:11434)"/>
+                    </TextBlock>
+
+                    <TextBlock Style="{StaticResource Body}" TextWrapping="Wrap" Margin="0,12,0,0">
+                        <Run Text="2. "/>
+                        <Run Text="Configure MongoDB" FontWeight="SemiBold"/>
+                        <Run Text=" - Adicione uma string de conexão MongoDB se deseja sincronizar registros para a nuvem (opcional)"/>
+                    </TextBlock>
+
+                    <TextBlock Style="{StaticResource Body}" TextWrapping="Wrap" Margin="0,12,0,0">
+                        <Run Text="3. "/>
+                        <Run Text="Faça upload de PDFs" FontWeight="SemiBold"/>
+                        <Run Text=" - Vá para a seção Upload PDF e selecione seus artigos de pesquisa"/>
+                    </TextBlock>
+
+                    <TextBlock Style="{StaticResource Body}" TextWrapping="Wrap" Margin="0,12,0,0">
+                        <Run Text="4. "/>
+                        <Run Text="Revise e edite" FontWeight="SemiBold"/>
+                        <Run Text=" - Verifique os dados extraídos e faça ajustes conforme necessário"/>
+                    </TextBlock>
+
+                    <TextBlock Style="{StaticResource Body}" TextWrapping="Wrap" Margin="0,12,0,0">
+                        <Run Text="5. "/>
+                        <Run Text="Sincronize" FontWeight="SemiBold"/>
+                        <Run Text=" - Sincronize seus registros com MongoDB para backup na nuvem (opcional)"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- Resources -->
+            <Border Background="{StaticResource Surface}" Padding="20" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Recursos e Suporte" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <TextBlock Style="{StaticResource Body}" TextWrapping="Wrap">
+                        <Run Text="Para suporte e documentação, entre em contato: "/>
+                        <Run Text="edalcin@jbrj.gov.br" FontWeight="SemiBold"/>
+                    </TextBlock>
+
+                    <TextBlock Style="{StaticResource Body}" TextWrapping="Wrap" Margin="0,12,0,0">
+                        Prerequisitos:
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0">• .NET 8.0 Runtime</TextBlock>
+                    <TextBlock Style="{StaticResource Caption}">• OLLAMA instalado e em execução</TextBlock>
+                    <TextBlock Style="{StaticResource Caption}">• (Opcional) MongoDB Atlas ou instância local</TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

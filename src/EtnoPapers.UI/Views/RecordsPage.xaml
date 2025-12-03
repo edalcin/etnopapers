@@ -1,0 +1,9 @@
+<Page x:Class="EtnoPapers.UI.Views.RecordsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="{StaticResource Background}">
+    <StackPanel Margin="40" VerticalAlignment="Top">
+        <TextBlock Text="Registros" Style="{StaticResource Heading1}"/>
+        <TextBlock Text="Página de gerenciamento de registros será implementada em Phase 4" Style="{StaticResource Body}" Margin="0,16,0,0"/>
+    </StackPanel>
+</Page>
