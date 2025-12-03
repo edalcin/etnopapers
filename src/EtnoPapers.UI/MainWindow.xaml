@@ -36,11 +36,11 @@
             <!-- Navigation Panel -->
             <Border Grid.Column="0" Background="#F3F3F3" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
                 <StackPanel Margin="0,20,0,0">
-                    <Button Content="Início" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Home"/>
-                    <Button Content="Upload PDF" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Upload"/>
-                    <Button Content="Registros" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Records"/>
-                    <Button Content="Sincronização" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Sync"/>
-                    <Button Content="Configurações" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
+                    <Button x:Name="BtnHome" Content="Início" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Home" Click="OnNavigationButtonClick"/>
+                    <Button x:Name="BtnUpload" Content="Upload PDF" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Upload" Click="OnNavigationButtonClick"/>
+                    <Button x:Name="BtnRecords" Content="Registros" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Records" Click="OnNavigationButtonClick"/>
+                    <Button x:Name="BtnSync" Content="Sincronização" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Sync" Click="OnNavigationButtonClick"/>
+                    <Button x:Name="BtnSettings" Content="Configurações" Margin="8" Padding="12,10" Background="Transparent" Command="{Binding NavigateCommand}" CommandParameter="Settings" Click="OnNavigationButtonClick"/>
                 </StackPanel>
             </Border>
 
