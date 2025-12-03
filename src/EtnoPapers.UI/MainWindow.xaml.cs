@@ -23,6 +23,9 @@ namespace EtnoPapers.UI.Views
 
             // Restore window state if previously saved
             RestoreWindowState();
+
+            // Carregar página inicial
+            NavigateToPage("Home");
         }
 
         private void OnMenuExit(object sender, RoutedEventArgs e)
@@ -70,15 +73,24 @@ namespace EtnoPapers.UI.Views
         {
             try
             {
-                // Criar URI para a página
-                string pageUri = $"/Views/BlankPage.xaml"; // Por enquanto, usar página em branco
+                // Mapear nome da página para arquivo XAML
+                string pageUri = pageName switch
+                {
+                    "Home" => "/Views/HomePage.xaml",
+                    "Upload" => "/Views/UploadPage.xaml",
+                    "Records" => "/Views/RecordsPage.xaml",
+                    "Sync" => "/Views/SyncPage.xaml",
+                    "Settings" => "/Views/SettingsPage.xaml",
+                    _ => "/Views/HomePage.xaml"
+                };
 
                 MainFrame.Source = new System.Uri(pageUri, System.UriKind.Relative);
-                System.Diagnostics.Debug.WriteLine($"Navigated to: {pageName}");
+                System.Diagnostics.Debug.WriteLine($"Navigated to: {pageName} ({pageUri})");
             }
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Navigation error: {ex.Message}");
+                MessageBox.Show($"Erro ao navegar: {ex.Message}", "Erro de Navegação");
             }
         }
 
