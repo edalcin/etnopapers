@@ -34,8 +34,8 @@ namespace EtnoPapers.UI.Views
         private void OnMenuAbout(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(
-                "EtnoPapers v1.0.0\n\nEthnobotanical Research Manager\n\nA Windows desktop application for automated extraction and cataloging of ethnobotanical metadata from scientific papers.",
-                "About EtnoPapers",
+                "EtnoPapers v1.0.0\n\nGerenciador de Pesquisa Etnobotânica\n\nAplicativo Windows desktop para extração e catalogação automatizada de metadados etnobotânicos de artigos científicos.",
+                "Sobre o EtnoPapers",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         }

@@ -13,7 +13,7 @@
     <SolidColorBrush x:Key="BackgroundLight" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="SurfaceLight" Color="#F3F3F3"/>
     <SolidColorBrush x:Key="TextPrimary" Color="#000000"/>
-    <SolidColorBrush x:Key="TextSecondary" Color="#505050"/>
+    <SolidColorBrush x:Key="TextSecondaryLight" Color="#505050"/>
     <SolidColorBrush x:Key="TextTertiary" Color="#8A8A8A"/>
     <SolidColorBrush x:Key="BorderLight" Color="#E0E0E0"/>
 

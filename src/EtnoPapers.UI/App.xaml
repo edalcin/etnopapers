@@ -2,17 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:EtnoPapers.UI"
-             StartupUri="Views/MainWindow.xaml">
+             StartupUri="MainWindow.xaml">
     <Application.Resources>
         <!-- Global application resources -->
         <ResourceDictionary xmlns:sys="clr-namespace:System;assembly=mscorlib">
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Windows 11 Design Language Colors -->
-                <ResourceDictionary Source="Styles/Brushes.xaml"/>
-                <!-- Control Styles -->
-                <ResourceDictionary Source="Styles/ControlStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-
             <!-- Default Fonts -->
             <FontFamily x:Key="DefaultFontFamily">Segoe UI</FontFamily>
             <sys:Double x:Key="DefaultFontSize">12</sys:Double>
@@ -20,6 +13,20 @@
             <!-- Application Metadata -->
             <sys:String x:Key="ApplicationTitle">EtnoPapers</sys:String>
             <sys:String x:Key="ApplicationVersion">1.0.0</sys:String>
+
+            <!-- Minimal Colors -->
+            <SolidColorBrush x:Key="Background" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="Text" Color="#000000"/>
+            <SolidColorBrush x:Key="Surface" Color="#F3F3F3"/>
+            <SolidColorBrush x:Key="TextPrimary" Color="#000000"/>
+            <SolidColorBrush x:Key="TextSecondary" Color="#505050"/>
+            <SolidColorBrush x:Key="Border" Color="#E0E0E0"/>
+            <SolidColorBrush x:Key="Primary" Color="#0078D4"/>
+            <SolidColorBrush x:Key="PrimaryHover" Color="#106EBE"/>
+            <SolidColorBrush x:Key="PrimaryPressed" Color="#005A9E"/>
+            <SolidColorBrush x:Key="TextTertiary" Color="#8A8A8A"/>
+            <SolidColorBrush x:Key="Connected" Color="#107C10"/>
+            <SolidColorBrush x:Key="Disconnected" Color="#D13438"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

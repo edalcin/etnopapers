@@ -60,7 +60,11 @@
       "Bash(dotnet build:*)",
       "Bash(ConvertFrom-Json)",
       "Bash(test:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(timeout 10 powershell:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"test-app.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(timeout 20 powershell:*)"
     ],
     "deny": [],
     "ask": []

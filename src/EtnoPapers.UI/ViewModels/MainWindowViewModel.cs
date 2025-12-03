@@ -16,7 +16,7 @@ namespace EtnoPapers.UI.ViewModels
         private string _currentPage = "Home";
         private bool _ollamaConnected = false;
         private bool _mongodbConnected = false;
-        private string _applicationTitle = "EtnoPapers";
+        private string _applicationTitle = "EtnoPapers - Gerenciador de Pesquisa Etnobotânica";
 
         public MainWindowViewModel()
         {

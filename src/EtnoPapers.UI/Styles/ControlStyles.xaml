@@ -35,8 +35,6 @@
         </Setter>
     </Style>
 
-    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource DefaultButtonStyle}"/>
-
     <!-- TextBlock Styles -->
     <Style TargetType="{x:Type TextBlock}" x:Key="Heading1">
         <Setter Property="FontSize" Value="28"/>
