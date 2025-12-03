@@ -59,7 +59,11 @@ namespace EtnoPapers.Core.Services
                 var record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(metadata);
 
                 if (!_validationService.ValidateRecord(record))
-                    throw new InvalidOperationException("Extracted data validation failed");
+                {
+                    var errors = _validationService.GetValidationErrors(record);
+                    var errorMessage = "Extracted data validation failed:\n" + string.Join("\n", errors);
+                    throw new InvalidOperationException(errorMessage);
+                }
 
                 CurrentStep = "Complete";
                 Progress = 100;
