@@ -162,25 +162,37 @@ namespace EtnoPapers.UI.ViewModels
             ErrorMessage = "";
             ExtractionProgress = 0;
 
+            Views.ExtractionProgressWindow progressWindow = null;
+            Views.ExtractionProgressViewModel progressViewModel = null;
             try
             {
                 _loggerService.Info($"Starting extraction for: {SelectedFilePath}");
 
-                // Create progress window (show modeless, not blocking)
-                var progressWindow = new Views.ExtractionProgressWindow
+                try
                 {
-                    Owner = System.Windows.Application.Current.MainWindow
-                };
+                    // Create progress window (show modeless, not blocking)
+                    progressWindow = new Views.ExtractionProgressWindow
+                    {
+                        Owner = System.Windows.Application.Current.MainWindow
+                    };
 
-                var progressViewModel = progressWindow.DataContext as Views.ExtractionProgressViewModel;
-                if (progressViewModel != null)
-                {
-                    progressViewModel.SetExtractionService(_extractionService);
-                    progressViewModel.IsExtracting = true;
+                    progressViewModel = progressWindow.DataContext as Views.ExtractionProgressViewModel;
+                    if (progressViewModel != null)
+                    {
+                        progressViewModel.SetExtractionService(_extractionService);
+                        progressViewModel.IsExtracting = true;
+                    }
+
+                    // Show as modeless window (non-blocking)
+                    progressWindow.Show();
                 }
-
-                // Show as modeless window (non-blocking)
-                progressWindow.Show();
+                catch (Exception ex)
+                {
+                    _loggerService.Error($"Error creating progress window: {ex.Message}", ex);
+                    HasExtractionError = true;
+                    ErrorMessage = $"Erro ao mostrar janela de progresso: {ex.Message}";
+                    throw;
+                }
 
                 try
                 {

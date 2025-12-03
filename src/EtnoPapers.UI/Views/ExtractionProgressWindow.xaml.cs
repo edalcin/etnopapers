@@ -96,18 +96,33 @@ namespace EtnoPapers.UI.Views
 
         private void OnProgressUpdated(object sender, ProgressUpdateEventArgs e)
         {
-            Progress = e.Progress;
-            CurrentStep = e.Step;
-            CurrentMessage = e.Message;
-
-            var timestamp = DateTime.Now.ToString("HH:mm:ss");
-            var logMessage = $"[{timestamp}] {e.Message}";
-            Application.Current.Dispatcher.Invoke(() =>
+            try
             {
-                LogItems.Add(logMessage);
-            });
+                Progress = e.Progress;
+                CurrentStep = e.Step;
+                CurrentMessage = e.Message;
 
-            OnPropertyChanged(nameof(ProgressText));
+                var timestamp = DateTime.Now.ToString("HH:mm:ss");
+                var logMessage = $"[{timestamp}] {e.Message}";
+
+                if (Application.Current?.Dispatcher != null)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        LogItems.Add(logMessage);
+                    });
+                }
+                else
+                {
+                    LogItems.Add(logMessage);
+                }
+
+                OnPropertyChanged(nameof(ProgressText));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in OnProgressUpdated: {ex.Message}");
+            }
         }
 
         public void CancelExtraction()

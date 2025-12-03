@@ -90,8 +90,7 @@
                     Click="CloseButton_Click"
                     Padding="16,8"
                     Background="#0078D4"
-                    Foreground="White"
-                    IsEnabled="{Binding IsExtracting, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                    Foreground="White"/>
         </StackPanel>
     </Grid>
 </Window>
