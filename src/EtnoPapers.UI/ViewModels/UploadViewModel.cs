@@ -166,7 +166,7 @@ namespace EtnoPapers.UI.ViewModels
             {
                 _loggerService.Info($"Starting extraction for: {SelectedFilePath}");
 
-                // Create and show progress window
+                // Create progress window (show modeless, not blocking)
                 var progressWindow = new Views.ExtractionProgressWindow
                 {
                     Owner = System.Windows.Application.Current.MainWindow
@@ -179,27 +179,69 @@ namespace EtnoPapers.UI.ViewModels
                     progressViewModel.IsExtracting = true;
                 }
 
+                // Show as modeless window (non-blocking)
                 progressWindow.Show();
 
-                ExtractedData = await _extractionService.ExtractFromPdfAsync(SelectedFilePath);
-
-                ExtractionProgress = 100;
-                CurrentStep = "Extração concluída";
-                AllowSave = true;
-
-                if (progressViewModel != null)
+                try
                 {
-                    progressViewModel.IsExtracting = false;
-                }
+                    ExtractedData = await _extractionService.ExtractFromPdfAsync(SelectedFilePath);
 
-                _loggerService.Info($"Extraction completed successfully for: {System.IO.Path.GetFileName(SelectedFilePath)}");
-            }
-            catch (Exception ex)
-            {
-                HasExtractionError = true;
-                ErrorMessage = $"Erro na extração: {ex.Message}";
-                CurrentStep = "Erro";
-                _loggerService.Error($"Extraction failed: {ex.Message}", ex);
+                    ExtractionProgress = 100;
+                    CurrentStep = "Extração concluída";
+
+                    // Check if we have a partial record that needs manual editing
+                    if (ExtractedData != null && !_validationService.IsValidForSaving(ExtractedData))
+                    {
+                        CurrentStep = "Edição de Campos Faltantes";
+
+                        if (progressViewModel != null)
+                        {
+                            progressViewModel.IsExtracting = false;
+                        }
+
+                        // Close progress window
+                        await Task.Delay(500);
+                        progressWindow.Close();
+
+                        // Open edit dialog for user to fill missing fields
+                        var editDialog = new Views.EditRecordDialog
+                        {
+                            Owner = System.Windows.Application.Current.MainWindow,
+                            DataContext = ExtractedData
+                        };
+
+                        if (editDialog.ShowDialog() == true)
+                        {
+                            // User saved the edited record
+                            AllowSave = true;
+                            CurrentStep = "Pronto para salvar";
+                            _loggerService.Info($"Record edited and ready to save: {ExtractedData.Id}");
+                        }
+                    }
+                    else
+                    {
+                        AllowSave = true;
+                        _loggerService.Info($"Extraction completed successfully for: {System.IO.Path.GetFileName(SelectedFilePath)}");
+
+                        // Close progress window after a short delay
+                        await Task.Delay(500);
+                        progressWindow.Close();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (progressViewModel != null)
+                    {
+                        progressViewModel.IsExtracting = false;
+                    }
+
+                    HasExtractionError = true;
+                    ErrorMessage = $"Erro na extração: {ex.Message}";
+                    CurrentStep = "Erro";
+                    _loggerService.Error($"Extraction failed: {ex.Message}", ex);
+
+                    // Keep progress window open to show error log
+                }
             }
             finally
             {

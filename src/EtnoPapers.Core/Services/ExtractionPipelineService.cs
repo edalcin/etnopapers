@@ -102,11 +102,20 @@ namespace EtnoPapers.Core.Services
 
                     UpdateProgress(75, "Validation Error", $"Validação falhou: {errors.Count} erro(s)");
 
-                    // Allow user to fix data
-                    var suggestedFix = SuggestFieldFixes(record, errors);
-                    var fullErrorMessage = errorDetails + "\n\n" + suggestedFix;
+                    // Return partial record so user can edit it manually
 
-                    throw new InvalidOperationException(fullErrorMessage);
+                    // Generate ID and timestamps for partial record
+                    if (string.IsNullOrEmpty(record.Id))
+                        record.Id = Guid.NewGuid().ToString();
+
+                    record.DataCriacao = DateTime.UtcNow;
+                    record.DataUltimaAtualizacao = DateTime.UtcNow;
+                    record.StatusSincronizacao = "local";
+
+                    UpdateProgress(100, "Complete - Manual Edit Needed",
+                        "Extração parcial concluída. Campos faltantes precisam ser preenchidos manualmente.");
+
+                    return record;
                 }
 
                 UpdateProgress(100, "Complete", "Extração concluída com sucesso!");
