@@ -49,7 +49,7 @@
             </Border>
 
             <!-- Application Preferences -->
-            <Border Background="#F3F3F3" Padding="20" CornerRadius="8">
+            <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="Preferências da Aplicação" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
@@ -58,6 +58,21 @@
                     <CheckBox Content="Lembrar senha do MongoDB" Margin="0,0,0,20" IsChecked="False"/>
 
                     <Button Content="Salvar Configurações" Command="{Binding SaveSettingsCommand}" Padding="16,8" Background="#0078D4" Foreground="White"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Success/Error Messages -->
+            <Border Background="#E8F5E9" Padding="16" CornerRadius="4" Margin="0,0,0,0" Visibility="{Binding SuccessMessage, Converter={StaticResource StringToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="✓" FontSize="16" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding SuccessMessage}" FontSize="13" Foreground="#2E7D32" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#FFEBEE" Padding="16" CornerRadius="4" Margin="0,8,0,0" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="✗" FontSize="16" Foreground="#F44336" FontWeight="Bold" Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding ErrorMessage}" FontSize="13" Foreground="#C62828" VerticalAlignment="Center" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
         </StackPanel>

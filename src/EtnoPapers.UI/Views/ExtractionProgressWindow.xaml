@@ -1,0 +1,97 @@
+<Window x:Class="EtnoPapers.UI.Views.ExtractionProgressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Progresso da Extração"
+        WindowStartupLocation="CenterOwner"
+        Width="600"
+        Height="400"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="White"
+        Foreground="Black">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0"
+                   Text="Processando extração de PDF..."
+                   FontSize="16"
+                   FontWeight="Bold"
+                   Foreground="#0078D4"
+                   Margin="0,0,0,16"/>
+
+        <!-- Progress Bar -->
+        <ProgressBar Grid.Row="1"
+                     Height="8"
+                     Foreground="#0078D4"
+                     Background="#E0E0E0"
+                     Value="{Binding Progress, Mode=OneWay}"
+                     Maximum="100"
+                     Margin="0,0,0,8"/>
+
+        <!-- Progress Text -->
+        <TextBlock Grid.Row="1"
+                   Text="{Binding ProgressText, Mode=OneWay}"
+                   FontSize="12"
+                   Foreground="#505050"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Right"
+                   Margin="0,0,0,8"/>
+
+        <!-- Current Step -->
+        <TextBlock Grid.Row="1"
+                   Text="{Binding CurrentMessage, Mode=OneWay}"
+                   FontSize="13"
+                   Foreground="#0078D4"
+                   FontWeight="Bold"
+                   VerticalAlignment="Bottom"
+                   Margin="0,16,0,0"/>
+
+        <!-- Log Output -->
+        <Border Grid.Row="2"
+                Background="#F5F5F5"
+                BorderBrush="#E0E0E0"
+                BorderThickness="1"
+                CornerRadius="4"
+                Margin="0,16,0,16">
+            <ListBox ItemsSource="{Binding LogItems, Mode=OneWay}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="12"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#505050"
+                                   FontSize="11"
+                                   Margin="0,2,0,2"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <!-- Status and Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancelar"
+                    Click="CancelButton_Click"
+                    Padding="16,8"
+                    Margin="0,0,8,0"
+                    Background="Transparent"
+                    Foreground="#D13438"
+                    IsEnabled="{Binding IsExtracting, Mode=OneWay}"/>
+            <Button Content="Fechar"
+                    Click="CloseButton_Click"
+                    Padding="16,8"
+                    Background="#0078D4"
+                    Foreground="White"
+                    IsEnabled="{Binding IsExtracting, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+        </StackPanel>
+    </Grid>
+</Window>

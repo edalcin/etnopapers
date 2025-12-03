@@ -166,11 +166,31 @@ namespace EtnoPapers.UI.ViewModels
             {
                 _loggerService.Info($"Starting extraction for: {SelectedFilePath}");
 
+                // Create and show progress window
+                var progressWindow = new Views.ExtractionProgressWindow
+                {
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
+
+                var progressViewModel = progressWindow.DataContext as Views.ExtractionProgressViewModel;
+                if (progressViewModel != null)
+                {
+                    progressViewModel.SetExtractionService(_extractionService);
+                    progressViewModel.IsExtracting = true;
+                }
+
+                progressWindow.Show();
+
                 ExtractedData = await _extractionService.ExtractFromPdfAsync(SelectedFilePath);
 
                 ExtractionProgress = 100;
                 CurrentStep = "Extração concluída";
                 AllowSave = true;
+
+                if (progressViewModel != null)
+                {
+                    progressViewModel.IsExtracting = false;
+                }
 
                 _loggerService.Info($"Extraction completed successfully for: {System.IO.Path.GetFileName(SelectedFilePath)}");
             }

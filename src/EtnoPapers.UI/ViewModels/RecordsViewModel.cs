@@ -171,7 +171,34 @@ namespace EtnoPapers.UI.ViewModels
         /// </summary>
         public void CreateRecord()
         {
-            _loggerService.Info("CreateRecord called from ViewModel");
+            try
+            {
+                _loggerService.Info("CreateRecord called from ViewModel");
+
+                var dialog = new Views.NewRecordDialog
+                {
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
+
+                if (dialog.ShowDialog() == true && dialog.CreatedRecord != null)
+                {
+                    if (SaveNewRecord(dialog.CreatedRecord))
+                    {
+                        _loggerService.Info($"New record created successfully: {dialog.CreatedRecord.Id}");
+                        System.Windows.MessageBox.Show(
+                            "Registro criado com sucesso!",
+                            "Sucesso",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                HasError = true;
+                ErrorMessage = $"Erro ao criar novo registro: {ex.Message}";
+                _loggerService.Error($"Error creating new record: {ex.Message}", ex);
+            }
         }
 
         /// <summary>

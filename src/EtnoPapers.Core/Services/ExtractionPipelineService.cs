@@ -6,6 +6,16 @@ using EtnoPapers.Core.Models;
 namespace EtnoPapers.Core.Services
 {
     /// <summary>
+    /// Progress update event arguments
+    /// </summary>
+    public class ProgressUpdateEventArgs : EventArgs
+    {
+        public int Progress { get; set; }
+        public string Step { get; set; }
+        public string Message { get; set; }
+    }
+
+    /// <summary>
     /// Orchestrates the complete extraction pipeline: PDF → text → AI → validation → storage
     /// </summary>
     public class ExtractionPipelineService
@@ -20,6 +30,11 @@ namespace EtnoPapers.Core.Services
         public int Progress { get; private set; }
         public bool IsExtracting { get; private set; }
 
+        /// <summary>
+        /// Event raised when progress is updated
+        /// </summary>
+        public event EventHandler<ProgressUpdateEventArgs>? ProgressUpdated;
+
         public ExtractionPipelineService(
             PDFProcessingService pdfService,
             OLLAMAService ollamaService,
@@ -33,6 +48,21 @@ namespace EtnoPapers.Core.Services
         }
 
         /// <summary>
+        /// Updates progress and raises ProgressUpdated event
+        /// </summary>
+        private void UpdateProgress(int progress, string step, string message)
+        {
+            Progress = progress;
+            CurrentStep = step;
+            ProgressUpdated?.Invoke(this, new ProgressUpdateEventArgs
+            {
+                Progress = progress,
+                Step = step,
+                Message = message
+            });
+        }
+
+        /// <summary>
         /// Extracts metadata from PDF file.
         /// </summary>
         public async Task<ArticleRecord> ExtractFromPdfAsync(string filePath)
@@ -40,39 +70,75 @@ namespace EtnoPapers.Core.Services
             IsExtracting = true;
             try
             {
-                CurrentStep = "Validating PDF";
-                Progress = 10;
+                UpdateProgress(10, "Validating PDF", "Validando arquivo PDF...");
 
                 if (!_pdfService.ValidatePDF(filePath))
                     throw new InvalidOperationException("Invalid PDF file");
 
-                CurrentStep = "Extracting text";
-                Progress = 25;
+                UpdateProgress(25, "Extracting text", "Extraindo texto do PDF...");
                 var text = _pdfService.ExtractText(filePath);
 
-                CurrentStep = "Processing with AI";
-                Progress = 50;
+                UpdateProgress(50, "Processing with AI", "Processando com IA (OLLAMA)...");
                 var metadata = await _ollamaService.ExtractMetadataAsync(text);
 
-                CurrentStep = "Validating extracted data";
-                Progress = 75;
-                var record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(metadata);
+                UpdateProgress(75, "Validating extracted data", "Validando dados extraídos...");
+
+                ArticleRecord record = null;
+                try
+                {
+                    record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(metadata);
+                }
+                catch (Exception ex)
+                {
+                    var detailedError = $"Erro ao fazer parsing dos dados JSON extraídos:\n{ex.Message}\n\nJSON recebido:\n{metadata}";
+                    UpdateProgress(75, "Error", $"Erro no parsing: {ex.Message}");
+                    throw new InvalidOperationException(detailedError, ex);
+                }
 
                 if (!_validationService.ValidateRecord(record))
                 {
                     var errors = _validationService.GetValidationErrors(record);
-                    var errorMessage = "Extracted data validation failed:\n" + string.Join("\n", errors);
-                    throw new InvalidOperationException(errorMessage);
+                    var errorDetails = "Erros de validação encontrados:\n" + string.Join("\n", errors);
+
+                    UpdateProgress(75, "Validation Error", $"Validação falhou: {errors.Count} erro(s)");
+
+                    // Allow user to fix data
+                    var suggestedFix = SuggestFieldFixes(record, errors);
+                    var fullErrorMessage = errorDetails + "\n\n" + suggestedFix;
+
+                    throw new InvalidOperationException(fullErrorMessage);
                 }
 
-                CurrentStep = "Complete";
-                Progress = 100;
+                UpdateProgress(100, "Complete", "Extração concluída com sucesso!");
                 return record;
             }
             finally
             {
                 IsExtracting = false;
             }
+        }
+
+        /// <summary>
+        /// Suggests field fixes based on validation errors
+        /// </summary>
+        private string SuggestFieldFixes(ArticleRecord record, List<string> errors)
+        {
+            var suggestions = "Sugestões:\n";
+
+            foreach (var error in errors)
+            {
+                if (error.Contains("Titulo"))
+                    suggestions += "• Título vazio: O PDF pode estar em idioma estrangeiro ou corrompido\n";
+                else if (error.Contains("Autores"))
+                    suggestions += "• Autores ausentes: Verifique se o PDF tem metadata ou página de capa\n";
+                else if (error.Contains("Ano"))
+                    suggestions += "• Ano inválido: Verifique o ano de publicação no PDF\n";
+                else if (error.Contains("Resumo"))
+                    suggestions += "• Resumo vazio: O PDF pode não ter um resumo estruturado\n";
+            }
+
+            suggestions += "\nA janela de edição permitirá que você corrija esses campos manualmente.";
+            return suggestions;
         }
 
         /// <summary>
