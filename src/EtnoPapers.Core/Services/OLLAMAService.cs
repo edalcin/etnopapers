@@ -50,6 +50,14 @@ namespace EtnoPapers.Core.Services
 
             try
             {
+                // First verify OLLAMA is running and model is available
+                var models = await GetAvailableModelsAsync();
+                if (models.Count == 0)
+                    throw new InvalidOperationException($"OLLAMA is not responding at {_baseUrl}. Please ensure OLLAMA is running.");
+
+                if (!models.Contains(_model))
+                    throw new InvalidOperationException($"Model '{_model}' not found in OLLAMA. Available models: {string.Join(", ", models)}");
+
                 var prompt = customPrompt ?? GenerateDefaultPrompt(pdfText);
                 var requestBody = new { model = _model, prompt, stream = false };
                 var content = new StringContent(
@@ -60,7 +68,10 @@ namespace EtnoPapers.Core.Services
 
                 var response = await _httpClient.PostAsync($"{_baseUrl}/api/generate", content);
                 if (!response.IsSuccessStatusCode)
-                    throw new HttpRequestException($"OLLAMA request failed: {response.StatusCode}");
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new HttpRequestException($"OLLAMA request failed: {response.StatusCode}. Response: {errorContent}");
+                }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 return responseContent;
