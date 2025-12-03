@@ -1,9 +1,246 @@
 <Page x:Class="EtnoPapers.UI.Views.SettingsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      Background="{StaticResource Background}">
-    <StackPanel Margin="40" VerticalAlignment="Top">
-        <TextBlock Text="Configurações" Style="{StaticResource Heading1}"/>
-        <TextBlock Text="Página de configurações será implementada em Phase 6" Style="{StaticResource Body}" Margin="0,16,0,0"/>
-    </StackPanel>
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:converters="clr-namespace:EtnoPapers.UI.Converters"
+      mc:Ignorable="d"
+      Background="{StaticResource Background}"
+      Foreground="{StaticResource Text}">
+
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40">
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="Configurações" Style="{StaticResource Heading1}" Margin="0,0,0,8"/>
+                <TextBlock Text="Configure a integração com OLLAMA, MongoDB e preferências da aplicação"
+                           Style="{StaticResource Caption}"
+                           Foreground="{StaticResource TextSecondary}"/>
+            </StackPanel>
+
+            <!-- Success Message -->
+            <Border Background="#FFC6EFCE"
+                    BorderBrush="#FF92D050"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="16"
+                    Margin="0,0,0,24"
+                    Visibility="{Binding SuccessMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="{Binding SuccessMessage}"
+                           Style="{StaticResource Body}"
+                           Foreground="#FF1F5517"/>
+            </Border>
+
+            <!-- Error Message -->
+            <Border Background="#FFE7E4E7"
+                    BorderBrush="{StaticResource Error}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="16"
+                    Margin="0,0,0,24"
+                    Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Text="❌ Erro" Style="{StaticResource Heading2}" Foreground="{StaticResource Error}" Margin="0,0,0,8"/>
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Style="{StaticResource Body}"
+                               TextWrapping="Wrap"
+                               Foreground="{StaticResource Error}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- OLLAMA Configuration Section -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24"
+                    Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Configuração OLLAMA" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <!-- OLLAMA URL -->
+                    <TextBlock Text="URL do OLLAMA" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding OllamaUrl, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Margin="0,0,0,16"
+                             Padding="8,6"/>
+
+                    <!-- OLLAMA Model -->
+                    <TextBlock Text="Modelo" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding OllamaModel, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Margin="0,0,0,16"
+                             Padding="8,6"/>
+
+                    <!-- OLLAMA Prompt -->
+                    <TextBlock Text="Prompt Personalizado (Opcional)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding OllamaPrompt, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Height="80"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             Margin="0,0,0,16"
+                             Padding="8,6"/>
+
+                    <!-- Connection Status and Test -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <Button Content="Testar Conexão OLLAMA"
+                                Command="{Binding TestOllamaCommand}"
+                                Style="{StaticResource DefaultButtonStyle}"
+                                Padding="12,6"
+                                Margin="0,0,12,0"/>
+
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center"
+                                 Fill="{StaticResource Success}"
+                                 Visibility="{Binding IsOllamaConnected, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center"
+                                 Fill="{StaticResource Error}"
+                                 Visibility="{Binding IsOllamaConnected, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+
+                        <TextBlock Text="{Binding OllamaTestStatus}"
+                                   Style="{StaticResource Caption}"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   Margin="8,0,0,0"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- MongoDB Configuration Section -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24"
+                    Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Configuração MongoDB" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <!-- MongoDB URI -->
+                    <TextBlock Text="URI do MongoDB" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding MongodbUri, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Margin="0,0,0,16"
+                             Padding="8,6"/>
+
+                    <!-- Connection Status and Test -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <Button Content="Testar Conexão MongoDB"
+                                Command="{Binding TestMongodbCommand}"
+                                Style="{StaticResource DefaultButtonStyle}"
+                                Padding="12,6"
+                                Margin="0,0,12,0"/>
+
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center"
+                                 Fill="{StaticResource Success}"
+                                 Visibility="{Binding IsMongodbConnected, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center"
+                                 Fill="{StaticResource Error}"
+                                 Visibility="{Binding IsMongodbConnected, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
+
+                        <TextBlock Text="{Binding MongodbTestStatus}"
+                                   Style="{StaticResource Caption}"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   Margin="8,0,0,0"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}">
+                        <Run Text="Exemplo: mongodb+srv://user:password@cluster.mongodb.net/database"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- Application Settings Section -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24"
+                    Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Configurações da Aplicação" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+
+                    <!-- Language Selection -->
+                    <TextBlock Text="Idioma" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                              SelectedItem="{Binding Language}"
+                              Style="{StaticResource {x:Type ComboBox}}"
+                              Margin="0,0,0,16"
+                              Padding="8,6"
+                              Width="200"
+                              HorizontalAlignment="Left"/>
+
+                    <!-- Window Size -->
+                    <TextBlock Text="Tamanho da Janela" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Text="Largura (px)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding WindowWidth}"
+                                     Style="{StaticResource {x:Type TextBox}}"
+                                     Width="80"
+                                     Padding="8,6"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Text="Altura (px)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding WindowHeight}"
+                                     Style="{StaticResource {x:Type TextBox}}"
+                                     Width="80"
+                                     Padding="8,6"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Window Maximized -->
+                    <CheckBox Content="Abrir aplicação maximizada"
+                              IsChecked="{Binding WindowMaximized}"
+                              Style="{StaticResource {x:Type CheckBox}}"
+                              Margin="0,0,0,16"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Action Buttons -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                <Button Content="Salvar Configurações"
+                        Command="{Binding SaveSettingsCommand}"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="16,8"
+                        Margin="0,0,8,0"/>
+
+                <Button Content="Restaurar Padrões"
+                        Command="{Binding ResetToDefaultsCommand}"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="16,8"
+                        Background="Transparent"
+                        Foreground="{StaticResource Primary}"/>
+            </StackPanel>
+
+            <!-- Information Box -->
+            <Border Background="{StaticResource Surface}"
+                    BorderBrush="{StaticResource Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                <StackPanel>
+                    <TextBlock Text="ℹ️ Informações" Style="{StaticResource Heading2}" Margin="0,0,0,8"/>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="• OLLAMA deve estar instalado e rodando localmente para extrair metadados"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="• MongoDB é opcional para sincronização de registros para a nuvem"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="• Use o botão 'Testar Conexão' para validar suas configurações"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap">
+                        <Run Text="• As configurações são salvas automaticamente no arquivo de configuração"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </Page>
