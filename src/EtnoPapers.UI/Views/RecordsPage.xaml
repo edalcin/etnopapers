@@ -1,9 +1,245 @@
 <Page x:Class="EtnoPapers.UI.Views.RecordsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      Background="{StaticResource Background}">
-    <StackPanel Margin="40" VerticalAlignment="Top">
-        <TextBlock Text="Registros" Style="{StaticResource Heading1}"/>
-        <TextBlock Text="Página de gerenciamento de registros será implementada em Phase 4" Style="{StaticResource Body}" Margin="0,16,0,0"/>
-    </StackPanel>
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:converters="clr-namespace:EtnoPapers.UI.Converters"
+      mc:Ignorable="d"
+      Background="{StaticResource Background}"
+      Foreground="{StaticResource Text}">
+
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="40,40,40,0">
+            <TextBlock Text="Registros" Style="{StaticResource Heading1}" Margin="0,0,0,8"/>
+            <TextBlock Text="Visualize, filtro e gerencie seus registros de artigos extraídos"
+                       Style="{StaticResource Caption}"
+                       Foreground="{StaticResource TextSecondary}"/>
+        </StackPanel>
+
+        <!-- Error Display -->
+        <Border Grid.Row="1"
+                Background="#FFE7E4E7"
+                BorderBrush="{StaticResource Error}"
+                BorderThickness="0,1"
+                Padding="40,12"
+                Margin="0"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Style="{StaticResource Body}"
+                       Foreground="{StaticResource Error}"
+                       TextWrapping="Wrap"/>
+        </Border>
+
+        <!-- Filter Panel -->
+        <Border Grid.Row="2"
+                Background="{StaticResource Surface}"
+                BorderBrush="{StaticResource Border}"
+                BorderThickness="0,1"
+                Padding="40,24">
+            <StackPanel>
+                <!-- Search Row -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                    <TextBlock Text="Pesquisa:" Style="{StaticResource Body}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Width="250"
+                             Padding="8,6"
+                             Margin="0,0,16,0"/>
+
+                    <Button Content="Aplicar Filtros"
+                            Command="{Binding ApplyFiltersCommand}"
+                            Style="{StaticResource DefaultButtonStyle}"
+                            Padding="12,6"
+                            Margin="0,0,8,0"/>
+
+                    <Button Content="Limpar Filtros"
+                            Command="{Binding ClearFiltersCommand}"
+                            Style="{StaticResource DefaultButtonStyle}"
+                            Padding="12,6"
+                            Background="Transparent"
+                            Foreground="{StaticResource Primary}"/>
+                </StackPanel>
+
+                <!-- Filter Criteria Row -->
+                <StackPanel Orientation="Horizontal">
+                    <!-- Year Range -->
+                    <StackPanel Margin="0,0,24,0">
+                        <TextBlock Text="Ano" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding YearFilterMin}"
+                                     Style="{StaticResource {x:Type TextBox}}"
+                                     Width="80"
+                                     Padding="8,6"
+                                     Margin="0,0,4,0"/>
+                            <TextBlock Text="a" VerticalAlignment="Center" Margin="4,0"/>
+                            <TextBox Text="{Binding YearFilterMax}"
+                                     Style="{StaticResource {x:Type TextBox}}"
+                                     Width="80"
+                                     Padding="8,6"
+                                     Margin="4,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Author Filter -->
+                    <StackPanel Margin="0,0,24,0">
+                        <TextBlock Text="Autor" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding AuthorFilter, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource {x:Type TextBox}}"
+                                 Width="150"
+                                 Padding="8,6"/>
+                    </StackPanel>
+
+                    <!-- Biome Filter -->
+                    <StackPanel>
+                        <TextBlock Text="Bioma" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding BiomeFilter, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource {x:Type TextBox}}"
+                                 Width="150"
+                                 Padding="8,6"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Action Toolbar -->
+        <Border Grid.Row="3"
+                Background="{StaticResource Surface}"
+                BorderBrush="{StaticResource Border}"
+                BorderThickness="0,1"
+                Padding="40,16"
+                Margin="0">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Novo Registro"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="12,6"
+                        Margin="0,0,8,0"
+                        Click="NewRecordButton_Click"/>
+
+                <Button Content="Editar"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="12,6"
+                        Margin="0,0,8,0"
+                        Click="EditButton_Click"/>
+
+                <Button Content="Deletar"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="12,6"
+                        Margin="0,0,8,0"
+                        Click="DeleteButton_Click"/>
+
+                <Separator Width="1" Margin="8,0" Background="{StaticResource Border}"/>
+
+                <Button Content="Sincronizar"
+                        Style="{StaticResource DefaultButtonStyle}"
+                        Padding="12,6"/>
+
+                <!-- Status -->
+                <TextBlock Text="{Binding RecordCount, StringFormat={}Registros: {0}}"
+                           Style="{StaticResource Body}"
+                           Margin="16,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource TextSecondary}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Records DataGrid -->
+        <DataGrid Grid.Row="3"
+                  x:Name="RecordsDataGrid"
+                  ItemsSource="{Binding FilteredRecords}"
+                  Margin="40,60,40,40"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  Background="{StaticResource Surface}"
+                  BorderBrush="{StaticResource Border}"
+                  BorderThickness="1"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  VerticalGridLinesBrush="{StaticResource Border}"
+                  HorizontalGridLinesBrush="{StaticResource Border}">
+            <DataGrid.Columns>
+                <!-- Checkbox for selection -->
+                <DataGridCheckBoxColumn Header="Selecionar" Width="60" IsReadOnly="False"/>
+
+                <!-- Title -->
+                <DataGridTextColumn Header="Título"
+                                    Binding="{Binding Titulo}"
+                                    Width="200"
+                                    IsReadOnly="True"/>
+
+                <!-- Authors -->
+                <DataGridTextColumn Header="Autores"
+                                    Binding="{Binding Autores, StringFormat='Multiplos Autores'}"
+                                    Width="150"
+                                    IsReadOnly="True"/>
+
+                <!-- Year -->
+                <DataGridTextColumn Header="Ano"
+                                    Binding="{Binding Ano}"
+                                    Width="60"
+                                    IsReadOnly="True"/>
+
+                <!-- Biome -->
+                <DataGridTextColumn Header="Bioma"
+                                    Binding="{Binding Bioma}"
+                                    Width="120"
+                                    IsReadOnly="True"/>
+
+                <!-- Country -->
+                <DataGridTextColumn Header="País"
+                                    Binding="{Binding Pais}"
+                                    Width="100"
+                                    IsReadOnly="True"/>
+
+                <!-- Last Modified (using Id for now as proxy) -->
+                <DataGridTextColumn Header="ID"
+                                    Binding="{Binding Id}"
+                                    Width="*"
+                                    IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="4"
+                Background="{StaticResource Surface}"
+                BorderBrush="{StaticResource Border}"
+                BorderThickness="0,1"
+                Padding="40,12">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Pronto"
+                           Style="{StaticResource Caption}"
+                           Foreground="{StaticResource TextSecondary}"/>
+                <TextBlock Text="{Binding RecordCount, StringFormat={}| Total: {0} registros}"
+                           Style="{StaticResource Caption}"
+                           Foreground="{StaticResource TextSecondary}"
+                           Margin="16,0,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Loading Overlay -->
+        <Grid Grid.Row="3"
+              Background="#CC000000"
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
+              ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Carregando registros..."
+                           Style="{StaticResource Body}"
+                           Foreground="White"
+                           TextAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
 </Page>

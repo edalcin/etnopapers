@@ -1,0 +1,133 @@
+<Window x:Class="EtnoPapers.UI.Views.NewRecordDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Novo Registro"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="SingleBorderWindow"
+        Background="{StaticResource Background}"
+        Foreground="{StaticResource Text}"
+        Width="700"
+        Height="800"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Criar Novo Registro"
+                       Style="{StaticResource Heading2}"
+                       Margin="0,0,0,8"/>
+            <TextBlock Text="Preencha os campos obrigatórios para criar um novo registro"
+                       Style="{StaticResource Caption}"
+                       Foreground="{StaticResource TextSecondary}"/>
+        </StackPanel>
+
+        <!-- Form Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Title (Required) -->
+                <StackPanel Margin="0,0,0,16">
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,0,0,4">
+                        <Run Text="Título"/>
+                        <Run Text="*" Foreground="{StaticResource Error}"/>
+                    </TextBlock>
+                    <TextBox x:Name="TituloTextBox"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Padding="8,6"/>
+                </StackPanel>
+
+                <!-- Authors (Required) -->
+                <StackPanel Margin="0,0,0,16">
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,0,0,4">
+                        <Run Text="Autores (um por linha)"/>
+                        <Run Text="*" Foreground="{StaticResource Error}"/>
+                    </TextBlock>
+                    <TextBox x:Name="AutoresTextBox"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Height="80"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             Padding="8,6"/>
+                </StackPanel>
+
+                <!-- Year (Required) -->
+                <StackPanel Margin="0,0,0,16">
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,0,0,4">
+                        <Run Text="Ano"/>
+                        <Run Text="*" Foreground="{StaticResource Error}"/>
+                    </TextBlock>
+                    <TextBox x:Name="AnoTextBox"
+                             Style="{StaticResource {x:Type TextBox}}"
+                             Padding="8,6"
+                             Width="100"
+                             HorizontalAlignment="Left"/>
+                </StackPanel>
+
+                <!-- Country -->
+                <TextBlock Text="País" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                <TextBox x:Name="PaisTextBox"
+                         Style="{StaticResource {x:Type TextBox}}"
+                         Margin="0,0,0,16"
+                         Padding="8,6"/>
+
+                <!-- State -->
+                <TextBlock Text="Estado" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                <TextBox x:Name="EstadoTextBox"
+                         Style="{StaticResource {x:Type TextBox}}"
+                         Margin="0,0,0,16"
+                         Padding="8,6"/>
+
+                <!-- City -->
+                <TextBlock Text="Município" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                <TextBox x:Name="MunicipioTextBox"
+                         Style="{StaticResource {x:Type TextBox}}"
+                         Margin="0,0,0,16"
+                         Padding="8,6"/>
+
+                <!-- Biome -->
+                <TextBlock Text="Bioma" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                <TextBox x:Name="BiomaTextBox"
+                         Style="{StaticResource {x:Type TextBox}}"
+                         Margin="0,0,0,16"
+                         Padding="8,6"/>
+
+                <!-- Abstract -->
+                <TextBlock Text="Resumo" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                <TextBox x:Name="ResumoTextBox"
+                         Style="{StaticResource {x:Type TextBox}}"
+                         Height="120"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         Padding="8,6"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="Cancelar"
+                    Style="{StaticResource DefaultButtonStyle}"
+                    Padding="16,8"
+                    Margin="0,0,8,0"
+                    IsCancel="True"
+                    Background="Transparent"
+                    Foreground="{StaticResource Primary}"/>
+
+            <Button Content="Criar"
+                    Style="{StaticResource DefaultButtonStyle}"
+                    Padding="16,8"
+                    IsDefault="True"
+                    Click="CreateButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
