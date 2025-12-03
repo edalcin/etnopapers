@@ -57,7 +57,9 @@
       "Bash(timeout 30 bash:*)",
       "Bash(dotnet sln:*)",
       "Bash(dotnet add:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(ConvertFrom-Json)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
