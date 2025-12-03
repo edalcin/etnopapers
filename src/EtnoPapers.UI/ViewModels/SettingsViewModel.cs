@@ -24,6 +24,7 @@ namespace EtnoPapers.UI.ViewModels
         private string _ollamaPrompt = "";
         private bool _isOllamaConnected = false;
         private string _ollamaTestStatus = "";
+        private ObservableCollection<string> _availableModels = new();
 
         // MongoDB Settings
         private string _mongodbUri = "";
@@ -90,6 +91,12 @@ namespace EtnoPapers.UI.ViewModels
         {
             get => _ollamaTestStatus;
             set => SetProperty(ref _ollamaTestStatus, value);
+        }
+
+        public ObservableCollection<string> AvailableModels
+        {
+            get => _availableModels;
+            set => SetProperty(ref _availableModels, value);
         }
 
         #endregion
@@ -317,7 +324,29 @@ namespace EtnoPapers.UI.ViewModels
                 if (isConnected)
                 {
                     IsOllamaConnected = true;
-                    OllamaTestStatus = "✓ Conectado ao OLLAMA";
+
+                    // Load available models
+                    var models = await tempService.GetAvailableModelsAsync();
+                    AvailableModels.Clear();
+                    foreach (var model in models)
+                    {
+                        AvailableModels.Add(model);
+                    }
+
+                    if (models.Count > 0)
+                    {
+                        OllamaTestStatus = $"✓ Conectado ao OLLAMA ({models.Count} modelo(s) disponível)";
+                        // If current model is not in list, select first available
+                        if (!AvailableModels.Contains(OllamaModel) && AvailableModels.Count > 0)
+                        {
+                            OllamaModel = AvailableModels[0];
+                        }
+                    }
+                    else
+                    {
+                        OllamaTestStatus = "✓ Conectado ao OLLAMA (nenhum modelo disponível)";
+                    }
+
                     _loggerService.Info("OLLAMA connection test successful");
 
                     // Update MainWindow connection status
@@ -328,6 +357,7 @@ namespace EtnoPapers.UI.ViewModels
                 {
                     IsOllamaConnected = false;
                     OllamaTestStatus = "✗ Erro ao conectar ao OLLAMA";
+                    AvailableModels.Clear();
                     _loggerService.Warn("OLLAMA connection test failed");
                 }
             }

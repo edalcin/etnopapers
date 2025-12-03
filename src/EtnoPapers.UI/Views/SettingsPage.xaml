@@ -20,6 +20,9 @@
                     <TextBlock Text="URL do OLLAMA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding OllamaUrl, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
 
+                    <TextBlock Text="Modelo OLLAMA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding AvailableModels}" SelectedItem="{Binding OllamaModel, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
+
                     <TextBlock Text="Prompt Personalizado" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding OllamaPrompt, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
 
