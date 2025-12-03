@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace EtnoPapers.UI.Commands
@@ -30,6 +31,52 @@ namespace EtnoPapers.UI.Commands
             if (CanExecute(parameter))
             {
                 _execute(parameter);
+            }
+        }
+
+        public void RaiseCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Async version of RelayCommand that supports Task-based operations.
+    /// </summary>
+    public class AsyncRelayCommand : ICommand
+    {
+        private readonly Func<object, Task> _executeAsync;
+        private readonly Predicate<object> _canExecute;
+        private bool _isExecuting;
+
+        public event EventHandler CanExecuteChanged;
+
+        public AsyncRelayCommand(Func<object, Task> executeAsync, Predicate<object> canExecute = null)
+        {
+            _executeAsync = executeAsync ?? throw new ArgumentNullException(nameof(executeAsync));
+            _canExecute = canExecute;
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            return !_isExecuting && (_canExecute == null || _canExecute(parameter));
+        }
+
+        public async void Execute(object parameter)
+        {
+            if (CanExecute(parameter))
+            {
+                try
+                {
+                    _isExecuting = true;
+                    RaiseCanExecuteChanged();
+                    await _executeAsync(parameter);
+                }
+                finally
+                {
+                    _isExecuting = false;
+                    RaiseCanExecuteChanged();
+                }
             }
         }
 

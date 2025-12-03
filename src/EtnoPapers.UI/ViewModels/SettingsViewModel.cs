@@ -52,8 +52,8 @@ namespace EtnoPapers.UI.ViewModels
             LoadSettingsCommand = new RelayCommand(_ => LoadSettings());
             SaveSettingsCommand = new RelayCommand(_ => SaveSettings(), _ => !IsSaving);
             ResetToDefaultsCommand = new RelayCommand(_ => ResetToDefaults());
-            TestOllamaCommand = new RelayCommand(_ => TestOllamaConnection());
-            TestMongodbCommand = new RelayCommand(_ => TestMongodbConnection());
+            TestOllamaCommand = new AsyncRelayCommand(_ => TestOllamaConnectionAsync());
+            TestMongodbCommand = new AsyncRelayCommand(_ => TestMongodbConnectionAsync());
             ClearErrorCommand = new RelayCommand(_ => ClearError());
 
             _loggerService.Info("SettingsViewModel initialized");
@@ -297,7 +297,7 @@ namespace EtnoPapers.UI.ViewModels
         /// <summary>
         /// Tests connection to OLLAMA service.
         /// </summary>
-        public async void TestOllamaConnection()
+        public async Task TestOllamaConnectionAsync()
         {
             try
             {
@@ -338,7 +338,7 @@ namespace EtnoPapers.UI.ViewModels
         /// <summary>
         /// Tests connection to MongoDB service.
         /// </summary>
-        public async void TestMongodbConnection()
+        public async Task TestMongodbConnectionAsync()
         {
             try
             {
