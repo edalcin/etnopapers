@@ -20,6 +20,7 @@ namespace EtnoPapers.UI.ViewModels
         private readonly OLLAMAService _ollamaService;
         private readonly ValidationService _validationService;
         private readonly LoggerService _loggerService;
+        private RelayCommand _startExtractionCommand;
 
         private string _selectedFilePath = "";
         private bool _isExtracting = false;
@@ -44,7 +45,8 @@ namespace EtnoPapers.UI.ViewModels
                 _storageService);
 
             SelectFileCommand = new RelayCommand(_ => SelectFile());
-            StartExtractionCommand = new RelayCommand(_ => StartExtraction(), _ => CanStartExtraction());
+            _startExtractionCommand = new RelayCommand(_ => StartExtraction(), _ => CanStartExtraction());
+            StartExtractionCommand = _startExtractionCommand;
             CancelExtractionCommand = new RelayCommand(_ => CancelExtraction(), _ => IsExtracting);
             SaveResultsCommand = new RelayCommand(_ => SaveResults(), _ => AllowSave && !IsExtracting);
             ClearCommand = new RelayCommand(_ => Clear());
@@ -130,6 +132,9 @@ namespace EtnoPapers.UI.ViewModels
             {
                 SelectedFilePath = openFileDialog.FileName;
                 _loggerService.Info($"PDF selected: {SelectedFilePath}");
+
+                // Notify StartExtractionCommand that CanExecute may have changed
+                _startExtractionCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -171,6 +176,7 @@ namespace EtnoPapers.UI.ViewModels
             finally
             {
                 IsExtracting = false;
+                _startExtractionCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -178,6 +184,7 @@ namespace EtnoPapers.UI.ViewModels
         {
             _extractionService.CancelExtraction();
             IsExtracting = false;
+            _startExtractionCommand?.RaiseCanExecuteChanged();
             CurrentStep = "Cancelado";
             _loggerService.Info("Extraction cancelled by user");
         }
@@ -234,6 +241,7 @@ namespace EtnoPapers.UI.ViewModels
             HasExtractionError = false;
             ErrorMessage = "";
             _loggerService.Info("Upload view cleared");
+            _startExtractionCommand?.RaiseCanExecuteChanged();
         }
 
         #endregion
