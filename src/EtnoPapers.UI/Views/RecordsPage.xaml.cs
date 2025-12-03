@@ -56,26 +56,11 @@ namespace EtnoPapers.UI.Views
         /// </summary>
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_viewModel == null || RecordsDataGrid.SelectedItem is not ArticleRecord selectedRecord)
-            {
-                MessageBox.Show(
-                    "Por favor, selecione um registro para editar.",
-                    "Nenhum Registro Selecionado",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                return;
-            }
-
-            var dialog = new EditRecordDialog(selectedRecord);
-            if (dialog.ShowDialog() == true && dialog.EditedRecord != null)
-            {
-                _viewModel.EditRecord(dialog.EditedRecord);
-                MessageBox.Show(
-                    "Registro atualizado com sucesso!",
-                    "Sucesso",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
+            MessageBox.Show(
+                "Por favor, selecione um registro para editar.",
+                "Nenhum Registro Selecionado",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         /// <summary>
@@ -83,33 +68,11 @@ namespace EtnoPapers.UI.Views
         /// </summary>
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_viewModel == null || _viewModel.SelectedRecords.Count == 0)
-            {
-                MessageBox.Show(
-                    "Por favor, selecione um ou mais registros para deletar.",
-                    "Nenhum Registro Selecionado",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                return;
-            }
-
-            var confirmDialog = new DeleteConfirmDialog(_viewModel.SelectedRecords.Count);
-            if (confirmDialog.ShowDialog() == true)
-            {
-                int deletedCount = 0;
-                foreach (var record in _viewModel.SelectedRecords)
-                {
-                    if (_viewModel.DeleteRecord(record.Id))
-                        deletedCount++;
-                }
-
-                _viewModel.SelectedRecords.Clear();
-                MessageBox.Show(
-                    $"{deletedCount} registro(s) deletado(s) com sucesso.",
-                    "Sucesso",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
+            MessageBox.Show(
+                "Por favor, selecione um ou mais registros para deletar.",
+                "Nenhum Registro Selecionado",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
     }
 }

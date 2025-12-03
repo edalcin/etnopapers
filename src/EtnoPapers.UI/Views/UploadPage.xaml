@@ -1,205 +1,59 @@
 <Page x:Class="EtnoPapers.UI.Views.UploadPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:converters="clr-namespace:EtnoPapers.UI.Converters"
-      mc:Ignorable="d"
-      Background="{StaticResource Background}"
-      Foreground="{StaticResource Text}">
-
-    <Page.Resources>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <converters:ListToStringConverter x:Key="ListToStringConverter"/>
-    </Page.Resources>
+      Background="White"
+      Foreground="Black">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="40" Background="{StaticResource Background}">
+        <StackPanel Margin="40">
             <!-- Header -->
-            <TextBlock Text="Upload de PDF" Style="{StaticResource Heading1}" Margin="0,0,0,8"/>
-            <TextBlock Text="Selecione um artigo PDF para extração automática de metadados etnobotânicos"
-                       Style="{StaticResource Caption}" Margin="0,0,0,24"/>
+            <TextBlock Text="Upload de PDF" FontSize="28" FontWeight="Bold" Foreground="#0078D4" Margin="0,0,0,8"/>
+            <TextBlock Text="Selecione um artigo PDF para extração automática de metadados etnobotânicos" FontSize="14" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,24"/>
 
             <!-- File Selection Area -->
-            <Border Background="{StaticResource Surface}"
-                    BorderBrush="{StaticResource Border}"
-                    BorderThickness="2"
-                    CornerRadius="8"
-                    Padding="24"
-                    Margin="0,0,0,24">
+            <Border Background="#F3F3F3" BorderBrush="#E0E0E0" BorderThickness="2" CornerRadius="8" Padding="24" Margin="0,0,0,24">
                 <StackPanel>
                     <!-- File Drop Zone -->
-                    <TextBlock Text="Selecione um arquivo PDF" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
+                    <TextBlock Text="Selecione um arquivo PDF" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
-                    <Border Background="{StaticResource BackgroundLight}"
-                            BorderBrush="{StaticResource BorderLight}"
-                            BorderThickness="2"
-                            CornerRadius="8"
-                            Padding="0"
-                            Margin="0,0,0,16"
-                            Height="120">
+                    <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="2" CornerRadius="8" Padding="0" Margin="0,0,0,16" Height="120">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBlock Text="📄" FontSize="48" TextAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="Clique para selecionar ou arraste um PDF aqui"
-                                       Style="{StaticResource Body}"
-                                       TextAlignment="Center"
-                                       Foreground="{StaticResource TextSecondary}"/>
+                            <TextBlock Text="Clique para selecionar ou arraste um PDF aqui" FontSize="13" TextAlignment="Center" Foreground="#505050"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Selected File Display -->
-                    <StackPanel Visibility="{Binding SelectedFilePath, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Arquivo selecionado:" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                        <TextBlock Text="{Binding SelectedFilePath}"
-                                   Style="{StaticResource Body}"
-                                   TextWrapping="Wrap"
-                                   Foreground="{StaticResource Primary}"
-                                   Margin="0,0,0,12"/>
-                    </StackPanel>
-
                     <!-- Buttons -->
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Selecionar Arquivo"
-                                Command="{Binding SelectFileCommand}"
-                                Style="{StaticResource DefaultButtonStyle}"
-                                Padding="16,8"
-                                Margin="0,0,8,0"/>
-
-                        <Button Content="Iniciar Extração"
-                                Command="{Binding StartExtractionCommand}"
-                                Style="{StaticResource DefaultButtonStyle}"
-                                Padding="16,8"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <!-- Extraction Progress -->
-            <Border Background="{StaticResource Surface}"
-                    BorderBrush="{StaticResource Border}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="24"
-                    Margin="0,0,0,24"
-                    Visibility="{Binding IsExtracting, Converter={StaticResource BoolToVisibilityConverter}}">
-                <StackPanel>
-                    <TextBlock Text="Processando..." Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
-
-                    <TextBlock Text="{Binding CurrentStep}" Style="{StaticResource Body}" Margin="0,0,0,8"/>
-
-                    <ProgressBar Value="{Binding ExtractionProgress}" Height="8" Margin="0,0,0,8"/>
-
-                    <TextBlock Text="{Binding ExtractionProgress, StringFormat=Progresso: {0}%}"
-                               Style="{StaticResource Caption}" Margin="0,0,0,16"/>
-
-                    <Button Content="Cancelar"
-                            Command="{Binding CancelExtractionCommand}"
-                            Style="{StaticResource DefaultButtonStyle}"
-                            Padding="16,8"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Error Display -->
-            <Border Background="#FFE7E4E7"
-                    BorderBrush="{StaticResource Error}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="16"
-                    Margin="0,0,0,24"
-                    Visibility="{Binding HasExtractionError, Converter={StaticResource BoolToVisibilityConverter}}">
-                <StackPanel>
-                    <TextBlock Text="❌ Erro na Extração" Style="{StaticResource Heading2}" Foreground="{StaticResource Error}" Margin="0,0,0,8"/>
-                    <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource Body}" TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Extraction Results -->
-            <Border Background="{StaticResource Surface}"
-                    BorderBrush="{StaticResource Border}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="24"
-                    Margin="0,0,0,24"
-                    Visibility="{Binding ExtractedData, Converter={StaticResource BoolToVisibilityConverter}}">
-                <StackPanel>
-                    <TextBlock Text="Resultados da Extração" Style="{StaticResource Heading2}" Margin="0,0,0,16"/>
-
-                    <!-- Title -->
-                    <TextBlock Text="Título" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding ExtractedData.Titulo}"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             Margin="0,0,0,12"/>
-
-                    <!-- Authors -->
-                    <TextBlock Text="Autores" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding ExtractedData.Autores, Converter={StaticResource ListToStringConverter}}"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             Margin="0,0,0,12"
-                             Height="60"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"/>
-
-                    <!-- Year and Country -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <StackPanel Width="200" Margin="0,0,16,0">
-                            <TextBlock Text="Ano" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding ExtractedData.Ano}" Style="{StaticResource {x:Type TextBox}}"/>
-                        </StackPanel>
-
-                        <StackPanel>
-                            <TextBlock Text="País" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding ExtractedData.Pais}" Style="{StaticResource {x:Type TextBox}}"/>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!-- Abstract -->
-                    <TextBlock Text="Resumo (Português)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding ExtractedData.Resumo}"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             Height="100"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             Margin="0,0,0,16"/>
-
-                    <!-- Action Buttons -->
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Salvar Registro"
-                                Command="{Binding SaveResultsCommand}"
-                                Style="{StaticResource DefaultButtonStyle}"
-                                Padding="16,8"
-                                Margin="0,0,8,0"/>
-
-                        <Button Content="Limpar"
-                                Command="{Binding ClearCommand}"
-                                Style="{StaticResource DefaultButtonStyle}"
-                                Background="Transparent"
-                                Foreground="{StaticResource TextPrimary}"
-                                Padding="16,8"/>
+                        <Button Content="Selecionar Arquivo" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White"/>
+                        <Button Content="Iniciar Extração" Padding="16,8" Background="#0078D4" Foreground="White"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
 
             <!-- Info Box -->
-            <Border Background="{StaticResource Surface}"
-                    BorderBrush="{StaticResource Border}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="16">
+            <Border Background="#F3F3F3" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="16">
                 <StackPanel>
-                    <TextBlock Text="ℹ️ Informações" Style="{StaticResource Heading2}" Margin="0,0,0,8"/>
-                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap">
-                        <Run Text="• Suporta apenas PDFs com texto extraível (não digitalizados)"/>
+                    <TextBlock Text="ℹ️ Informações" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="#505050">
+                        <Run Text="• "/>
+                        <Run Text="Suporta apenas PDFs com texto extraível (não digitalizados)"/>
                     </TextBlock>
-                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0">
-                        <Run Text="• Tamanho máximo de arquivo: 50 MB"/>
+                    <TextBlock FontSize="12" Margin="0,4,0,0" Foreground="#505050">
+                        <Run Text="• "/>
+                        <Run Text="Tamanho máximo de arquivo: 50 MB"/>
                     </TextBlock>
-                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0">
-                        <Run Text="• A extração pode levar alguns minutos dependendo do tamanho do PDF"/>
+                    <TextBlock FontSize="12" Margin="0,4,0,0" Foreground="#505050">
+                        <Run Text="• "/>
+                        <Run Text="A extração pode levar alguns minutos dependendo do tamanho do PDF"/>
                     </TextBlock>
-                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0">
-                        <Run Text="• Revise os dados extraídos antes de salvar"/>
+                    <TextBlock FontSize="12" Margin="0,4,0,0" Foreground="#505050">
+                        <Run Text="• "/>
+                        <Run Text="Revise os dados extraídos antes de salvar"/>
                     </TextBlock>
                 </StackPanel>
             </Border>
         </StackPanel>
     </ScrollViewer>
+
 </Page>
