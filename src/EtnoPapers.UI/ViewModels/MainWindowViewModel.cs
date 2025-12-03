@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using EtnoPapers.Core.Services;
 using EtnoPapers.UI.Commands;
@@ -13,6 +14,8 @@ namespace EtnoPapers.UI.ViewModels
     {
         private readonly ConfigurationService _configService;
         private readonly LoggerService _loggerService;
+        private readonly OLLAMAService _ollamaService;
+        private readonly MongoDBSyncService _mongodbService;
         private string _currentPage = "Home";
         private bool _ollamaConnected = false;
         private bool _mongodbConnected = false;
@@ -23,6 +26,8 @@ namespace EtnoPapers.UI.ViewModels
             // Placeholder - services will be injected from App.xaml resources
             _configService = new ConfigurationService();
             _loggerService = new LoggerService();
+            _ollamaService = new OLLAMAService();
+            _mongodbService = new MongoDBSyncService();
 
             _loggerService.Info("MainWindowViewModel initialized");
 
@@ -77,10 +82,32 @@ namespace EtnoPapers.UI.ViewModels
             }
         }
 
-        public void CheckConnections()
+        public async void CheckConnections()
         {
-            // Will be implemented to check OLLAMA and MongoDB connections
-            // Called periodically or on demand
+            try
+            {
+                // Check OLLAMA connection
+                var ollamaConnected = await _ollamaService.CheckHealthAsync();
+                OllamaConnected = ollamaConnected;
+
+                // Check MongoDB connection if URI is configured
+                var config = _configService.LoadConfiguration();
+                if (!string.IsNullOrWhiteSpace(config?.MongodbUri))
+                {
+                    var mongodbConnected = await _mongodbService.TestConnectionAsync(config.MongodbUri);
+                    MongodbConnected = mongodbConnected;
+                }
+                else
+                {
+                    MongodbConnected = false;
+                }
+
+                _loggerService.Info($"Connection check completed - OLLAMA: {OllamaConnected}, MongoDB: {MongodbConnected}");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.Error($"Error checking connections: {ex.Message}", ex);
+            }
         }
 
         #endregion

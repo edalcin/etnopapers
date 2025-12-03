@@ -319,6 +319,10 @@ namespace EtnoPapers.UI.ViewModels
                     IsOllamaConnected = true;
                     OllamaTestStatus = "✓ Conectado ao OLLAMA";
                     _loggerService.Info("OLLAMA connection test successful");
+
+                    // Update MainWindow connection status
+                    var mainWindow = System.Windows.Application.Current.MainWindow as Views.MainWindow;
+                    mainWindow?.RefreshConnectionStatus();
                 }
                 else
                 {
@@ -358,6 +362,10 @@ namespace EtnoPapers.UI.ViewModels
                     IsMongodbConnected = true;
                     MongodbTestStatus = "✓ Conectado ao MongoDB";
                     _loggerService.Info("MongoDB connection test successful");
+
+                    // Update MainWindow connection status
+                    var mainWindow = System.Windows.Application.Current.MainWindow as Views.MainWindow;
+                    mainWindow?.RefreshConnectionStatus();
                 }
                 else
                 {

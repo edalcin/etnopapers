@@ -1,11 +1,15 @@
 <Window x:Class="EtnoPapers.UI.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:EtnoPapers.UI.Converters"
         Title="EtnoPapers - Gerenciador de Pesquisa Etnobotânica"
         Height="750" Width="1100"
         Background="White"
         Foreground="Black"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <converters:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -60,14 +64,14 @@
 
                 <!-- OLLAMA Status -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="12" Height="12" Fill="Green" Margin="0,0,8,0"/>
+                    <Ellipse Width="12" Height="12" Fill="{Binding OllamaConnected, Converter={StaticResource BoolToBrushConverter}}" Margin="0,0,8,0"/>
                     <TextBlock Text="OLLAMA:" Margin="0,0,4,0" VerticalAlignment="Center" FontWeight="Bold"/>
                     <TextBlock Text="{Binding OllamaConnected, StringFormat={}{0:Conectado;Desconectado}}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- MongoDB Status -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Ellipse Width="12" Height="12" Fill="Green" Margin="0,0,8,0"/>
+                    <Ellipse Width="12" Height="12" Fill="{Binding MongodbConnected, Converter={StaticResource BoolToBrushConverter}}" Margin="0,0,8,0"/>
                     <TextBlock Text="MongoDB:" Margin="0,0,4,0" VerticalAlignment="Center" FontWeight="Bold"/>
                     <TextBlock Text="{Binding MongodbConnected, StringFormat={}{0:Conectado;Desconectado}}" VerticalAlignment="Center"/>
                 </StackPanel>

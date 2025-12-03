@@ -10,22 +10,35 @@ namespace EtnoPapers.UI.Views
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MainWindowViewModel _viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
 
             // Set DataContext to ViewModel
-            var viewModel = new MainWindowViewModel();
-            DataContext = viewModel;
+            _viewModel = new MainWindowViewModel();
+            DataContext = _viewModel;
 
             System.Diagnostics.Debug.WriteLine("MainWindow DataContext set: " + (DataContext != null ? "OK" : "NULL"));
-            System.Diagnostics.Debug.WriteLine("NavigateCommand: " + (viewModel.NavigateCommand != null ? "OK" : "NULL"));
+            System.Diagnostics.Debug.WriteLine("NavigateCommand: " + (_viewModel.NavigateCommand != null ? "OK" : "NULL"));
 
             // Restore window state if previously saved
             RestoreWindowState();
 
             // Carregar página inicial
             NavigateToPage("Home");
+
+            // Subscribe to Loaded event to check connections
+            Loaded += (s, e) => _viewModel.CheckConnections();
+        }
+
+        /// <summary>
+        /// Public method to allow other views/viewmodels to request connection check
+        /// </summary>
+        public void RefreshConnectionStatus()
+        {
+            _viewModel?.CheckConnections();
         }
 
         private void OnMenuExit(object sender, RoutedEventArgs e)
