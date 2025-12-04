@@ -86,15 +86,24 @@ namespace EtnoPapers.Core.Services
 
                 UpdateProgress(75, "Validating extracted data", "Validando dados extraídos...");
 
+                // Fix OLLAMA response that uses parentheses instead of braces
+                // Sometimes OLLAMA returns: ( { ... } ) instead of { ... }
+                var cleanedMetadata = metadata.Trim();
+                if (cleanedMetadata.StartsWith("(") && cleanedMetadata.EndsWith(")"))
+                {
+                    System.Diagnostics.Debug.WriteLine("Detected parentheses around JSON. Removing them...");
+                    cleanedMetadata = cleanedMetadata.Substring(1, cleanedMetadata.Length - 2).Trim();
+                }
+
                 ArticleRecord record = null;
                 try
                 {
-                    record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(metadata);
+                    record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(cleanedMetadata);
                     System.Diagnostics.Debug.WriteLine($"Parsed record: Titulo={record?.Titulo}, Autores={record?.Autores?.Count ?? 0}, Ano={record?.Ano}");
                 }
                 catch (Exception ex)
                 {
-                    var detailedError = $"Erro ao fazer parsing dos dados JSON extraídos:\n{ex.Message}\n\nJSON recebido:\n{metadata}";
+                    var detailedError = $"Erro ao fazer parsing dos dados JSON extraídos:\n{ex.Message}\n\nJSON recebido (cleaned):\n{cleanedMetadata}\n\nJSON original:\n{metadata}";
                     System.Diagnostics.Debug.WriteLine($"JSON Parsing Error: {detailedError}");
                     UpdateProgress(75, "Error", $"Erro no parsing: {ex.Message}");
                     throw new InvalidOperationException(detailedError, ex);
