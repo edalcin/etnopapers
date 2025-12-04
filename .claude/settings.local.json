@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(git -C \"H:\\git\\etnopapers\" status --short)",
-      "Bash(timeout 300 dotnet publish:*)"
+      "Bash(timeout 300 dotnet publish:*)",
+      "Bash(dir:*)",
+      "Bash(.EtnoPapers.UI.exe)",
+      "Bash(powershell -Command:*)",
+      "Bash(copy:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(git -C \"H:\\git\\etnopapers\" diff HEAD)",
+      "Bash(git -C \"H:\\git\\etnopapers\" log -5 --oneline)",
+      "Bash(git -C \"H:\\git\\etnopapers\" add .claude/settings.local.json src/EtnoPapers.UI/ViewModels/UploadViewModel.cs)"
     ],
     "deny": [],
     "ask": []

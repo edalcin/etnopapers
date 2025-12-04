@@ -236,82 +236,53 @@ namespace EtnoPapers.UI.ViewModels
                         $"Dados recebidos:\n\nTítulo: {ExtractedData.Titulo}\nAutores: {ExtractedData.Autores?.Count ?? 0}\nAno: {ExtractedData.Ano}\n\nIsValidForSaving: {isValid}",
                         "Etapa 2: Dados Extraídos");
 
-                    // Check if we have a partial record that needs manual editing
-                    if (!isValid)
+                    // Always open EditRecordDialog to allow user review/validation/edit
+                    _loggerService.Info("Opening EditRecordDialog for user review...");
+                    CurrentStep = isValid ? "Revisão de Dados" : "Edição de Campos Faltantes";
+
+                    System.Windows.MessageBox.Show(
+                        isValid ? "Dados extraídos! Abrindo tela para revisão..." : "Dados incompletos! Abrindo tela para edição...",
+                        "Etapa 3: Dados Válidos");
+
+                    // Close progress window safely on UI thread
+                    await Task.Delay(500);
+                    try
                     {
-                        _loggerService.Info("Record needs manual editing. Opening EditRecordDialog...");
-                        CurrentStep = "Edição de Campos Faltantes";
+                        progressWindow?.Close();
+                        _loggerService.Info("Progress window closed successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggerService.Error($"Error closing progress window: {ex.Message}", ex);
+                    }
 
-                        // Close progress window safely on UI thread
-                        await Task.Delay(500);
-                        try
+                    // Open edit dialog for user to review/edit/validate
+                    try
+                    {
+                        var editDialog = new Views.EditRecordDialog(ExtractedData)
                         {
-                            progressWindow?.Close();
-                            _loggerService.Info("Progress window closed successfully");
+                            Owner = System.Windows.Application.Current.MainWindow
+                        };
+                        _loggerService.Info("EditRecordDialog created. Showing dialog...");
+
+                        if (editDialog.ShowDialog() == true)
+                        {
+                            // User saved the edited record
+                            AllowSave = true;
+                            CurrentStep = "Pronto para salvar";
+                            _loggerService.Info($"Record edited and ready to save: {ExtractedData.Id}");
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            _loggerService.Error($"Error closing progress window: {ex.Message}", ex);
-                        }
-
-                        // Open edit dialog for user to fill missing fields
-                        try
-                        {
-                            System.Windows.MessageBox.Show(
-                                "Abrindo tela de edição...",
-                                "Etapa 3: Abrindo Dialog");
-
-                            var editDialog = new Views.EditRecordDialog(ExtractedData)
-                            {
-                                Owner = System.Windows.Application.Current.MainWindow
-                            };
-                            _loggerService.Info("EditRecordDialog created. Showing dialog...");
-
-                            System.Windows.MessageBox.Show(
-                                "Dialog criado. Chamando ShowDialog()...",
-                                "Etapa 4: ShowDialog");
-
-                            if (editDialog.ShowDialog() == true)
-                            {
-                                // User saved the edited record
-                                AllowSave = true;
-                                CurrentStep = "Pronto para salvar";
-                                _loggerService.Info($"Record edited and ready to save: {ExtractedData.Id}");
-                            }
-                            else
-                            {
-                                _loggerService.Info("EditRecordDialog cancelled by user");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _loggerService.Error($"Error creating/showing EditRecordDialog: {ex.Message}\n{ex.StackTrace}", ex);
-                            HasExtractionError = true;
-                            ErrorMessage = $"Erro ao abrir tela de edição: {ex.Message}";
-                            throw;
+                            _loggerService.Info("EditRecordDialog cancelled by user");
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        // Data is valid for saving - no manual edit needed
-                        System.Windows.MessageBox.Show(
-                            "Dados válidos! Salvando automaticamente...",
-                            "Etapa 3: Dados Válidos");
-
-                        AllowSave = true;
-                        _loggerService.Info($"Extraction completed successfully with valid data for: {System.IO.Path.GetFileName(SelectedFilePath)}");
-
-                        // Close progress window after a short delay
-                        await Task.Delay(500);
-                        try
-                        {
-                            progressWindow?.Close();
-                            _loggerService.Info("Progress window closed successfully");
-                        }
-                        catch (Exception ex)
-                        {
-                            _loggerService.Error($"Error closing progress window: {ex.Message}", ex);
-                        }
+                        _loggerService.Error($"Error creating/showing EditRecordDialog: {ex.Message}\n{ex.StackTrace}", ex);
+                        HasExtractionError = true;
+                        ErrorMessage = $"Erro ao abrir tela de edição: {ex.Message}";
+                        throw;
                     }
                 }
                 catch (Exception ex)
