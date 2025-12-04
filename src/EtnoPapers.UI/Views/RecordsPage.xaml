@@ -30,10 +30,54 @@
         </Border>
 
         <!-- Records List -->
-        <StackPanel Grid.Row="2" Margin="40,20">
-            <TextBlock Text="Nenhum registro encontrado" FontSize="14" Foreground="#505050" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,60,0,0"/>
-            <TextBlock Text="Use a seção Upload PDF para adicionar novos registros" FontSize="12" Foreground="#8A8A8A" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-        </StackPanel>
+        <Grid Grid.Row="2" Margin="40,20">
+            <!-- Empty State (shown when no records) -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding FilteredRecords.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="Nenhum registro encontrado" FontSize="14" Foreground="#505050" HorizontalAlignment="Center" Margin="0,60,0,0"/>
+                <TextBlock Text="Use a seção Upload PDF para adicionar novos registros" FontSize="12" Foreground="#8A8A8A" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+            </StackPanel>
+
+            <!-- Records DataGrid (shown when records exist) -->
+            <DataGrid ItemsSource="{Binding FilteredRecords}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Extended"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      Background="White"
+                      BorderBrush="#E0E0E0"
+                      BorderThickness="1">
+                <DataGrid.Style>
+                    <Style TargetType="DataGrid">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding FilteredRecords.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.Style>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Título" Binding="{Binding Titulo}" Width="2*" />
+                    <DataGridTextColumn Header="Ano" Binding="{Binding Ano}" Width="80" />
+                    <DataGridTextColumn Header="Autores" Binding="{Binding Autores[0]}" Width="*" />
+                    <DataGridTextColumn Header="País" Binding="{Binding Pais}" Width="120" />
+                    <DataGridTextColumn Header="Bioma" Binding="{Binding Bioma}" Width="120" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
     </Grid>
 
 </Page>
