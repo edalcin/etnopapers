@@ -157,6 +157,8 @@ namespace EtnoPapers.UI.ViewModels
             if (!CanStartExtraction())
                 return;
 
+            System.Windows.MessageBox.Show("Iniciando extração...", "Info");
+
             IsExtracting = true;
             HasExtractionError = false;
             ErrorMessage = "";
@@ -204,6 +206,10 @@ namespace EtnoPapers.UI.ViewModels
 
                     _loggerService.Info($"ExtractFromPdfAsync returned. ExtractedData is null: {ExtractedData == null}");
 
+                    System.Windows.MessageBox.Show(
+                        $"Extração concluída!\n\nExtractedData null: {ExtractedData == null}\n\n(Verificando validação...)",
+                        "Etapa 1: Dados Recebidos");
+
                     if (ExtractedData == null)
                     {
                         _loggerService.Error("CRITICAL: ExtractFromPdfAsync returned NULL!");
@@ -223,10 +229,15 @@ namespace EtnoPapers.UI.ViewModels
                     _loggerService.Info($"  Titulo: {ExtractedData.Titulo}");
                     _loggerService.Info($"  Autores count: {ExtractedData.Autores?.Count ?? 0}");
                     _loggerService.Info($"  Ano: {ExtractedData.Ano}");
-                    _loggerService.Info($"  IsValidForSaving: {_validationService.IsValidForSaving(ExtractedData)}");
+                    var isValid = _validationService.IsValidForSaving(ExtractedData);
+                    _loggerService.Info($"  IsValidForSaving: {isValid}");
+
+                    System.Windows.MessageBox.Show(
+                        $"Dados recebidos:\n\nTítulo: {ExtractedData.Titulo}\nAutores: {ExtractedData.Autores?.Count ?? 0}\nAno: {ExtractedData.Ano}\n\nIsValidForSaving: {isValid}",
+                        "Etapa 2: Dados Extraídos");
 
                     // Check if we have a partial record that needs manual editing
-                    if (!_validationService.IsValidForSaving(ExtractedData))
+                    if (!isValid)
                     {
                         _loggerService.Info("Record needs manual editing. Opening EditRecordDialog...");
                         CurrentStep = "Edição de Campos Faltantes";
@@ -246,11 +257,19 @@ namespace EtnoPapers.UI.ViewModels
                         // Open edit dialog for user to fill missing fields
                         try
                         {
+                            System.Windows.MessageBox.Show(
+                                "Abrindo tela de edição...",
+                                "Etapa 3: Abrindo Dialog");
+
                             var editDialog = new Views.EditRecordDialog(ExtractedData)
                             {
                                 Owner = System.Windows.Application.Current.MainWindow
                             };
                             _loggerService.Info("EditRecordDialog created. Showing dialog...");
+
+                            System.Windows.MessageBox.Show(
+                                "Dialog criado. Chamando ShowDialog()...",
+                                "Etapa 4: ShowDialog");
 
                             if (editDialog.ShowDialog() == true)
                             {
@@ -275,6 +294,10 @@ namespace EtnoPapers.UI.ViewModels
                     else
                     {
                         // Data is valid for saving - no manual edit needed
+                        System.Windows.MessageBox.Show(
+                            "Dados válidos! Salvando automaticamente...",
+                            "Etapa 3: Dados Válidos");
+
                         AllowSave = true;
                         _loggerService.Info($"Extraction completed successfully with valid data for: {System.IO.Path.GetFileName(SelectedFilePath)}");
 
