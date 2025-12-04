@@ -203,16 +203,30 @@ namespace EtnoPapers.UI.ViewModels
                     CurrentStep = "Extração concluída";
 
                     _loggerService.Info($"ExtractFromPdfAsync returned. ExtractedData is null: {ExtractedData == null}");
-                    if (ExtractedData != null)
+
+                    if (ExtractedData == null)
                     {
-                        _loggerService.Info($"  Titulo: {ExtractedData.Titulo}");
-                        _loggerService.Info($"  Autores count: {ExtractedData.Autores?.Count ?? 0}");
-                        _loggerService.Info($"  Ano: {ExtractedData.Ano}");
-                        _loggerService.Info($"  IsValidForSaving: {_validationService.IsValidForSaving(ExtractedData)}");
+                        _loggerService.Error("CRITICAL: ExtractFromPdfAsync returned NULL!");
+                        HasExtractionError = true;
+                        ErrorMessage = "ERRO CRÍTICO: Pipeline de extração retornou dados NULL!";
+                        CurrentStep = "Erro Crítico";
+
+                        System.Windows.MessageBox.Show(
+                            "ERRO CRÍTICO:\n\nO pipeline de extração retornou dados NULL.\n\nVerifique os logs para mais detalhes.",
+                            "Erro Crítico",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error);
+
+                        return; // Exit extraction
                     }
 
+                    _loggerService.Info($"  Titulo: {ExtractedData.Titulo}");
+                    _loggerService.Info($"  Autores count: {ExtractedData.Autores?.Count ?? 0}");
+                    _loggerService.Info($"  Ano: {ExtractedData.Ano}");
+                    _loggerService.Info($"  IsValidForSaving: {_validationService.IsValidForSaving(ExtractedData)}");
+
                     // Check if we have a partial record that needs manual editing
-                    if (ExtractedData != null && !_validationService.IsValidForSaving(ExtractedData))
+                    if (!_validationService.IsValidForSaving(ExtractedData))
                     {
                         _loggerService.Info("Record needs manual editing. Opening EditRecordDialog...");
                         CurrentStep = "Edição de Campos Faltantes";
@@ -260,8 +274,9 @@ namespace EtnoPapers.UI.ViewModels
                     }
                     else
                     {
+                        // Data is valid for saving - no manual edit needed
                         AllowSave = true;
-                        _loggerService.Info($"Extraction completed successfully for: {System.IO.Path.GetFileName(SelectedFilePath)}");
+                        _loggerService.Info($"Extraction completed successfully with valid data for: {System.IO.Path.GetFileName(SelectedFilePath)}");
 
                         // Close progress window after a short delay
                         await Task.Delay(500);
@@ -294,6 +309,13 @@ namespace EtnoPapers.UI.ViewModels
                         progressWindow?.Close();
                     }
                     catch { }
+
+                    // Show error message box to user
+                    System.Windows.MessageBox.Show(
+                        $"ERRO NA EXTRAÇÃO:\n\n{ex.Message}\n\nStack: {ex.StackTrace}",
+                        "Erro",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
 
                     // Keep error visible to user
                 }
