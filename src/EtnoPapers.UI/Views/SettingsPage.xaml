@@ -32,8 +32,10 @@
 
                     <TextBlock Text="ℹ Deixe em branco ou selecione 'Autodetectar' para usar o melhor modelo disponível" FontSize="11" Foreground="#8A8A8A" Margin="0,0,0,12"/>
 
-                    <TextBlock Text="Prompt Personalizado" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding OllamaPrompt, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
+                    <TextBlock Text="Prompt Personalizado (Deixe em branco para usar prompt padrão)" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding OllamaPrompt, UpdateSourceTrigger=PropertyChanged}" Height="300" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" Padding="10,8" Margin="0,0,0,12" Background="White" BorderBrush="#CCCCCC" FontFamily="Courier New" FontSize="11"/>
+
+                    <TextBlock Text="ℹ Dica: Cole um prompt completo (ex: instrução de como extrair dados etnobotânicos)" FontSize="10" Foreground="#8A8A8A" Margin="0,-8,0,12" FontStyle="Italic"/>
 
                     <Button Content="Testar Conexão" Command="{Binding TestOllamaCommand}" Padding="16,8" Background="#0078D4" Foreground="White" Margin="0,0,0,12"/>
 
