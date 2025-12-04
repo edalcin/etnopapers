@@ -196,14 +196,25 @@ namespace EtnoPapers.UI.ViewModels
 
                 try
                 {
+                    _loggerService.Info("Calling ExtractFromPdfAsync...");
                     ExtractedData = await _extractionService.ExtractFromPdfAsync(SelectedFilePath);
 
                     ExtractionProgress = 100;
                     CurrentStep = "Extração concluída";
 
+                    _loggerService.Info($"ExtractFromPdfAsync returned. ExtractedData is null: {ExtractedData == null}");
+                    if (ExtractedData != null)
+                    {
+                        _loggerService.Info($"  Titulo: {ExtractedData.Titulo}");
+                        _loggerService.Info($"  Autores count: {ExtractedData.Autores?.Count ?? 0}");
+                        _loggerService.Info($"  Ano: {ExtractedData.Ano}");
+                        _loggerService.Info($"  IsValidForSaving: {_validationService.IsValidForSaving(ExtractedData)}");
+                    }
+
                     // Check if we have a partial record that needs manual editing
                     if (ExtractedData != null && !_validationService.IsValidForSaving(ExtractedData))
                     {
+                        _loggerService.Info("Record needs manual editing. Opening EditRecordDialog...");
                         CurrentStep = "Edição de Campos Faltantes";
 
                         // Close progress window safely on UI thread
@@ -211,6 +222,7 @@ namespace EtnoPapers.UI.ViewModels
                         try
                         {
                             progressWindow?.Close();
+                            _loggerService.Info("Progress window closed successfully");
                         }
                         catch (Exception ex)
                         {
@@ -218,17 +230,32 @@ namespace EtnoPapers.UI.ViewModels
                         }
 
                         // Open edit dialog for user to fill missing fields
-                        var editDialog = new Views.EditRecordDialog(ExtractedData)
+                        try
                         {
-                            Owner = System.Windows.Application.Current.MainWindow
-                        };
+                            var editDialog = new Views.EditRecordDialog(ExtractedData)
+                            {
+                                Owner = System.Windows.Application.Current.MainWindow
+                            };
+                            _loggerService.Info("EditRecordDialog created. Showing dialog...");
 
-                        if (editDialog.ShowDialog() == true)
+                            if (editDialog.ShowDialog() == true)
+                            {
+                                // User saved the edited record
+                                AllowSave = true;
+                                CurrentStep = "Pronto para salvar";
+                                _loggerService.Info($"Record edited and ready to save: {ExtractedData.Id}");
+                            }
+                            else
+                            {
+                                _loggerService.Info("EditRecordDialog cancelled by user");
+                            }
+                        }
+                        catch (Exception ex)
                         {
-                            // User saved the edited record
-                            AllowSave = true;
-                            CurrentStep = "Pronto para salvar";
-                            _loggerService.Info($"Record edited and ready to save: {ExtractedData.Id}");
+                            _loggerService.Error($"Error creating/showing EditRecordDialog: {ex.Message}\n{ex.StackTrace}", ex);
+                            HasExtractionError = true;
+                            ErrorMessage = $"Erro ao abrir tela de edição: {ex.Message}";
+                            throw;
                         }
                     }
                     else
@@ -241,6 +268,7 @@ namespace EtnoPapers.UI.ViewModels
                         try
                         {
                             progressWindow?.Close();
+                            _loggerService.Info("Progress window closed successfully");
                         }
                         catch (Exception ex)
                         {
@@ -258,9 +286,16 @@ namespace EtnoPapers.UI.ViewModels
                     HasExtractionError = true;
                     ErrorMessage = $"Erro na extração: {ex.Message}";
                     CurrentStep = "Erro";
-                    _loggerService.Error($"Extraction failed: {ex.Message}", ex);
+                    _loggerService.Error($"Extraction failed: {ex.Message}\nStack trace: {ex.StackTrace}", ex);
 
-                    // Keep progress window open to show error log
+                    // Close progress window if still open
+                    try
+                    {
+                        progressWindow?.Close();
+                    }
+                    catch { }
+
+                    // Keep error visible to user
                 }
             }
             finally
