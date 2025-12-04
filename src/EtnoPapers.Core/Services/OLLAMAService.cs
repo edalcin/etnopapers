@@ -165,7 +165,28 @@ namespace EtnoPapers.Core.Services
                     }
 
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    return responseContent;
+
+                    // OLLAMA returns response in format: { "response": "...", "model": "...", ... }
+                    // We need to extract just the "response" field which contains our JSON
+                    try
+                    {
+                        dynamic ollamaResponse = JsonConvert.DeserializeObject(responseContent);
+                        string extractedJsonResponse = ollamaResponse?.response?.ToString();
+
+                        if (string.IsNullOrEmpty(extractedJsonResponse))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Empty response from OLLAMA. Full response: {responseContent.Substring(0, Math.Min(200, responseContent.Length))}");
+                            throw new InvalidOperationException("OLLAMA returned empty response");
+                        }
+
+                        System.Diagnostics.Debug.WriteLine($"Extracted response (first 300 chars): {extractedJsonResponse.Substring(0, Math.Min(300, extractedJsonResponse.Length))}");
+                        return extractedJsonResponse;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error extracting response from OLLAMA: {ex.Message}. Raw response: {responseContent.Substring(0, Math.Min(500, responseContent.Length))}");
+                        throw;
+                    }
                 }
             }
             catch (Exception ex) when (retryCount < maxRetries)
