@@ -28,6 +28,23 @@ namespace EtnoPapers.UI.Views
         {
             this.Close();
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            try
+            {
+                // Clear DataContext before cleanup to avoid binding resolution issues
+                DataContext = null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during window cleanup: {ex.Message}");
+            }
+            finally
+            {
+                base.OnClosed(e);
+            }
+        }
     }
 
     /// <summary>

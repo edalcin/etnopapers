@@ -211,9 +211,19 @@ namespace EtnoPapers.UI.ViewModels
                             progressViewModel.IsExtracting = false;
                         }
 
-                        // Close progress window
+                        // Close progress window safely on UI thread
                         await Task.Delay(500);
-                        progressWindow.Close();
+                        System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+                        {
+                            try
+                            {
+                                progressWindow?.Close();
+                            }
+                            catch (Exception ex)
+                            {
+                                _loggerService.Error($"Error closing progress window: {ex.Message}", ex);
+                            }
+                        });
 
                         // Open edit dialog for user to fill missing fields
                         var editDialog = new Views.EditRecordDialog(ExtractedData)
@@ -234,9 +244,19 @@ namespace EtnoPapers.UI.ViewModels
                         AllowSave = true;
                         _loggerService.Info($"Extraction completed successfully for: {System.IO.Path.GetFileName(SelectedFilePath)}");
 
-                        // Close progress window after a short delay
+                        // Close progress window safely on UI thread after a short delay
                         await Task.Delay(500);
-                        progressWindow.Close();
+                        System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+                        {
+                            try
+                            {
+                                progressWindow?.Close();
+                            }
+                            catch (Exception ex)
+                            {
+                                _loggerService.Error($"Error closing progress window: {ex.Message}", ex);
+                            }
+                        });
                     }
                 }
                 catch (Exception ex)
