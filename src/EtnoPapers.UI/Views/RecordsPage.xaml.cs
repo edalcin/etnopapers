@@ -18,7 +18,12 @@ namespace EtnoPapers.UI.Views
             InitializeComponent();
             _viewModel = new RecordsViewModel();
             DataContext = _viewModel;
+
+            // Load records on initial page load
             _viewModel.LoadRecords();
+
+            // Reload records every time the page is navigated to
+            Loaded += (s, e) => _viewModel?.LoadRecords();
         }
 
         /// <summary>
