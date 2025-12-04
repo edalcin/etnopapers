@@ -34,22 +34,41 @@ namespace EtnoPapers.Core.Validation
         /// <summary>
         /// Validates that all mandatory fields are present and non-empty.
         /// Mandatory fields: titulo, autores, ano, resumo
+        /// Allows partial records with warnings for manual editing.
         /// </summary>
         public bool ValidateMandatoryFields(ArticleRecord record)
         {
+            bool hasMissingFields = false;
+
             if (string.IsNullOrWhiteSpace(record.Titulo))
-                ValidationErrors.Add("Titulo (title) is required and cannot be empty");
+            {
+                ValidationErrors.Add("⚠ Titulo (title) is empty - requires manual entry");
+                hasMissingFields = true;
+            }
 
             if (record.Autores == null || record.Autores.Count == 0)
-                ValidationErrors.Add("Autores (authors) is required; at least one author must be present");
+            {
+                ValidationErrors.Add("⚠ Autores (authors) is empty - requires at least one author");
+                hasMissingFields = true;
+            }
 
             if (!record.Ano.HasValue || record.Ano < 1500 || record.Ano > DateTime.Now.Year + 1)
-                ValidationErrors.Add($"Ano (year) must be a valid year between 1500 and {DateTime.Now.Year + 1}");
+            {
+                ValidationErrors.Add($"⚠ Ano (year) invalid - must be between 1500 and {DateTime.Now.Year + 1}");
+                hasMissingFields = true;
+            }
 
             if (string.IsNullOrWhiteSpace(record.Resumo))
-                ValidationErrors.Add("Resumo (abstract) is required and should not be empty");
+            {
+                ValidationErrors.Add("⚠ Resumo (abstract) is empty - requires manual entry");
+                hasMissingFields = true;
+            }
 
-            return ValidationErrors.Count == 0;
+            // Mark as partial record if missing fields but some data was extracted
+            if (hasMissingFields && !string.IsNullOrWhiteSpace(record.Titulo))
+                ValidationErrors.Insert(0, "ℹ This is a partial record - please complete the missing required fields");
+
+            return !hasMissingFields; // Return false only if missing mandatory fields
         }
 
         /// <summary>

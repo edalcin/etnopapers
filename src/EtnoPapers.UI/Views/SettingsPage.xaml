@@ -21,7 +21,16 @@
                     <TextBox Text="{Binding OllamaUrl, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
 
                     <TextBlock Text="Modelo OLLAMA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding AvailableModels}" SelectedItem="{Binding OllamaModel, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableModels}" SelectedItem="{Binding OllamaModel, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Background="White" BorderBrush="#E0E0E0"/>
+                        <Button Grid.Column="1" Content="Atualizar" Margin="8,0,0,0" Padding="12,6" Background="#0078D4" Foreground="White" Command="{Binding TestOllamaCommand}"/>
+                    </Grid>
+
+                    <TextBlock Text="ℹ Deixe em branco ou selecione 'Autodetectar' para usar o melhor modelo disponível" FontSize="11" Foreground="#8A8A8A" Margin="0,0,0,12"/>
 
                     <TextBlock Text="Prompt Personalizado" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding OllamaPrompt, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>

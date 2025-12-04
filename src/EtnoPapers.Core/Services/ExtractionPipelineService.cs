@@ -78,8 +78,11 @@ namespace EtnoPapers.Core.Services
                 UpdateProgress(25, "Extracting text", "Extraindo texto do PDF...");
                 var text = _pdfService.ExtractText(filePath);
 
-                UpdateProgress(50, "Processing with AI", "Processando com IA (OLLAMA)...");
+                UpdateProgress(50, "Processing with AI", $"Processando com IA (OLLAMA - modelo: {_ollamaService.CurrentModel})...");
                 var metadata = await _ollamaService.ExtractMetadataAsync(text);
+
+                // Log OLLAMA response for debugging
+                System.Diagnostics.Debug.WriteLine($"OLLAMA Response (first 500 chars): {metadata.Substring(0, Math.Min(500, metadata.Length))}");
 
                 UpdateProgress(75, "Validating extracted data", "Validando dados extraídos...");
 
@@ -87,10 +90,12 @@ namespace EtnoPapers.Core.Services
                 try
                 {
                     record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(metadata);
+                    System.Diagnostics.Debug.WriteLine($"Parsed record: Titulo={record?.Titulo}, Autores={record?.Autores?.Count ?? 0}, Ano={record?.Ano}");
                 }
                 catch (Exception ex)
                 {
                     var detailedError = $"Erro ao fazer parsing dos dados JSON extraídos:\n{ex.Message}\n\nJSON recebido:\n{metadata}";
+                    System.Diagnostics.Debug.WriteLine($"JSON Parsing Error: {detailedError}");
                     UpdateProgress(75, "Error", $"Erro no parsing: {ex.Message}");
                     throw new InvalidOperationException(detailedError, ex);
                 }
@@ -99,6 +104,7 @@ namespace EtnoPapers.Core.Services
                 {
                     var errors = _validationService.GetValidationErrors(record);
                     var errorDetails = "Erros de validação encontrados:\n" + string.Join("\n", errors);
+                    System.Diagnostics.Debug.WriteLine($"Validation errors: {errorDetails}");
 
                     UpdateProgress(75, "Validation Error", $"Validação falhou: {errors.Count} erro(s)");
 
@@ -112,6 +118,7 @@ namespace EtnoPapers.Core.Services
                     record.DataUltimaAtualizacao = DateTime.UtcNow;
                     record.StatusSincronizacao = "local";
 
+                    System.Diagnostics.Debug.WriteLine($"Returning partial record for manual edit: {record.Id}");
                     UpdateProgress(100, "Complete - Manual Edit Needed",
                         "Extração parcial concluída. Campos faltantes precisam ser preenchidos manualmente.");
 
