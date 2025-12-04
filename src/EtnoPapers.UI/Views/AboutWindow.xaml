@@ -6,8 +6,7 @@
         Background="White"
         Foreground="Black"
         WindowStartupLocation="CenterOwner"
-        ShowInTaskbar="False"
-        Icon="Assets/etnopapers.png">
+        ShowInTaskbar="False">
     <Grid>
         <StackPanel Margin="40" VerticalAlignment="Center" HorizontalAlignment="Center">
             <!-- Logo -->

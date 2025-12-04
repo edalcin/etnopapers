@@ -6,8 +6,7 @@
         Height="750" Width="1100"
         Background="White"
         Foreground="Black"
-        WindowStartupLocation="CenterScreen"
-        Icon="Assets/etnopapers.png">
+        WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <converters:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
     </Window.Resources>
