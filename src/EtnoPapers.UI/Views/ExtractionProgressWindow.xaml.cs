@@ -12,55 +12,55 @@ namespace EtnoPapers.UI.Views
     {
         public ExtractionProgressWindow()
         {
-            InitializeComponent();
-            DataContext = new ExtractionProgressViewModel();
+            try
+            {
+                InitializeComponent();
+                DataContext = new ExtractionProgressViewModel();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error initializing ExtractionProgressWindow: {ex.Message}");
+                throw;
+            }
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            if (DataContext is ExtractionProgressViewModel vm)
+            try
             {
-                vm.CancelExtraction();
+                if (DataContext is ExtractionProgressViewModel vm)
+                {
+                    vm.CancelExtraction();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error canceling extraction: {ex.Message}");
             }
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
-        }
-
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
-        {
             try
             {
-                // Detach all bindings and clear visual tree BEFORE window closes
-                // This prevents WPF from trying to resolve resources during unload
-                if (Content is System.Windows.Controls.Grid grid)
-                {
-                    grid.Children.Clear();
-                }
-                Content = null;
-                DataContext = null;
+                this.Close();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error during window pre-close cleanup: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error closing window: {ex.Message}");
             }
-
-            base.OnClosing(e);
         }
 
         protected override void OnClosed(EventArgs e)
         {
             try
             {
-                // Final cleanup
+                // Minimal cleanup - just nullify DataContext to detach bindings
                 DataContext = null;
-                Content = null;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error during window post-close cleanup: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error during window cleanup: {ex.Message}");
             }
             finally
             {

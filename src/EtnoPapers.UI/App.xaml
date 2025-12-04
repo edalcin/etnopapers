@@ -7,6 +7,11 @@
     <Application.Resources>
         <!-- Global application resources -->
         <ResourceDictionary xmlns:sys="clr-namespace:System;assembly=mscorlib">
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Control Styles -->
+                <ResourceDictionary Source="Styles/ControlStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
             <!-- Value Converters -->
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
