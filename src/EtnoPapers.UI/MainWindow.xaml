@@ -2,11 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:converters="clr-namespace:EtnoPapers.UI.Converters"
-        Title="EtnoPapers - Gerenciador de Pesquisa Etnobotânica"
+        Title="EtnoPapers - Extração Automatizada de Dados e Metadados Etnobotânicos"
         Height="750" Width="1100"
         Background="White"
         Foreground="Black"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="Assets/etnopapers.png">
     <Window.Resources>
         <converters:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
     </Window.Resources>

@@ -6,9 +6,23 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="40">
-            <!-- Welcome Section -->
-            <TextBlock Text="Bem-vindo ao EtnoPapers" FontSize="28" FontWeight="Bold" Foreground="#0078D4" Margin="0,0,0,8"/>
-            <TextBlock Text="{Binding WelcomeMessage}" FontSize="14" TextWrapping="Wrap" Margin="0,0,0,30" Foreground="#505050"/>
+            <!-- Welcome Section with Logo -->
+            <Grid Margin="0,0,0,30">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Logo -->
+                <Image Grid.Column="0" Source="Assets/etnopapers.png" Width="120" Height="120" Margin="0,0,30,0" VerticalAlignment="Top"/>
+
+                <!-- Welcome Text -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Bem-vindo ao EtnoPapers" FontSize="28" FontWeight="Bold" Foreground="#0078D4" Margin="0,0,0,8"/>
+                    <TextBlock Text="Extração Automatizada de Dados e Metadados Etnobotânicos" FontSize="16" Foreground="#505050" Margin="0,0,0,16"/>
+                    <TextBlock Text="{Binding WelcomeMessage}" FontSize="14" TextWrapping="Wrap" Foreground="#505050"/>
+                </StackPanel>
+            </Grid>
 
             <!-- Quick Stats -->
             <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">

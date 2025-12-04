@@ -28,4 +28,8 @@
     <ProjectReference Include="..\EtnoPapers.Core\EtnoPapers.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\etnopapers.png" />
+  </ItemGroup>
+
 </Project>

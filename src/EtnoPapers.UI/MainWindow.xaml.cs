@@ -54,11 +54,11 @@ namespace EtnoPapers.UI.Views
 
         private void OnMenuAbout(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                "EtnoPapers v1.0.0\n\nGerenciador de Pesquisa Etnobotânica\n\nAplicativo Windows desktop para extração e catalogação automatizada de metadados etnobotânicos de artigos científicos.",
-                "Sobre o EtnoPapers",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            var aboutWindow = new AboutWindow
+            {
+                Owner = this
+            };
+            aboutWindow.ShowDialog();
         }
 
         private void OnNavigationButtonClick(object sender, RoutedEventArgs e)
