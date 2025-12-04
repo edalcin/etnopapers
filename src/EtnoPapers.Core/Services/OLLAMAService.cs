@@ -137,13 +137,13 @@ namespace EtnoPapers.Core.Services
         private async Task<string> ExtractWithRetryAsync(string model, string prompt, int retryCount = 0)
         {
             const int maxRetries = 2;
-            const int baseTimeoutSeconds = 5;
+            const int baseTimeoutMinutes = 5;
 
             try
             {
-                // Increase timeout with each retry
-                var timeoutSeconds = baseTimeoutSeconds * (retryCount + 1);
-                _httpClient.Timeout = TimeSpan.FromSeconds(Math.Min(timeoutSeconds * 60, 600)); // Max 10 minutes
+                // Increase timeout with each retry (5min, 10min, 10min max)
+                var timeoutMinutes = baseTimeoutMinutes * (retryCount + 1);
+                if (timeoutMinutes > 10) timeoutMinutes = 10;
 
                 var requestBody = new { model, prompt, stream = false };
                 var content = new StringContent(
@@ -152,17 +152,21 @@ namespace EtnoPapers.Core.Services
                     "application/json"
                 );
 
-                System.Diagnostics.Debug.WriteLine($"Extraction attempt {retryCount + 1}/{maxRetries + 1} with timeout {timeoutSeconds * 60}s");
+                System.Diagnostics.Debug.WriteLine($"Extraction attempt {retryCount + 1}/{maxRetries + 1} with timeout {timeoutMinutes}min");
 
-                var response = await _httpClient.PostAsync($"{_baseUrl}/api/generate", content);
-                if (!response.IsSuccessStatusCode)
+                // Use CancellationToken for thread-safe timeout (instead of modifying HttpClient.Timeout)
+                using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(timeoutMinutes)))
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    throw new HttpRequestException($"OLLAMA request failed: {response.StatusCode}");
-                }
+                    var response = await _httpClient.PostAsync($"{_baseUrl}/api/generate", content, cts.Token);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+                        throw new HttpRequestException($"OLLAMA request failed: {response.StatusCode}");
+                    }
 
-                var responseContent = await response.Content.ReadAsStringAsync();
-                return responseContent;
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return responseContent;
+                }
             }
             catch (Exception ex) when (retryCount < maxRetries)
             {
