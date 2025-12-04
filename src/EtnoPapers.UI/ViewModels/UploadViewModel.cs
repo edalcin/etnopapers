@@ -157,8 +157,6 @@ namespace EtnoPapers.UI.ViewModels
             if (!CanStartExtraction())
                 return;
 
-            System.Windows.MessageBox.Show("Iniciando extração...", "Info");
-
             IsExtracting = true;
             HasExtractionError = false;
             ErrorMessage = "";
@@ -206,10 +204,6 @@ namespace EtnoPapers.UI.ViewModels
 
                     _loggerService.Info($"ExtractFromPdfAsync returned. ExtractedData is null: {ExtractedData == null}");
 
-                    System.Windows.MessageBox.Show(
-                        $"Extração concluída!\n\nExtractedData null: {ExtractedData == null}\n\n(Verificando validação...)",
-                        "Etapa 1: Dados Recebidos");
-
                     if (ExtractedData == null)
                     {
                         _loggerService.Error("CRITICAL: ExtractFromPdfAsync returned NULL!");
@@ -232,17 +226,9 @@ namespace EtnoPapers.UI.ViewModels
                     var isValid = _validationService.IsValidForSaving(ExtractedData);
                     _loggerService.Info($"  IsValidForSaving: {isValid}");
 
-                    System.Windows.MessageBox.Show(
-                        $"Dados recebidos:\n\nTítulo: {ExtractedData.Titulo}\nAutores: {ExtractedData.Autores?.Count ?? 0}\nAno: {ExtractedData.Ano}\n\nIsValidForSaving: {isValid}",
-                        "Etapa 2: Dados Extraídos");
-
                     // Always open EditRecordDialog to allow user review/validation/edit
                     _loggerService.Info("Opening EditRecordDialog for user review...");
                     CurrentStep = isValid ? "Revisão de Dados" : "Edição de Campos Faltantes";
-
-                    System.Windows.MessageBox.Show(
-                        isValid ? "Dados extraídos! Abrindo tela para revisão..." : "Dados incompletos! Abrindo tela para edição...",
-                        "Etapa 3: Dados Válidos");
 
                     // Close progress window safely on UI thread
                     await Task.Delay(500);
@@ -267,10 +253,9 @@ namespace EtnoPapers.UI.ViewModels
 
                         if (editDialog.ShowDialog() == true)
                         {
-                            // User saved the edited record
-                            AllowSave = true;
-                            CurrentStep = "Pronto para salvar";
-                            _loggerService.Info($"Record edited and ready to save: {ExtractedData.Id}");
+                            // User saved the edited record - save automatically
+                            _loggerService.Info($"Record edited by user. Saving: {ExtractedData.Id}");
+                            SaveResults();
                         }
                         else
                         {
