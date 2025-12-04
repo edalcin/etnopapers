@@ -16,6 +16,13 @@
     <Company>EtnoPapers Project</Company>
     <Description>Automated extraction and cataloging of ethnobotanical metadata from scientific papers</Description>
     <Copyright>Copyright © 2024 EtnoPapers Contributors</Copyright>
+
+    <!-- Self-contained executable configuration -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
