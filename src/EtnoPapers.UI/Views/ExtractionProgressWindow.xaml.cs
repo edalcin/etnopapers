@@ -29,16 +29,38 @@ namespace EtnoPapers.UI.Views
             this.Close();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             try
             {
-                // Clear DataContext before cleanup to avoid binding resolution issues
+                // Detach all bindings and clear visual tree BEFORE window closes
+                // This prevents WPF from trying to resolve resources during unload
+                if (Content is System.Windows.Controls.Grid grid)
+                {
+                    grid.Children.Clear();
+                }
+                Content = null;
                 DataContext = null;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error during window cleanup: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error during window pre-close cleanup: {ex.Message}");
+            }
+
+            base.OnClosing(e);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            try
+            {
+                // Final cleanup
+                DataContext = null;
+                Content = null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during window post-close cleanup: {ex.Message}");
             }
             finally
             {
