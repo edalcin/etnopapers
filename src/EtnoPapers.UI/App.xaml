@@ -7,11 +7,6 @@
     <Application.Resources>
         <!-- Global application resources -->
         <ResourceDictionary xmlns:sys="clr-namespace:System;assembly=mscorlib">
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Control Styles -->
-                <ResourceDictionary Source="Styles/ControlStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-
             <!-- Value Converters -->
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
@@ -23,7 +18,7 @@
             <sys:String x:Key="ApplicationTitle">EtnoPapers</sys:String>
             <sys:String x:Key="ApplicationVersion">1.0.0</sys:String>
 
-            <!-- Minimal Colors -->
+            <!-- Minimal Colors (MUST be defined before MergedDictionaries that reference them) -->
             <SolidColorBrush x:Key="Background" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="Text" Color="#000000"/>
             <SolidColorBrush x:Key="Surface" Color="#F3F3F3"/>
@@ -36,6 +31,11 @@
             <SolidColorBrush x:Key="TextTertiary" Color="#8A8A8A"/>
             <SolidColorBrush x:Key="Connected" Color="#107C10"/>
             <SolidColorBrush x:Key="Disconnected" Color="#D13438"/>
+
+            <!-- Control Styles (after colors are defined) -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/ControlStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
