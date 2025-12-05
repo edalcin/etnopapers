@@ -162,6 +162,23 @@ Extraídos quando disponíveis no documento:
 - **Bioma**
 - **Metodologia** do estudo
 
+### Exemplo Real - Dados Extraídos com Qwen 2.5 7B
+
+Abaixo um exemplo real de artigo processado pelo EtnoPapers usando o modelo **Qwen 2.5 7B**:
+
+![Exemplo de dados extraídos](docs/dataSampleJSON.png)
+
+**Neste exemplo:**
+- ✅ Título normalizado em inglês
+- ✅ 2 autores em formato APA
+- ✅ Ano de publicação extraído
+- ✅ Resumo completo em português brasileiro (traduzido automaticamente)
+- ✅ 2 espécies de plantas identificadas com nomes vernaculares e científicos
+- ✅ Comunidade indígena (Xavante) e localização
+- ✅ Dados geográficos completos (país, estado, município, bioma)
+- ✅ Metodologia documentada
+- ✅ **Tempo de extração: 37.97 segundos** (com Qwen 2.5 7B)
+
 ### Estrutura de Dados
 
 A estrutura completa dos dados extraídos está documentada em `docs/estrutura.json`.
