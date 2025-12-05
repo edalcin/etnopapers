@@ -24,6 +24,7 @@ namespace EtnoPapers.Core.Services
         private readonly OLLAMAService _ollamaService;
         private readonly ValidationService _validationService;
         private readonly DataStorageService _storageService;
+        private readonly string _customPrompt;
         private CancellationTokenSource _cancellationTokenSource;
 
         public string CurrentStep { get; private set; }
@@ -39,12 +40,14 @@ namespace EtnoPapers.Core.Services
             PDFProcessingService pdfService,
             OLLAMAService ollamaService,
             ValidationService validationService,
-            DataStorageService storageService)
+            DataStorageService storageService,
+            string customPrompt = null)
         {
             _pdfService = pdfService;
             _ollamaService = ollamaService;
             _validationService = validationService;
             _storageService = storageService;
+            _customPrompt = customPrompt;
         }
 
         /// <summary>
@@ -79,7 +82,7 @@ namespace EtnoPapers.Core.Services
                 var text = _pdfService.ExtractText(filePath);
 
                 UpdateProgress(50, "Processing with AI", $"Processando com IA (OLLAMA - modelo: {_ollamaService.CurrentModel})...");
-                var metadata = await _ollamaService.ExtractMetadataAsync(text);
+                var metadata = await _ollamaService.ExtractMetadataAsync(text, _customPrompt);
 
                 // Log OLLAMA response for debugging
                 System.Diagnostics.Debug.WriteLine($"OLLAMA Response (first 500 chars): {metadata.Substring(0, Math.Min(500, metadata.Length))}");

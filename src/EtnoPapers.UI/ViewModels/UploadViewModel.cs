@@ -48,13 +48,15 @@ namespace EtnoPapers.UI.ViewModels
             var config = _configService.LoadConfiguration();
             var ollamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
             var ollamaModel = config?.OllamaModel ?? "llama2";
+            var customPrompt = config?.OllamaPrompt;  // Load custom prompt from configuration
 
             _ollamaService = new OLLAMAService(ollamaUrl, ollamaModel);
             _extractionService = new ExtractionPipelineService(
                 _pdfService,
                 _ollamaService,
                 _validationService,
-                _storageService);
+                _storageService,
+                customPrompt);  // Pass custom prompt to extraction pipeline
 
             SelectFileCommand = new RelayCommand(_ => SelectFile());
             _startExtractionCommand = new RelayCommand(_ => StartExtraction(), _ => CanStartExtraction());
