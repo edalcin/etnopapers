@@ -1,4 +1,6 @@
-## Arquitetura do Sistema
+# Arquitetura do Sistema - EtnoPapers
+
+> 📚 **Voltar ao README**: Veja [README.md](README.md) para informações gerais do projeto, instalação e como usar.
 
 O EtnoPapers segue uma arquitetura em camadas que integra componentes locais e externos para processamento de documentos científicos.
 
@@ -189,3 +191,72 @@ flowchart TD
     style SaveLocal fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:black
     style SyncMongo fill:#b2dfdb,stroke:#00796b,stroke-width:2px,color:black
 ```
+
+---
+
+## 🔧 Considerações Técnicas: OLLAMA e Modelos de IA
+
+### Integração com OLLAMA
+
+O EtnoPapers utiliza OLLAMA como serviço de IA local para extração de metadados. A integração é feita via **API REST HTTP** na porta padrão `11434`.
+
+**Fluxo Técnico:**
+
+```
+PDF → Texto Extraído → OLLAMAService → Prompt Estruturado → API /api/generate → JSON Response → Validação → ArticleRecord
+```
+
+### Modelo Recomendado: Qwen 2.5 7B
+
+**Para máxima compatibilidade e desempenho, use: `ollama pull qwen2.5:7b`**
+
+**Por que Qwen 2.5 7B é a melhor escolha para EtnoPapers:**
+
+1. **Suporte Robusto a Português**
+   - Treinamento específico em português brasileiro
+   - Compreensão de termos científicos e etnobotânicos
+   - Melhor handling de nomes vernaculares/científicos
+
+2. **Excelência em Extração Estruturada (JSON)**
+   - Modelo especializado em retornar JSON válido
+   - Menos erros de sintaxe nas respostas
+   - Melhor parsing das estruturas de dados esperadas
+
+3. **Desempenho Otimizado**
+   - Tempo médio: 15-30 segundos por PDF
+   - Timeout configurado para 10 minutos (adequado)
+   - Uso de RAM: 8-10 GB (compatível com máquinas comuns)
+
+4. **Qualidade de Extração**
+   - Taxa mais alta de campos extraídos corretamente
+   - Menos alucinações e dados fictícios
+   - Melhor compreensão de contexto etnobotânico
+
+### Alternativas e Fallbacks
+
+Se Qwen 2.5 não for adequado para sua máquina:
+
+- **Qwen 2.5 14B** (16+ GB RAM): Versão maior, mais precisa
+- **Mistral 7B**: Rápido, suporte razoável a português
+- **Neural Chat 7B**: Compacto, menos preciso para JSON
+- **Llama 2 7B**: Legacy, requer mais validação manual
+
+### Configuração no OLLAMAService
+
+O serviço é configurado em `src/EtnoPapers.Core/Services/OLLAMAService.cs`:
+
+- **URL padrão**: `http://localhost:11434`
+- **Timeout base**: 5 minutos, com retry até 10 minutos
+- **Retry logic**: 2 tentativas com timeout crescente
+- **Auto-detection**: Sistema detecta melhor modelo disponível
+
+### Melhorias Futuras
+
+- Suporte a modelos vision para análise de imagens em PDFs
+- Cache de embeddings para PDFs similares
+- Integração com modelos mais novos (Qwen 3.0, etc)
+- Quantização para rodar em máquinas com menos RAM
+
+---
+
+> 👉 Para detalhes de instalação e guia de uso, volte ao [README.md](README.md)

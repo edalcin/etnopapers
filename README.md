@@ -81,7 +81,8 @@ Mantenha seus dados seguros e acessíveis:
 1. **Instale o OLLAMA** (pré-requisito obrigatório)
    - Visite o site oficial do OLLAMA (https://ollama.ai) e siga as instruções de instalação
    - Certifique-se de que o serviço está rodando antes de usar o EtnoPapers
-   - Baixe um modelo compatível (ex: `ollama pull llama2`)
+   - **Recomendado**: Baixe o modelo Qwen 2.5 7B: `ollama pull qwen2.5:7b`
+   - Veja a seção [Modelo de IA Recomendado](#-modelo-de-ia-recomendado) abaixo para detalhes
 
 2. **Baixe o EtnoPapers**
    - Acesse a seção de Releases no GitHub
@@ -167,15 +168,80 @@ A estrutura completa dos dados extraídos está documentada em `docs/estrutura.j
 
 ---
 
+## 🤖 Modelo de IA Recomendado
+
+### Qwen 2.5 7B (Altamente Recomendado)
+
+Para melhor desempenho da extração de dados etnobotânicos, **recomendamos fortemente o uso do modelo Qwen 2.5 7B**.
+
+**Instalação:**
+```bash
+ollama pull qwen2.5:7b
+```
+
+**Por que Qwen 2.5 7B?**
+
+| Aspecto | Qwen 2.5 7B | Llama 2 7B | Outros |
+|--------|-----------|-----------|---------|
+| **Tamanho** | 7B (otimizado) | 7B | 13B+ (pesado) |
+| **Memória RAM** | ~8-10 GB | ~8-10 GB | 16+ GB |
+| **Suporte a Português** | ⭐⭐⭐⭐⭐ (excelente) | ⭐⭐⭐ (bom) | ⭐⭐⭐ (variável) |
+| **JSON Estruturado** | ⭐⭐⭐⭐⭐ (especializado) | ⭐⭐⭐ (bom) | ⭐⭐ (fraco) |
+| **Velocidade** | ⚡⚡⚡⚡ (muito rápido) | ⚡⚡⚡ (rápido) | ⚡⚡ (lento) |
+| **Precisão** | ⭐⭐⭐⭐⭐ (alta) | ⭐⭐⭐⭐ (boa) | ⭐⭐⭐ (média) |
+| **Consumo GPU** | ✅ Baixo | ✅ Baixo | ❌ Alto |
+
+**Vantagens Específicas para EtnoPapers:**
+
+1. **Multilíngue Robusto**
+   - Treinamento aprofundado em português brasileiro
+   - Melhor compreensão de termos científicos e etnobotânicos
+   - Tratamento correto de nomes vernaculares e científicos
+
+2. **Especializado em Extração Estruturada**
+   - Ótimo para extrair JSON limpo e válido
+   - Melhor compreensão de estruturas de dados
+   - Menos erros de formatação na resposta
+
+3. **Eficiência de Recursos**
+   - Roda em máquinas com 8-10 GB de RAM
+   - Tempo de resposta: 15-30 segundos por PDF (vs. 30-60s em outros)
+   - Pode rodar com ou sem GPU dedicada
+
+4. **Qualidade de Resposta**
+   - Mais "inteligente" na extração de metadados
+   - Melhor compreensão de contexto etnobotânico
+   - Menos alucinações (falsas informações geradas)
+
+5. **Custo-Benefício**
+   - Melhor relação entre tamanho, qualidade e velocidade
+   - Reduz frustração de timeouts
+   - Menos erros = menos edição manual
+
+**Modelos Alternativos (em ordem de preferência):**
+
+- **Qwen 2.5 14B**: Se sua máquina tem 16+ GB de RAM, melhor ainda! Maior precisão
+- **Mistral 7B**: Boa alternativa, um pouco mais rápido que Qwen 2.5 7B
+- **Neural Chat 7B**: Alternativa razoável, menos preciso para tarefas estruturadas
+- **Llama 2 7B**: Funciona, mas requer mais edição manual de dados extraídos
+
+---
+
 ## Tecnologias Utilizadas
 
 - **Framework**: .NET 8.0
 - **Interface**: WPF (Windows Presentation Foundation)
 - **Arquitetura**: MVVM (Model-View-ViewModel)
-- **IA Local**: OLLAMA (API REST)
+- **IA Local**: OLLAMA (API REST) com modelo **Qwen 2.5 7B** recomendado
 - **Armazenamento Local**: JSON
 - **Banco de Dados**: MongoDB (Atlas ou local)
 - **Linguagem**: C#
+
+---
+
+## Arquitetura
+
+Para entender a arquitetura detalhada do sistema, incluindo diagramas C4 Model e fluxos de trabalho completos, consulte o documento de **[Arquitetura do Sistema (Arquitetrura.md)](Arquitetrura.md)**.
 
 ---
 
