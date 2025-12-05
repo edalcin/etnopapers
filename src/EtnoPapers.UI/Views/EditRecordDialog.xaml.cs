@@ -17,6 +17,7 @@ namespace EtnoPapers.UI.Views
             InitializeComponent();
             EditedRecord = record;
             LoadRecordData(record);
+            DisplayExtractionTime(record);
         }
 
         private void LoadRecordData(ArticleRecord record)
@@ -29,6 +30,38 @@ namespace EtnoPapers.UI.Views
             MunicipioTextBox.Text = record.Municipio ?? "";
             BiomaTextBox.Text = record.Bioma ?? "";
             ResumoTextBox.Text = record.Resumo ?? "";
+        }
+
+        private void DisplayExtractionTime(ArticleRecord record)
+        {
+            if (record.TempoExtracao.HasValue)
+            {
+                double segundos = record.TempoExtracao.Value;
+                string timeDisplay;
+
+                if (segundos < 60)
+                {
+                    timeDisplay = $"{segundos:F1}s";
+                }
+                else if (segundos < 3600)
+                {
+                    int minutos = (int)(segundos / 60);
+                    int segs = (int)(segundos % 60);
+                    timeDisplay = $"{minutos}m {segs}s";
+                }
+                else
+                {
+                    int horas = (int)(segundos / 3600);
+                    int minutos = (int)((segundos % 3600) / 60);
+                    timeDisplay = $"{horas}h {minutos}m";
+                }
+
+                ExtractionTimeTextBlock.Text = timeDisplay;
+            }
+            else
+            {
+                ExtractionTimeTextBlock.Text = "N/A";
+            }
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)

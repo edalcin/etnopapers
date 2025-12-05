@@ -63,5 +63,8 @@ namespace EtnoPapers.Core.Models
 
         [JsonProperty("atributos_customizados")]
         public Dictionary<string, object> AtributosCustomizados { get; set; } = new();
+
+        [JsonProperty("tempo_extracao_segundos")]
+        public double? TempoExtracao { get; set; }
     }
 }

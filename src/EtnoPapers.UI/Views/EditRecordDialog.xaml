@@ -25,11 +25,28 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <TextBlock Grid.Row="0"
-                   Text="Editar Registro"
-                   Style="{StaticResource Heading2}"
-                   Margin="0,0,0,16"/>
+        <!-- Header with Extraction Time -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Editar Registro"
+                       Style="{StaticResource Heading2}"/>
+
+            <StackPanel Grid.Column="1"
+                       Orientation="Horizontal"
+                       VerticalAlignment="Center">
+                <TextBlock Text="Tempo de extração: "
+                          Style="{StaticResource Caption}"
+                          Margin="0,0,4,0"/>
+                <TextBlock x:Name="ExtractionTimeTextBlock"
+                          Style="{StaticResource Caption}"
+                          Foreground="{StaticResource Primary}"/>
+            </StackPanel>
+        </Grid>
 
         <!-- Form Content (ScrollViewer for long content) -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

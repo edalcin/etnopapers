@@ -1,5 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Media;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using EtnoPapers.Core.Models;
@@ -22,6 +25,7 @@ namespace EtnoPapers.UI.ViewModels
         private readonly LoggerService _loggerService;
         private readonly ConfigurationService _configService;
         private RelayCommand _startExtractionCommand;
+        private Stopwatch? _extractionStopwatch;
 
         private string _selectedFilePath = "";
         private bool _isExtracting = false;
@@ -162,6 +166,10 @@ namespace EtnoPapers.UI.ViewModels
             ErrorMessage = "";
             ExtractionProgress = 0;
 
+            // Start extraction timer
+            _extractionStopwatch = Stopwatch.StartNew();
+            _loggerService.Info("Extraction timer started");
+
             Views.ExtractionProgressWindow progressWindow = null;
             Views.ExtractionProgressViewModel progressViewModel = null;
             try
@@ -198,6 +206,18 @@ namespace EtnoPapers.UI.ViewModels
                 {
                     _loggerService.Info("Calling ExtractFromPdfAsync...");
                     ExtractedData = await _extractionService.ExtractFromPdfAsync(SelectedFilePath);
+
+                    // Stop extraction timer and save elapsed time
+                    if (_extractionStopwatch != null)
+                    {
+                        _extractionStopwatch.Stop();
+                        double elapsedSeconds = _extractionStopwatch.Elapsed.TotalSeconds;
+                        if (ExtractedData != null)
+                        {
+                            ExtractedData.TempoExtracao = elapsedSeconds;
+                            _loggerService.Info($"Extraction completed in {elapsedSeconds:F2} seconds");
+                        }
+                    }
 
                     ExtractionProgress = 100;
                     CurrentStep = "Extração concluída";
@@ -242,6 +262,16 @@ namespace EtnoPapers.UI.ViewModels
                         _loggerService.Error($"Error closing progress window: {ex.Message}", ex);
                     }
 
+                    // Play completion sound
+                    try
+                    {
+                        PlayExtractionCompleteSound();
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggerService.Warn($"Could not play completion sound: {ex.Message}");
+                    }
+
                     // Open edit dialog for user to review/edit/validate
                     try
                     {
@@ -277,8 +307,13 @@ namespace EtnoPapers.UI.ViewModels
                         progressViewModel.IsExtracting = false;
                     }
 
+                    // Stop timer if still running
+                    if (_extractionStopwatch?.IsRunning == true)
+                    {
+                        _extractionStopwatch.Stop();
+                    }
+
                     HasExtractionError = true;
-                    ErrorMessage = $"Erro na extração: {ex.Message}";
                     CurrentStep = "Erro";
                     _loggerService.Error($"Extraction failed: {ex.Message}\nStack trace: {ex.StackTrace}", ex);
 
@@ -289,10 +324,14 @@ namespace EtnoPapers.UI.ViewModels
                     }
                     catch { }
 
+                    // Handle different error types with user-friendly messages
+                    string userMessage = GetUserFriendlyErrorMessage(ex);
+                    ErrorMessage = userMessage;
+
                     // Show error message box to user
                     System.Windows.MessageBox.Show(
-                        $"ERRO NA EXTRAÇÃO:\n\n{ex.Message}\n\nStack: {ex.StackTrace}",
-                        "Erro",
+                        userMessage,
+                        "Erro na Extração",
                         System.Windows.MessageBoxButton.OK,
                         System.Windows.MessageBoxImage.Error);
 
@@ -368,6 +407,77 @@ namespace EtnoPapers.UI.ViewModels
             ErrorMessage = "";
             _loggerService.Info("Upload view cleared");
             _startExtractionCommand?.RaiseCanExecuteChanged();
+        }
+
+        private string GetUserFriendlyErrorMessage(Exception ex)
+        {
+            // Check for timeout-related exceptions
+            if (ex is OperationCanceledException)
+            {
+                return "A extração excedeu o tempo limite de 10 minutos.\n\n" +
+                       "Possíveis causas:\n" +
+                       "• OLLAMA está processando muito lentamente\n" +
+                       "• O modelo de IA é muito grande para o arquivo PDF\n" +
+                       "• Problema temporário de conexão\n\n" +
+                       "Soluções:\n" +
+                       "1. Tentar novamente com um PDF menor\n" +
+                       "2. Verificar se OLLAMA está respondendo (http://localhost:11434)\n" +
+                       "3. Considerar usar um modelo mais rápido nas configurações";
+            }
+
+            if (ex is HttpRequestException && ex.Message.Contains("timeout", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return "Timeout de conexão com OLLAMA.\n\n" +
+                       "O serviço OLLAMA não respondeu dentro do tempo esperado.\n\n" +
+                       "Verifique:\n" +
+                       "• Se OLLAMA está rodando\n" +
+                       "• A URL de conexão está correta\n" +
+                       "• Sua conexão de rede está estável";
+            }
+
+            if (ex is InvalidOperationException && ex.Message.Contains("OLLAMA", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return "Erro de conexão com OLLAMA:\n\n" + ex.Message + "\n\n" +
+                       "Verifique se OLLAMA está instalado e rodando em http://localhost:11434";
+            }
+
+            if (ex is InvalidOperationException && ex.Message.Contains("modelo", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return "Erro de modelo de IA:\n\n" + ex.Message + "\n\n" +
+                       "Verifique nas configurações qual modelo está sendo usado";
+            }
+
+            // Generic error message
+            return $"Erro durante a extração:\n\n{ex.Message}\n\n" +
+                   "Verifique os logs para mais detalhes.\n\n" +
+                   "Tente novamente ou entre em contato com o suporte.";
+        }
+
+        private void PlayExtractionCompleteSound()
+        {
+            // Play a pleasant completion sound using system beeps
+            try
+            {
+                // Create a simple pleasant melody: two ascending beeps
+                SystemSounds.Beep.Play();
+                Task.Delay(200).Wait();
+                SystemSounds.Beep.Play();
+            }
+            catch
+            {
+                // If system sounds fail, try alternative approach
+                try
+                {
+                    // Use console beep as fallback
+                    System.Console.Beep(800, 150);
+                    Task.Delay(100).Wait();
+                    System.Console.Beep(1000, 150);
+                }
+                catch
+                {
+                    // Silent fallback - no sound
+                }
+            }
         }
 
         #endregion
