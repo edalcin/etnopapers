@@ -8,7 +8,7 @@ O EtnoPapers segue uma arquitetura em camadas que integra componentes locais e e
 graph TB
     User[👤 Pesquisador<br/>Etnobotânico]
 
-    subgraph Sistema["EtnoPapers<br/>(Aplicação Desktop Windows)"]
+    subgraph Sistema["EtnoPapers"]
         App[EtnoPapers]
     end
 
