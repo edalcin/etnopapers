@@ -89,14 +89,9 @@ namespace EtnoPapers.Core.Services
 
                 UpdateProgress(75, "Validating extracted data", "Validando dados extraídos...");
 
-                // Fix OLLAMA response that uses parentheses instead of braces
-                // Sometimes OLLAMA returns: ( { ... } ) instead of { ... }
-                var cleanedMetadata = metadata.Trim();
-                if (cleanedMetadata.StartsWith("(") && cleanedMetadata.EndsWith(")"))
-                {
-                    System.Diagnostics.Debug.WriteLine("Detected parentheses around JSON. Removing them...");
-                    cleanedMetadata = cleanedMetadata.Substring(1, cleanedMetadata.Length - 2).Trim();
-                }
+                // Clean OLLAMA response that may have various formatting issues
+                // OLLAMA sometimes returns: json ( { ... } ) or json\n( { ... } ) etc.
+                var cleanedMetadata = CleanOLLAMAResponse(metadata);
 
                 ArticleRecord record = null;
                 try
@@ -167,6 +162,55 @@ namespace EtnoPapers.Core.Services
 
             suggestions += "\nA janela de edição permitirá que você corrija esses campos manualmente.";
             return suggestions;
+        }
+
+        /// <summary>
+        /// Cleans OLLAMA response to extract valid JSON.
+        /// OLLAMA may return formats like: json ( { ... } ) or json { ... } etc.
+        /// </summary>
+        private string CleanOLLAMAResponse(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response))
+                return response;
+
+            var cleaned = response.Trim();
+
+            // Step 1: Remove "json" keyword that may appear at the start (case-insensitive)
+            // Format: "json\n(\n{\n..."
+            if (cleaned.StartsWith("json", StringComparison.OrdinalIgnoreCase))
+            {
+                cleaned = cleaned.Substring(4).Trim();  // Remove "json"
+                System.Diagnostics.Debug.WriteLine("Removed 'json' keyword from start of response");
+            }
+
+            // Step 2: Remove parentheses around JSON
+            // Format: "(\n{\n...}\n)"
+            while (cleaned.StartsWith("("))
+            {
+                cleaned = cleaned.Substring(1).Trim();
+            }
+            while (cleaned.EndsWith(")"))
+            {
+                cleaned = cleaned.Substring(0, cleaned.Length - 1).Trim();
+            }
+
+            // Step 3: Find the actual JSON object boundaries
+            // Extract from first { to last }
+            int startIndex = cleaned.IndexOf('{');
+            int endIndex = cleaned.LastIndexOf('}');
+
+            if (startIndex >= 0 && endIndex > startIndex)
+            {
+                cleaned = cleaned.Substring(startIndex, endIndex - startIndex + 1).Trim();
+                System.Diagnostics.Debug.WriteLine("Extracted JSON from first { to last }");
+            }
+
+            if (cleaned != response.Trim())
+            {
+                System.Diagnostics.Debug.WriteLine($"OLLAMA response cleaned. Original length: {response.Length}, Cleaned length: {cleaned.Length}");
+            }
+
+            return cleaned;
         }
 
         /// <summary>
