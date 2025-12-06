@@ -39,14 +39,4 @@
     <Resource Include="Assets\etnopapers.png" />
   </ItemGroup>
 
-  <!-- Post-publish target: Copy published files to single location for easier access -->
-  <Target Name="CopyPublishToSingleLocation" AfterTargets="Publish">
-    <PropertyGroup>
-      <PublishSourceDir>$(MSBuildProjectDirectory)\bin\Release\net8.0-windows\win-x64\publish\</PublishSourceDir>
-      <PublishDestDir>$(MSBuildProjectDirectory)\bin\Release\publish\</PublishDestDir>
-    </PropertyGroup>
-    <Exec Command="robocopy &quot;$(PublishSourceDir)&quot; &quot;$(PublishDestDir)&quot; /S /E /Y" ContinueOnError="true" />
-    <Message Text="Published files copied to: $(PublishDestDir)" Importance="high" />
-  </Target>
-
 </Project>
