@@ -1,50 +1,92 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# EtnoPapers Project Constitution
+
+**Version**: 1.0.0 | **Ratified**: 2025-12-06 | **Last Amended**: 2025-12-06
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Functional Parity (NON-NEGOTIABLE)
+100% feature compatibility with the Electron version is mandatory. All user workflows, data formats, and AI integration must be identical between Electron and WPF versions. Zero data loss is required during migration. Users must be able to seamlessly transition between versions without friction or capability loss.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**GATE**: Every feature must have acceptance criteria mapping to Electron equivalence. Any deviation requires explicit justification in plan.md complexity tracking.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Native Windows Design (NON-NEGOTIABLE)
+The WPF application MUST use native Windows controls throughout—no web-like emulation or Electron-derived UI patterns. Windows 11 design language compliance is mandatory. Standard Windows keyboard shortcuts (Ctrl+S, Ctrl+Q, Alt+F4, Tab navigation) MUST work intuitively. Windows file dialogs, drag-and-drop, and notifications MUST integrate seamlessly.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**GATE**: UI review must verify native control usage; non-native patterns require architecture review.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Performance First (HARD REQUIREMENT)
+Performance targets are non-negotiable and define success for this migration:
+- **Startup** < 2 seconds (vs. Electron ~5-10 seconds)
+- **Idle Memory** < 150 MB (vs. Electron ~300-500 MB)
+- **UI Responsiveness** < 200ms for record operations
+These metrics MUST be measured and validated before release. Deviations require root cause analysis and explicit acceptance.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**GATE**: Benchmarks (T070, T071, T072) must pass before Phase 7 completion.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Data Integrity (NON-NEGOTIABLE)
+JSON file format MUST remain identical to Electron version. MongoDB documents MUST be unchanged. Configuration compatibility MUST be maintained across versions. Migration path MUST be documented and tested. Unknown fields in JSON MUST be preserved (forward/backward compatibility).
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**GATE**: Data serialization tests (T016) MUST validate round-trip compatibility.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Simplicity & Maintainability
+Standard WPF patterns and best practices MUST be followed. MVVM architectural pattern is required (standard WPF). Clear separation of concerns (Data Layer, Service Layer, UI Layer) is mandatory. Complexity introduced during migration MUST be justified in plan.md and marked as accepted technical debt.
+
+**GATE**: Architecture review before Phase 1; complexity justification required in plan.md.
+
+### VI. Quality Assurance (NON-NEGOTIABLE)
+Unit tests for business logic are mandatory. Integration tests for data layer and MongoDB are required. Manual acceptance testing for UI and workflows is required. Performance benchmarking MUST occur before release.
+
+**GATE**: No task completion without tests (where applicable per tech stack). T070/T071/T072 benchmarks must validate SC-002, SC-003.
+
+## Single-Branch Workflow (Project-Specific Deviation)
+
+**DEVIATION FROM SPECKIT**: This project uses a single `main` branch instead of the SpecKit-standard numbered feature branches (`###-feature-name`).
+
+**Rationale**:
+- Windows desktop application maintained by single owner
+- Single-branch simplifies deployment and release process
+- Eliminates branch merge complexity for small team
+- All specifications stored in `specs/main/` directory
+
+**Implementation**:
+- ALL commits go to `main` branch (never create feature branches)
+- Specs directory: `specs/main/` (not `specs/###-feature-name/`)
+- Feature tracking via task IDs in tasks.md, not branch names
+- This deviation is INTENTIONAL and NON-NEGOTIABLE
+
+## Phase Gates
+
+### Phase 0 Gate ✅ PASSED
+- Technology choices justified (C# WPF vs alternatives)
+- Performance targets defined and measurable (SC-002, SC-003)
+- Data compatibility strategy documented (identical JSON/MongoDB)
+- Architecture approach documented in plan.md
+
+### Phase 1 Gate ✅ PASSED
+- Data model matches Electron version (JSON structure validated in research.md)
+- Service interfaces designed (contracts/ directory)
+- No unnecessary complexity added (YAGNI principle)
+- All technical decisions traceable to requirements (spec.md)
+
+### Phase 2-7 Gates
+- T016 (JSON compatibility tests) must pass
+- T070/T071/T072 (performance benchmarks) must validate SC-002, SC-003
+- T083 (UI acceptance checklist) must confirm feature parity
+- All edge case tests (T048, new schema migration tasks) must pass
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**Authority**: This constitution is non-negotiable. Violations in `/speckit.analyze` are automatically CRITICAL severity.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendment Process**:
+1. Constitution changes require explicit documentation and user approval
+2. Changes propagated to dependent templates (spec/plan/tasks)
+3. Semantic versioning: MAJOR.MINOR.PATCH (e.g., 1.0.0 → 1.1.0 if adding principle, 2.0.0 if removing)
+
+**Enforcement**:
+- All PRs/reviews MUST verify compliance with principles
+- Complexity justification required in plan.md for deviations
+- Performance targets are hard requirements, not aspirational
+- Data integrity gates MUST pass before release
+
+**Reference**: Development guidance in `CLAUDE.md` (project-level instructions)

@@ -53,8 +53,8 @@ A researcher working on older hardware or with limited system resources expects 
 
 **Acceptance Scenarios**:
 
-1. **Given** the application launches on a Windows machine, **When** measuring startup time, **Then** WPF version starts in under 2 seconds (vs. Electron ~5-10 seconds)
-2. **Given** application is idle, **When** measuring memory usage, **Then** WPF version uses less than 150MB RAM (vs. Electron ~300-500MB)
+1. **Given** the application launches on a Windows machine, **When** measuring startup time from EtnoPapers.exe invocation to MainWindow rendered and responsive (cold start, .NET runtime initialization included), **Then** WPF version starts in under 2 seconds measured with System.Diagnostics.Stopwatch (baseline: T070 benchmark)
+2. **Given** application is idle (MainWindow loaded, no records loaded), **When** measuring memory usage after 30 seconds via Task Manager or Process.WorkingSet64, **Then** WPF version uses less than 150MB RAM (baseline: T072 benchmark)
 3. **Given** user performs record management operations (sorting, filtering, searching 100+ records), **When** measuring responsiveness, **Then** all interactions complete in under 200ms
 4. **Given** user uploads and processes a PDF, **When** measuring CPU usage, **Then** WPF version maintains lower CPU utilization during extraction
 
@@ -108,6 +108,8 @@ A researcher who was using the Electron version with existing local JSON data an
 - **FR-035**: System MUST extract metadata from structured Markdown with higher accuracy than raw text extraction
 - **FR-036**: System MUST handle scientific papers with complex layouts (multi-column, tables, equations) by converting to clean Markdown representation
 - **FR-037**: System MUST provide fallback to raw text extraction if Markdown conversion fails
+
+**Implementation Note**: FR-033 through FR-037 introduce structured Markdown conversion as the solution to reduce AI hallucinations. This architectural layer (using PdfPig library) is a core requirement of this migration, not an optional enhancement. Success of the WPF version depends on accurate Markdown-based extraction matching Electron version output quality.
 
 #### Windows Native Integration Requirements
 

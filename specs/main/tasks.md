@@ -247,8 +247,30 @@ Tasks are organized by phase and user story priority. Each task includes:
   - **Methods**: Debug(), Info(), Warn(), Error(), GetLogFilePath()
   - **Configuration**: Logs to %APPDATA%/EtnoPapers/logs/, 7-day retention
 
----
+### Data Compatibility & Edge Case Testing (US4)
 
+- [ ] T092 [US4] Create JSON schema migration detection and validation
+  - **File**: `src/EtnoPapers.Core/Services/ConfigurationMigrationService.cs`
+  - **Acceptance**: Detect JSON version/schema and validate compatibility
+  - **Methods**: DetectJsonVersion(), ValidateMigration(), PreserveUnknownFields()
+  - **Test Cases**: v1.0 config to v2.0 parser with unknown fields, handles gracefully
+  - **Note**: Prevents data loss if Electron config has fields unknown to WPF version
+
+- [ ] T093 [US4] Implement simultaneous version detection and warning
+  - **File**: `src/EtnoPapers.Core/Services/ApplicationLockService.cs`
+  - **Acceptance**: Detect if both Electron and WPF are running against same JSON file
+  - **Methods**: CheckApplicationLock(), LockDataFile(), WarnUserOfConflict()
+  - **Behavior**: If Electron running and WPF tries to open same data file, warn user: "Electron version detected as running. Multiple versions accessing the same data file may cause conflicts. Close Electron first."
+  - **Technical**: Use file locking (FileStream with FileShare.None) or marker file in data directory
+
+- [ ] T094 [US4] Create incomplete migration detection and rollback
+  - **File**: `src/EtnoPapers.Core/Services/MigrationCompletionService.cs`
+  - **Acceptance**: Detect and handle incomplete migrations (mixed v1 + v2 records)
+  - **Methods**: DetectMixedFormats(), ValidateConsistency(), BackupBeforeMigration()
+  - **Recovery**: If inconsistent state detected, offer rollback to last known good backup
+  - **Logging**: Log all migration transitions for debugging
+
+---
 ## Phase 2: Windows Native UI Foundation (US2, US1)
 
 **Goal**: Set up WPF application structure, MVVM pattern, and native Windows controls
@@ -793,15 +815,15 @@ Release
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Total Tasks | 97 | ✅ |
+| Total Tasks | 100 | ✅ |
 | Setup Phase (T001-T011) | 11 | ✅ |
-| Foundational Phase (T012-T029) | 18 | ✅ |
+| Foundational Phase (T012-T094) | 21 | ✅ |
 | US1 Phase (T030-T049) | 20 | ✅ |
 | US2 Phase (incorporated in T030-T074) | Integrated | ✅ |
 | US4 Phase (incorporated in T012-T069) | Integrated | ✅ |
 | US3 Phase (T070-T074) | 5 | ✅ |
 | Testing Phase (T075-T083) | 9 | ✅ |
-| Build & Release (T084-T097) | 14 | ✅ |
+| Build & Release (T084-T100) | 14 | ✅ |
 | Tasks with [P] parallel marker | 25 | ✅ |
 | Tasks with [US#] story label | 74 | ✅ |
 | Format Compliance | 100% | ✅ |
@@ -842,9 +864,9 @@ Release
 
 ## Checklist Format Validation
 
-All 97 tasks follow the required format:
+All 100 tasks follow the required format:
 - ✅ All start with `- [ ]` (markdown checkbox)
-- ✅ All have sequential Task ID (T001...T097)
+- ✅ All have sequential Task ID (T001...T100)
 - ✅ Story labels ([US#]) present for phases 3-6
 - ✅ Parallelizable tasks marked with [P]
 - ✅ All have clear description with file path
