@@ -349,6 +349,13 @@ namespace EtnoPapers.UI.ViewModels
                     throw new InvalidOperationException("URI do MongoDB não configurado");
                 }
 
+                _loggerService.Info($"MongoDB URI: {config.MongodbUri}");
+                _loggerService.Info("Inicializando MongoDBSyncService...");
+
+                // Initialize the MongoDB service with the URI
+                _syncService.Initialize(config.MongodbUri);
+                _loggerService.Info("MongoDBSyncService inicializado com sucesso");
+
                 // Make a copy to avoid modification during iteration
                 var recordsToSync = new List<ArticleRecord>(SelectedRecords);
                 _loggerService.Info($"Preparing to sync {recordsToSync.Count} records");
@@ -367,19 +374,22 @@ namespace EtnoPapers.UI.ViewModels
                         }
 
                         CurrentSyncStatus = $"Sincronizando: {i + 1}/{recordsToSync.Count} - {record.Titulo}";
-                        _loggerService.Debug($"Uploading record: {record.Id}");
+                        _loggerService.Info($"Uploading record {i + 1}/{recordsToSync.Count}: {record.Id} - {record.Titulo}");
 
                         // Upload to MongoDB asynchronously
-                        if (await _syncService.UploadRecordAsync(record))
+                        bool uploadSuccess = await _syncService.UploadRecordAsync(record);
+                        _loggerService.Info($"  - Upload result: {uploadSuccess}");
+
+                        if (uploadSuccess)
                         {
-                            _loggerService.Debug($"Successfully uploaded record: {record.Id}");
+                            _loggerService.Info($"✓ Successfully uploaded record: {record.Id}");
                             // Delete local copy on success
                             _storageService.Delete(record.Id);
                             successCount++;
                         }
                         else
                         {
-                            _loggerService.Warn($"Failed to upload record: {record.Id}");
+                            _loggerService.Warn($"✗ Failed to upload record: {record.Id}");
                         }
 
                         // Update progress
@@ -418,9 +428,10 @@ namespace EtnoPapers.UI.ViewModels
                 ErrorMessage = $"Erro durante sincronização: {ex.Message}";
                 CurrentSyncStatus = "✗ Erro na sincronização";
                 _loggerService.Error($"Sync failed with exception: {ex.GetType().Name}: {ex.Message}", ex);
+                _loggerService.Error($"Stack trace: {ex.StackTrace}");
 
                 // Mostrar messageBox de erro
-                System.Windows.MessageBox.Show($"Erro na sincronização:\n\n{ex.Message}", "Erro na Sincronização");
+                System.Windows.MessageBox.Show($"Erro na sincronização:\n\n{ex.GetType().Name}: {ex.Message}", "Erro na Sincronização");
             }
             finally
             {
