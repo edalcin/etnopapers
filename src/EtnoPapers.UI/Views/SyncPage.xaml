@@ -38,10 +38,23 @@
                 </StackPanel>
             </Border>
 
+            <!-- Status Message -->
+            <TextBlock Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}"
+                       FontSize="12" Foreground="#C62828" Margin="0,0,0,16" TextWrapping="Wrap">
+                <Run Text="⚠️ "/>
+                <Run Text="{Binding ErrorMessage}"/>
+            </TextBlock>
+
             <!-- Records for Sync -->
             <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">
                 <StackPanel>
-                    <TextBlock Text="Registros Disponíveis para Sincronização" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="Registros Disponíveis para Sincronização" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Visibility="{Binding AvailableRecords.Count, Converter={StaticResource EmptyStateConverter}}"
+                                   FontSize="13" Foreground="#B71C1C" Margin="16,0,0,0" VerticalAlignment="Center">
+                            <Run Text="(nenhum)"/>
+                        </TextBlock>
+                    </StackPanel>
 
                     <!-- Available Records List -->
                     <ListBox x:Name="RecordsListBox" Height="200" Margin="0,0,0,16" Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
@@ -111,18 +124,24 @@
             <!-- Info Box -->
             <Border Background="#F3F3F3" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="16">
                 <StackPanel>
-                    <TextBlock Text="ℹ️ Informações" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <TextBlock Text="ℹ️ Como Usar" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
                     <TextBlock FontSize="12" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
-                        <Run Text="• Os registros são sincronizados com MongoDB e depois deletados localmente"/>
+                        <Run Text="1. Primeiro, você deve criar registros na aba '📄 Upload PDF'"/>
                     </TextBlock>
                     <TextBlock FontSize="12" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
-                        <Run Text="• Configure a URI do MongoDB nas Configurações antes de sincronizar"/>
+                        <Run Text="2. Clique em '🔄 Recarregar Registros' para carregar os dados salvos localmente"/>
                     </TextBlock>
                     <TextBlock FontSize="12" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
-                        <Run Text="• A sincronização pode levar alguns minutos dependendo do número de registros"/>
+                        <Run Text="3. Selecione os registros que deseja sincronizar (clique nos checkboxes)"/>
                     </TextBlock>
-                    <TextBlock FontSize="12" Foreground="#505050" TextWrapping="Wrap">
-                        <Run Text="• Recomenda-se sincronizar quando houver mais de 500 registros locais"/>
+                    <TextBlock FontSize="12" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="4. Configure a URI do MongoDB nas '⚙️ Configurações' (se ainda não fez)"/>
+                    </TextBlock>
+                    <TextBlock FontSize="12" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
+                        <Run Text="5. Clique em '📤 Iniciar Sincronização' para fazer backup na nuvem"/>
+                    </TextBlock>
+                    <TextBlock FontSize="12" Foreground="#C62828" TextWrapping="Wrap" Margin="0,8,0,0">
+                        <Run Text="⚠️ Aviso: Os registros sincronizados são DELETADOS da máquina local após o backup"/>
                     </TextBlock>
                 </StackPanel>
             </Border>
