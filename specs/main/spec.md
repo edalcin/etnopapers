@@ -17,7 +17,7 @@ A researcher using EtnoPapers with Electron expects all existing features to wor
 
 **Acceptance Scenarios**:
 
-1. **Given** a PDF is uploaded, **When** processing occurs, **Then** extracted metadata (title, authors, year, abstract in Portuguese) matches the Electron version results
+1. **Given** a PDF is uploaded, **When** processing occurs, **Then** PDF is converted to structured Markdown and extracted metadata (title, authors, year, abstract in Portuguese) is accurate without hallucinations
 2. **Given** records exist in local storage, **When** user accesses the records management interface, **Then** all records display with identical data and formatting as Electron version
 3. **Given** user edits a record, **When** they save changes, **Then** JSON file updates with identical structure and data format as Electron version
 4. **Given** user selects records for MongoDB sync, **When** sync occurs, **Then** records upload identically and are deleted from local storage as in Electron version
@@ -100,6 +100,14 @@ A researcher who was using the Electron version with existing local JSON data an
 - **FR-008**: System MUST handle all edge cases (scanned PDFs, duplicate detection, large records, connection failures) identically to Electron version
 - **FR-009**: System MUST maintain maximum local record limit enforcement with identical warnings as Electron version
 - **FR-010**: System MUST display abstract data in Brazilian Portuguese with identical handling as Electron version
+
+#### PDF Processing and Extraction Accuracy Requirements
+
+- **FR-033**: System MUST convert PDF documents to structured Markdown format before AI extraction to preserve document hierarchy and reduce metadata hallucinations
+- **FR-034**: System MUST detect and preserve document structure including headings, sections, tables, and lists during PDF to Markdown conversion
+- **FR-035**: System MUST extract metadata from structured Markdown with higher accuracy than raw text extraction
+- **FR-036**: System MUST handle scientific papers with complex layouts (multi-column, tables, equations) by converting to clean Markdown representation
+- **FR-037**: System MUST provide fallback to raw text extraction if Markdown conversion fails
 
 #### Windows Native Integration Requirements
 

@@ -3,14 +3,25 @@ using System.IO;
 using System.Text;
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
+using Serilog;
 
 namespace EtnoPapers.Core.Services
 {
     /// <summary>
-    /// Extracts text and metadata from PDF files using iTextSharp.
+    /// Coordinates PDF processing and Markdown conversion.
+    /// Primary method: ProcessPDF() returns structured Markdown for better LLM extraction.
+    /// Legacy method: ExtractText() returns raw text (kept for backward compatibility).
     /// </summary>
     public class PDFProcessingService
     {
+        private readonly MarkdownConverter _markdownConverter;
+        private readonly ILogger _logger;
+
+        public PDFProcessingService(MarkdownConverter markdownConverter, ILogger logger)
+        {
+            _markdownConverter = markdownConverter ?? throw new ArgumentNullException(nameof(markdownConverter));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
         static PDFProcessingService()
         {
             // Register encoding provider for extended encodings (MacRoman, etc.)
@@ -25,7 +36,49 @@ namespace EtnoPapers.Core.Services
         }
 
         /// <summary>
-        /// Extracts all text from a PDF file.
+        /// Processes a PDF file and returns structured Markdown representation.
+        /// This is the PRIMARY method to use for better LLM extraction accuracy.
+        /// Falls back to raw text if Markdown conversion fails.
+        /// </summary>
+        /// <param name="filePath">Path to the PDF file</param>
+        /// <returns>Structured Markdown text</returns>
+        public string ProcessPDF(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"PDF file not found: {filePath}");
+
+            _logger.Information("Processing PDF: {FilePath}", filePath);
+
+            // Validate PDF first
+            if (!ValidatePDF(filePath))
+            {
+                throw new InvalidOperationException($"Invalid PDF file: {filePath}");
+            }
+
+            // Check for text layers (not scanned)
+            if (!CheckTextLayers(filePath))
+            {
+                _logger.Warning("PDF appears to be scanned (no text layers): {FilePath}", filePath);
+                throw new InvalidOperationException("PDF appears to be scanned. OCR is not supported. Please provide a text-based PDF.");
+            }
+
+            // Convert to Markdown
+            try
+            {
+                var markdown = _markdownConverter.ConvertToMarkdown(filePath);
+                _logger.Information("Successfully processed PDF to Markdown ({CharCount} characters)", markdown.Length);
+                return markdown;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to process PDF to Markdown: {FilePath}", filePath);
+                throw new InvalidOperationException($"Failed to process PDF: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// LEGACY: Extracts all text from a PDF file (raw text, no structure).
+        /// Use ProcessPDF() instead for better LLM extraction accuracy.
         /// </summary>
         public string ExtractText(string filePath)
         {

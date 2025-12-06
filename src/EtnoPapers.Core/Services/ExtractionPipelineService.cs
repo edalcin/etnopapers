@@ -78,11 +78,11 @@ namespace EtnoPapers.Core.Services
                 if (!_pdfService.ValidatePDF(filePath))
                     throw new InvalidOperationException("Invalid PDF file");
 
-                UpdateProgress(25, "Extracting text", "Extraindo texto do PDF...");
-                var text = _pdfService.ExtractText(filePath);
+                UpdateProgress(25, "Converting to Markdown", "Convertendo PDF para Markdown estruturado...");
+                var markdown = _pdfService.ProcessPDF(filePath);
 
-                UpdateProgress(50, "Processing with AI", $"Processando com IA (OLLAMA - modelo: {_ollamaService.CurrentModel})...");
-                var metadata = await _ollamaService.ExtractMetadataAsync(text, _customPrompt);
+                UpdateProgress(50, "Processing with AI", $"Processando Markdown com IA (OLLAMA - modelo: {_ollamaService.CurrentModel})...");
+                var metadata = await _ollamaService.ExtractMetadataAsync(markdown, _customPrompt);
 
                 // Log OLLAMA response for debugging
                 System.Diagnostics.Debug.WriteLine($"OLLAMA Response (first 500 chars): {metadata.Substring(0, Math.Min(500, metadata.Length))}");

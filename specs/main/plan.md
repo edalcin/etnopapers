@@ -24,6 +24,7 @@ EtnoPapers is being refactored from a Node.js/TypeScript/Electron-based desktop 
 - **WPF**: Windows Presentation Foundation (built-in to .NET)
 - **C#**: Primary language
 - **XAML**: UI markup language for WPF
+- **PdfPig**: PDF text extraction and document structure analysis (replaces iTextSharp for superior extraction quality)
 - **MongoDB .NET Driver**: MongoDB integration (identical to Electron version)
 - **OLLAMA**: External AI service (localhost REST API) - unchanged
 - **Newtonsoft.Json (Json.NET)**: JSON serialization for data compatibility with Electron version
@@ -149,10 +150,11 @@ etnopapers/
 │   │   ├── Services/                       # Service implementations
 │   │   │   ├── ConfigurationService.cs     # Settings (app.config, JSON)
 │   │   │   ├── DataStorageService.cs       # Local JSON file management
-│   │   │   ├── PDFProcessingService.cs     # PDF text extraction (iTextSharp/Spire)
+│   │   │   ├── PDFProcessingService.cs     # PDF orchestrator (coordinates Markdown conversion)
+│   │   │   ├── MarkdownConverter.cs        # PDF→Markdown conversion using PdfPig (NEW)
 │   │   │   ├── OLLAMAService.cs            # REST API integration with local OLLAMA
 │   │   │   ├── MongoDBSyncService.cs       # MongoDB upload/sync
-│   │   │   ├── ExtractionPipelineService.cs # Orchestration: PDF→text→AI→validation→storage
+│   │   │   ├── ExtractionPipelineService.cs # Orchestration: PDF→Markdown→AI→validation→storage
 │   │   │   ├── ValidationService.cs        # Data validation against schema
 │   │   │   └── LoggerService.cs            # File-based logging
 │   │   ├── Models/                         # Data classes matching Electron JSON schema
@@ -219,6 +221,7 @@ etnopapers/
 │   │   │   ├── ConfigurationServiceTests.cs
 │   │   │   ├── DataStorageServiceTests.cs
 │   │   │   ├── PDFProcessingServiceTests.cs
+│   │   │   ├── MarkdownConverterTests.cs    # NEW: Tests for PDF→Markdown conversion
 │   │   │   ├── OLLAMAServiceTests.cs
 │   │   │   ├── MongoDBSyncServiceTests.cs
 │   │   │   ├── ExtractionPipelineTests.cs
@@ -284,6 +287,163 @@ All architectural decisions follow standard WPF and .NET practices:
 
 ---
 
+## PDF to Markdown Architecture (Critical Enhancement)
+
+### Problem Addressed
+
+**Issue**: OLLAMA models (qwen2.5:7b, qwen3:8b) were hallucinating metadata (title, authors, year) when processing raw text extracted from PDFs because:
+- iTextSharp extracts text without preserving document structure
+- Headers, footers, tables, sections become unstructured text blob
+- References, footnotes mixed with body text
+- Ambiguous context leads LLMs to "guess" missing information
+
+### Solution: Structured Markdown Layer
+
+**New Pipeline**:
+```
+PDF → [MarkdownConverter] → Structured Markdown → OLLAMA → ArticleRecord JSON
+```
+
+**Benefits**:
+- ✅ Preserves document hierarchy (headings, sections, subsections)
+- ✅ Tables converted to Markdown tables (readable structure)
+- ✅ Clear separation of metadata from content
+- ✅ LLMs are trained on Markdown (GitHub, Stack Overflow, Wikipedia)
+- ✅ Reduces hallucinations by providing clear structure
+
+### Technical Implementation
+
+**Library**: PdfPig (open source, MIT license)
+- Port of Apache PDFBox to C#
+- Superior text extraction compared to iTextSharp
+- Provides layout analysis and word positioning
+- Supports structure detection (headings, tables, lists)
+
+**New Service**: `MarkdownConverter.cs`
+
+```csharp
+public class MarkdownConverter
+{
+    public string ConvertToMarkdown(string pdfPath)
+    {
+        using (var document = PdfDocument.Open(pdfPath))
+        {
+            var markdown = new StringBuilder();
+
+            foreach (var page in document.GetPages())
+            {
+                // Extract words with position and font info
+                var words = page.GetWords();
+
+                // Detect document structure
+                var headings = DetectHeadings(words);      // By font size/position
+                var tables = DetectTables(words);          // By alignment patterns
+                var paragraphs = DetectParagraphs(words);  // By spacing
+
+                // Convert to Markdown
+                foreach (var heading in headings)
+                    markdown.AppendLine($"# {heading.Text}");
+
+                foreach (var table in tables)
+                    markdown.AppendLine(FormatMarkdownTable(table));
+
+                foreach (var paragraph in paragraphs)
+                    markdown.AppendLine(paragraph.Text);
+            }
+
+            return markdown.ToString();
+        }
+    }
+
+    private List<Heading> DetectHeadings(IEnumerable<Word> words)
+    {
+        // Detect by font size > average and centered/bold
+    }
+
+    private List<Table> DetectTables(IEnumerable<Word> words)
+    {
+        // Detect by column alignment patterns
+    }
+
+    private string FormatMarkdownTable(Table table)
+    {
+        // Convert to Markdown table format
+    }
+}
+```
+
+**Updated Pipeline Service**:
+
+```csharp
+public class ExtractionPipelineService
+{
+    private readonly MarkdownConverter _markdownConverter;
+    private readonly OLLAMAService _ollamaService;
+
+    public async Task<ArticleRecord> ExtractFromPdfAsync(string pdfPath)
+    {
+        // OLD: var text = _pdfService.ExtractText(pdfPath);
+        // NEW: Convert to structured Markdown first
+        var markdown = _markdownConverter.ConvertToMarkdown(pdfPath);
+
+        // Send structured Markdown to OLLAMA (not raw text)
+        var json = await _ollamaService.ExtractMetadataAsync(markdown);
+
+        return ParseArticleRecord(json);
+    }
+}
+```
+
+**Updated OLLAMA Prompt**:
+
+```csharp
+private static string GenerateDefaultPrompt(string markdownContent)
+{
+    return $@"Analyze the following scientific paper in structured Markdown format.
+
+IMPORTANT: The content is already structured with:
+- # headings for titles and sections
+- ## for subsections
+- | tables | in Markdown format
+- Clear paragraph separation
+
+Extract metadata accurately from this structured content:
+
+RULES:
+1. Title is usually the first # heading
+2. Authors appear after title, often with affiliations
+3. Year may be in metadata section or references
+4. Abstract is usually under ""Abstract"" or ""Resumo"" heading
+5. Return valid JSON only
+
+{markdownContent}";
+}
+```
+
+### Fallback Strategy
+
+If Markdown conversion fails (corrupt PDF, scanned document):
+1. Catch exception in `MarkdownConverter`
+2. Fall back to raw text extraction (current iTextSharp method)
+3. Log warning to user: "Structured extraction failed, using basic text extraction"
+4. Continue with reduced accuracy (better than crashing)
+
+### Testing Strategy
+
+**Unit Tests** (`MarkdownConverterTests.cs`):
+- Test heading detection from sample PDF pages
+- Test table extraction and Markdown formatting
+- Test paragraph separation
+- Test fallback to raw text on errors
+
+**Integration Tests**:
+- Real scientific papers (10-20 page samples)
+- Compare Markdown output to expected structure
+- Verify OLLAMA receives well-formatted Markdown
+- Measure accuracy improvement (before/after hallucinations)
+
+---
+
 ## Implementation Phases Overview
 
 ### Phase 0: Project Setup & Core Infrastructure ✅ COMPLETE (in progress)
@@ -301,11 +461,14 @@ All architectural decisions follow standard WPF and .NET practices:
 **Deliverables**:
 - Data model classes matching Electron JSON schema
 - Core services (Configuration, Storage, PDF, OLLAMA, Validation)
+- **NEW**: MarkdownConverter service (PdfPig integration for PDF→Markdown)
+- **UPDATED**: ExtractionPipelineService (uses Markdown instead of raw text)
+- **UPDATED**: OLLAMAService (prompt optimized for Markdown input)
 - JSON serialization for Electron compatibility
 - MongoDB driver integration
 - Logger service
 
-**Why First**: All other features depend on working data layer and service infrastructure
+**Why First**: All other features depend on working data layer and service infrastructure. The Markdown conversion layer is critical to prevent metadata hallucinations.
 
 ### Phase 2: WPF UI Foundation (P1)
 **Dependencies**: Phase 1 complete

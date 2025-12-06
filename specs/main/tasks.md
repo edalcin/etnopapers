@@ -64,10 +64,11 @@ Tasks are organized by phase and user story priority. Each task includes:
   - **Acceptance**: Packages added: MongoDB.Driver, Newtonsoft.Json, Serilog, Serilog.Sinks.File
   - **Commands**: `dotnet add EtnoPapers.Core package MongoDB.Driver` (and others)
 
-- [ ] T006 [P] Install PDF processing library
+- [ ] T006 [P] Install PdfPig library for PDF processing
   - **File**: `src/EtnoPapers.Core/EtnoPapers.Core.csproj`
-  - **Acceptance**: iTextSharp or equivalent PDF library installed (evaluate and choose)
-  - **Commands**: `dotnet add EtnoPapers.Core package iTextSharp.Kernel`
+  - **Acceptance**: PdfPig library installed (open source, superior to iTextSharp for structure detection)
+  - **Commands**: `dotnet add src/EtnoPapers.Core package PdfPig`
+  - **Note**: PdfPig provides document structure analysis needed for Markdown conversion
 
 - [ ] T007 [P] Install WPF UI dependencies
   - **File**: `src/EtnoPapers.UI/EtnoPapers.UI.csproj`
@@ -183,17 +184,43 @@ Tasks are organized by phase and user story priority. Each task includes:
   - **Methods**: Initialize(), LoadAll(), GetById(id), Create(article), Update(article), Delete(id), Count(), CheckLimit()
   - **Features**: Atomic writes, limit enforcement (1000 records), auto-save
 
-- [ ] T024 [US1] Implement PDFProcessingService
-  - **File**: `src/EtnoPapers.Core/Services/PDFProcessingService.cs`
-  - **Acceptance**: Extract text from PDF, get metadata, validate PDF has text
-  - **Methods**: ExtractText(filePath), GetMetadata(filePath), ValidatePDF(filePath), CheckTextLayers(filePath)
-  - **Features**: Stream processing, page-by-page for large files, error handling
+- [ ] T023a [US1] Implement MarkdownConverter service (NEW - Critical for accuracy)
+  - **File**: `src/EtnoPapers.Core/Services/MarkdownConverter.cs`
+  - **Acceptance**: Converts PDF to structured Markdown using PdfPig library
+  - **Methods**: ConvertToMarkdown(pdfPath), DetectHeadings(words), DetectTables(words), DetectParagraphs(words), FormatMarkdownTable(table)
+  - **Features**: Document structure analysis, heading detection by font size/position, table extraction, paragraph separation
+  - **Testing**: Unit tests with sample PDFs to verify Markdown structure (headings as #, tables as |...|)
 
-- [ ] T025 [US1] Implement OLLAMAService
+- [ ] T023b [US1] Implement structure detection algorithms in MarkdownConverter
+  - **File**: `src/EtnoPapers.Core/Services/MarkdownConverter.cs`
+  - **Acceptance**: Detect headings by font size (>average + bold/centered), detect tables by column alignment, detect lists by bullets/numbering
+  - **Algorithms**: Font size analysis, text positioning analysis, alignment pattern detection
+  - **Edge Cases**: Multi-column layouts, nested structures, mixed fonts
+
+- [ ] T023c [US1] Implement fallback to raw text extraction in MarkdownConverter
+  - **File**: `src/EtnoPapers.Core/Services/MarkdownConverter.cs`
+  - **Acceptance**: If structure detection fails, falls back to simple text extraction with warning logged
+  - **Methods**: ConvertToMarkdownWithFallback(pdfPath), ExtractRawText(pdfPath)
+  - **Features**: Try-catch wrapper, error logging, graceful degradation
+
+- [ ] T023d [US1] Create unit tests for MarkdownConverter
+  - **File**: `tests/EtnoPapers.Core.Tests/Services/MarkdownConverterTests.cs`
+  - **Acceptance**: Tests for heading detection, table extraction, paragraph separation, fallback behavior
+  - **Test Cases**: Simple paper (title + abstract), complex paper (tables + sections), corrupt PDF (fallback)
+  - **Assertions**: Verify Markdown structure (# headings present, tables formatted correctly)
+
+- [ ] T024 [US1] Update PDFProcessingService to orchestrate Markdown conversion
+  - **File**: `src/EtnoPapers.Core/Services/PDFProcessingService.cs`
+  - **Acceptance**: Coordinates MarkdownConverter, provides high-level PDF processing interface
+  - **Methods**: ProcessPDF(filePath) → returns structured Markdown, GetMetadata(filePath), ValidatePDF(filePath)
+  - **Features**: Uses MarkdownConverter internally, handles errors, provides progress callbacks
+
+- [ ] T025 [US1] Implement OLLAMAService with Markdown-optimized prompts
   - **File**: `src/EtnoPapers.Core/Services/OLLAMAService.cs`
-  - **Acceptance**: REST API integration with local OLLAMA service
-  - **Methods**: CheckHealth(), ExtractMetadata(text, prompt), TranslateToPortuguese(text), GetAvailableModels()
+  - **Acceptance**: REST API integration with local OLLAMA service, prompts optimized for structured Markdown input
+  - **Methods**: CheckHealth(), ExtractMetadataFromMarkdown(markdownText, customPrompt), TranslateToPortuguese(text), GetAvailableModels()
   - **Features**: Connection testing, retry logic, timeout handling, response parsing
+  - **Prompt Changes**: Updated default prompt to process Markdown structure (# headings, tables, sections)
 
 - [ ] T026 [US4] Implement MongoDBSyncService
   - **File**: `src/EtnoPapers.Core/Services/MongoDBSyncService.cs`
@@ -207,11 +234,12 @@ Tasks are organized by phase and user story priority. Each task includes:
   - **Methods**: ValidateRecord(article), CheckMandatoryFields(article), GetValidationErrors(article)
   - **Integration**: Uses ArticleRecordValidator
 
-- [ ] T028 [US1] Implement ExtractionPipelineService (orchestration)
+- [ ] T028 [US1] Update ExtractionPipelineService to use Markdown pipeline
   - **File**: `src/EtnoPapers.Core/Services/ExtractionPipelineService.cs`
-  - **Acceptance**: Orchestrates PDF → text → AI → validation → storage
+  - **Acceptance**: Orchestrates PDF → Markdown → AI → validation → storage (updated pipeline)
   - **Methods**: ExtractFromPDF(filePath), CancelExtraction(), GetExtractionStatus()
-  - **Features**: Progress tracking, error recovery, atomic operations
+  - **Pipeline**: PDFProcessingService.ProcessPDF() → MarkdownConverter → OLLAMAService.ExtractMetadataFromMarkdown() → ValidationService
+  - **Features**: Progress tracking, error recovery, atomic operations, fallback handling
 
 - [ ] T029 Create LoggerService
   - **File**: `src/EtnoPapers.Core/Services/LoggerService.cs`

@@ -238,47 +238,62 @@ namespace EtnoPapers.Core.Services
             }
         }
 
-        private static string GenerateDefaultPrompt(string pdfText)
+        private static string GenerateDefaultPrompt(string markdownContent)
         {
-            return $@"Analyze the following academic paper about traditional plant use by indigenous and traditional communities. Extract ONLY valid information found in the text. Return a JSON object with these fields:
+            return $@"Analyze the following scientific paper about traditional plant use by indigenous and traditional communities.
 
-IMPORTANT RULES:
-1. Return valid JSON only - no markdown, no explanations
-2. For missing fields, use null (not empty strings or 'unknown')
-3. Autores: array of full names as found in the paper
-4. Ano: 4-digit year only (1500-2026)
-5. Resumo: always in Brazilian Portuguese (translate if needed)
-6. Return all text content, not just the first 2000 characters
+IMPORTANT: The content below is in structured Markdown format with:
+- # Headings for main titles and sections
+- ## Subheadings for subsections
+- Tables formatted as | markdown tables |
+- Clear paragraph separation
+
+Extract metadata ACCURATELY from this structured content. DO NOT invent or hallucinate information.
+
+EXTRACTION RULES:
+1. Title: Usually the FIRST # heading in the document
+2. Authors: Listed after the title, often with affiliations or email addresses
+3. Year: Found in publication date, header, or references (4-digit year only, 1500-2026)
+4. Abstract: Section titled ""Abstract"", ""Resumo"", or similar
+5. Return valid JSON only - no markdown code blocks, no explanations
+6. For missing fields, use null (not empty strings, not 'unknown', not guesses)
+7. Resumo: ALWAYS in Brazilian Portuguese (translate if the abstract is in another language)
+8. DO NOT extract information from References or Bibliography sections for main metadata
 
 EXAMPLE OUTPUT:
 {{
-  ""titulo"": ""Medicinal Plants Used by Guarani Communities"",
-  ""autores"": [""Silva, J."", ""Santos, M.""],
+  ""titulo"": ""Medicinal Plants Used by Guarani Communities in Southern Brazil"",
+  ""autores"": [""Silva, J.P."", ""Santos, M.A."", ""Oliveira, R.T.""],
   ""ano"": 2019,
-  ""resumo"": ""Este estudo investigou o uso de plantas medicinais entre comunidades Guarani. Foram documentadas 47 espécies utilizadas para fins medicinais."",
+  ""resumo"": ""Este estudo investigou o uso tradicional de plantas medicinais entre comunidades Guarani no sul do Brasil. Foram documentadas 47 espécies utilizadas para diversos fins medicinais, incluindo tratamento de doenças respiratórias, digestivas e infecções."",
   ""pais"": ""Brazil"",
   ""estado"": ""Mato Grosso do Sul"",
-  ""municipio"": null,
-  ""local"": ""Indigenous Territory"",
+  ""municipio"": ""Dourados"",
+  ""local"": ""Terra Indígena Guarani de Dourados"",
   ""bioma"": ""Atlantic Forest"",
   ""comunidade"": {{
-    ""nome"": ""Guarani de Iguape"",
-    ""localizacao"": ""Mato Grosso do Sul, Brazil""
+    ""nome"": ""Guarani Kaiowá"",
+    ""localizacao"": ""Dourados, Mato Grosso do Sul, Brazil""
   }},
   ""especies"": [
     {{
-      ""nome_vernacular"": ""Jaborandi"",
-      ""nome_cientifico"": ""Pilocarpus microphyllus"",
-      ""tipo_uso"": ""Medicinal""
+      ""nome_vernacular"": [""Jaborandi"", ""Jaborandi-verdadeiro""],
+      ""nome_cientifico"": [""Pilocarpus microphyllus""],
+      ""tipo_uso"": ""Medicinal - tratamento de febres e dores de cabeça""
+    }},
+    {{
+      ""nome_vernacular"": [""Guaco""],
+      ""nome_cientifico"": [""Mikania glomerata"", ""Mikania laevigata""],
+      ""tipo_uso"": ""Medicinal - problemas respiratórios""
     }}
   ],
-  ""metodologia"": ""Estudo etnobotânico com 25 informantes locais, utilizando entrevistas semiestruturadas."",
+  ""metodologia"": ""Foram realizadas entrevistas semiestruturadas com 25 informantes-chave da comunidade, seguidas de caminhadas guiadas para identificação das espécies vegetais utilizadas."",
   ""ano_coleta"": 2018
 }}
 
-Now extract from this paper text:
+Now extract from this structured Markdown paper:
 
-{pdfText}";
+{markdownContent}";
         }
     }
 }
