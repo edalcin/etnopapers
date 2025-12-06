@@ -32,6 +32,7 @@ namespace EtnoPapers.UI.ViewModels
         private string _errorMessage = "";
         private bool _hasError = false;
         private DateTime? _lastSyncTime;
+        private bool _canStartSync = false;
 
         public SyncViewModel()
         {
@@ -55,6 +56,13 @@ namespace EtnoPapers.UI.ViewModels
                 _loggerService.Info("Creating ObservableCollections...");
                 _availableRecords = new ObservableCollection<ArticleRecord>();
                 _selectedRecords = new ObservableCollection<ArticleRecord>();
+
+                // Monitor SelectedRecords changes to update CanStartSync
+                _selectedRecords.CollectionChanged += (s, e) =>
+                {
+                    UpdateCanStartSync();
+                };
+
                 _loggerService.Info("ObservableCollections created");
 
                 _loggerService.Info("Creating commands...");
@@ -92,7 +100,13 @@ namespace EtnoPapers.UI.ViewModels
         public bool IsSyncing
         {
             get => _isSyncing;
-            set => SetProperty(ref _isSyncing, value);
+            set
+            {
+                if (SetProperty(ref _isSyncing, value))
+                {
+                    UpdateCanStartSync();
+                }
+            }
         }
 
         public int SyncProgress
@@ -116,7 +130,13 @@ namespace EtnoPapers.UI.ViewModels
         public bool IsMongoDBConnected
         {
             get => _isMongoDBConnected;
-            set => SetProperty(ref _isMongoDBConnected, value);
+            set
+            {
+                if (SetProperty(ref _isMongoDBConnected, value))
+                {
+                    UpdateCanStartSync();
+                }
+            }
         }
 
         public bool ShowSyncReminder
@@ -147,6 +167,12 @@ namespace EtnoPapers.UI.ViewModels
         {
             get => _lastSyncTime;
             set => SetProperty(ref _lastSyncTime, value);
+        }
+
+        public bool CanStartSync
+        {
+            get => _canStartSync;
+            set => SetProperty(ref _canStartSync, value);
         }
 
         public int SelectedRecordCount => SelectedRecords.Count;
@@ -425,6 +451,17 @@ namespace EtnoPapers.UI.ViewModels
         {
             ShowSyncReminder = false;
             _loggerService.Info("Sync reminder dismissed by user");
+        }
+
+        /// <summary>
+        /// Updates the CanStartSync property based on current conditions.
+        /// Enables the button only if registros are selected AND MongoDB is connected.
+        /// </summary>
+        private void UpdateCanStartSync()
+        {
+            bool canStart = SelectedRecords.Count > 0 && IsMongoDBConnected && !IsSyncing;
+            CanStartSync = canStart;
+            _loggerService.Debug($"CanStartSync updated: {canStart} (Selected: {SelectedRecords.Count}, Connected: {IsMongoDBConnected}, Syncing: {IsSyncing})");
         }
 
         #endregion

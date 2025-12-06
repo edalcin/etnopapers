@@ -1,20 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C \"H:\\git\\etnopapers\" remote -v)",
-      "Bash(git -C \"H:\\git\\etnopapers\" commit -m \"$(cat <<''EOF''\ndocs: Adicionar exemplo real de dados extraídos com Qwen 2.5 7B\n\nIncluída imagem visual (docs/dataSampleJSON.png) mostrando exemplo real\nde artigo processado pelo EtnoPapers usando o modelo Qwen 2.5 7B.\n\nA imagem destaca:\n- Extração de metadados completos (título, autores, ano)\n- Tradução automática de resumo para português brasileiro\n- Identificação de espécies com nomes vernaculares e científicos\n- Dados geográficos e comunidade indígena\n- Tempo de processamento (37.97 segundos)\n\nLocalização: Seção \"Dados Extraídos\" do README.md\nPropósito: Demonstrar visualmente a qualidade e completude da extração\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git -C \"H:\\git\\etnopapers\" log -1 --oneline)",
-      "Bash(git -C \"H:\\git\\etnopapers\" add docs/dataSampleJSON.png)",
-      "Bash(git -C \"H:\\git\\etnopapers\" commit -m \"docs: Adicionar arquivo de imagem de exemplo de dados extraídos\")",
-      "Bash(dir:*)",
-      "Bash(findstr:*)",
-      "Bash(dotnet build:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(dotnet publish:*)",
-      "Bash(robocopy:*)",
-      "Bash(powershell:*)",
-      "Bash(Selecionados: Y\"\n  - Mostra dados dinâmicos de ambas as coleções\n  \n- Removido binding problemático em Run element que causava erro\n\n### App.xaml\n- Registrado novo converter EmptyStateConverter globalmente\n\n### Novo Converter: EmptyStateConverter.cs\n- Retorna Visible quando contagem = 0\n- Retorna Collapsed quando contagem > 0\n- Útil para mostrar mensagens de \"estado vazio\"\n\n## Status\n\nA tela agora é muito mais clara sobre:\n- Qual é a função de cada botão (graças aos tooltips)\n- Quantos registros estão carregados vs selecionados\n- O que significa cada elemento\n\nPróximo passo: Investigar por que registros não aparecem após\nclicar em \"Recarregar Registros\" (pode ser que não haja dados em data.json)\n\nRelease: Publicado em bin\\Release\\publish\\\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(dotnet clean:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c:*)"
     ],
     "deny": [],
     "ask": []

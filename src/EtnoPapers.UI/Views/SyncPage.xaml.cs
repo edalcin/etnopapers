@@ -55,6 +55,16 @@ namespace EtnoPapers.UI.Views
                             }
 
                             _logger.Info($"Selection sync completed. Total selected: {selectedCount}");
+
+                            // Atualizar estado do checkbox "Selecionar Todos"
+                            if (selectedCount == _viewModel.AvailableRecords.Count && selectedCount > 0)
+                            {
+                                SelectAllCheckBox.IsChecked = true;
+                            }
+                            else if (selectedCount == 0)
+                            {
+                                SelectAllCheckBox.IsChecked = false;
+                            }
                         }
                         catch (Exception selEx)
                         {
@@ -118,13 +128,38 @@ namespace EtnoPapers.UI.Views
             {
                 if (_viewModel != null)
                 {
-                    _viewModel.SelectedRecords.Clear();
+                    RecordsListBox.SelectedItems.Clear();
+                    SelectAllCheckBox.IsChecked = false;
                 }
             }
             catch (Exception ex)
             {
                 _logger.Error($"Error clearing selection: {ex.Message}", ex);
                 MessageBox.Show($"Erro ao limpar seleção: {ex.Message}");
+            }
+        }
+
+        private void SelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (SelectAllCheckBox.IsChecked == true)
+                {
+                    // Selecionar todos os itens
+                    RecordsListBox.SelectAll();
+                    _logger.Info("All records selected");
+                }
+                else
+                {
+                    // Desselecionar todos os itens
+                    RecordsListBox.SelectedItems.Clear();
+                    _logger.Info("All records deselected");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error in SelectAll_Click: {ex.Message}", ex);
+                MessageBox.Show($"Erro ao selecionar todos: {ex.Message}");
             }
         }
     }
