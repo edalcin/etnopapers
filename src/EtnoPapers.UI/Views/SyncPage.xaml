@@ -61,7 +61,13 @@
                              ItemsSource="{Binding AvailableRecords}" SelectionMode="Multiple">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox Content="{Binding titulo}" Foreground="#505050" IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                    <CheckBox VerticalAlignment="Center" Margin="0,0,8,0" IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Titulo}" Foreground="#1F1F1F" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding Ano, StringFormat='Ano: {0}'}" Foreground="#8A8A8A" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
