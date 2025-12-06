@@ -97,8 +97,9 @@ namespace EtnoPapers.Core.Validation
                         continue;
                     }
 
-                    if (string.IsNullOrWhiteSpace(specie.NomeVernacular))
-                        ValidationErrors.Add("Each species must have a vernacular name (nome_vernacular)");
+                    if (specie.NomeVernacular == null || specie.NomeVernacular.Count == 0 ||
+                        specie.NomeVernacular.TrueForAll(n => string.IsNullOrWhiteSpace(n)))
+                        ValidationErrors.Add("Each species must have at least one vernacular name (nome_vernacular)");
                 }
             }
         }
