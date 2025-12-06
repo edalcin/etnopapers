@@ -7,9 +7,13 @@ namespace EtnoPapers.UI.Behaviors
     /// <summary>
     /// Attached behavior to synchronize ListBox selection with a ViewModel collection.
     /// Usage: local:ListBoxSelectionBehavior.SelectedItems="{Binding SelectedRecords}"
+    ///
+    /// IMPORTANT: This behavior uses a guard flag to prevent infinite synchronization loops.
     /// </summary>
     public static class ListBoxSelectionBehavior
     {
+        private static bool _isSyncing = false;
+
         public static IList GetSelectedItems(DependencyObject obj)
         {
             return (IList)obj.GetValue(SelectedItemsProperty);
@@ -29,28 +33,43 @@ namespace EtnoPapers.UI.Behaviors
 
         private static void OnSelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ListBox listBox)
+            if (d is ListBox listBox && !_isSyncing)
             {
-                listBox.SelectionChanged -= ListBox_SelectionChanged;
-                listBox.SelectionChanged += ListBox_SelectionChanged;
-
-                // Sync ViewModel collection to UI
-                if (e.NewValue is IList selectedItems)
+                try
                 {
-                    listBox.SelectedItems.Clear();
-                    foreach (var item in selectedItems)
+                    _isSyncing = true;
+
+                    // Unsubscribe first to prevent duplicate handlers
+                    listBox.SelectionChanged -= ListBox_SelectionChanged;
+                    listBox.SelectionChanged += ListBox_SelectionChanged;
+
+                    // Sync ViewModel collection to UI only on initial binding
+                    if (e.NewValue is IList selectedItems && e.OldValue == null)
                     {
-                        listBox.SelectedItems.Add(item);
+                        listBox.SelectedItems.Clear();
+                        foreach (var item in selectedItems)
+                        {
+                            listBox.SelectedItems.Add(item);
+                        }
                     }
+                }
+                finally
+                {
+                    _isSyncing = false;
                 }
             }
         }
 
         private static void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is ListBox listBox)
+            if (_isSyncing || !(sender is ListBox listBox))
+                return;
+
+            try
             {
+                _isSyncing = true;
                 var selectedItems = GetSelectedItems(listBox);
+
                 if (selectedItems != null)
                 {
                     // Sync UI selection to ViewModel collection
@@ -60,6 +79,10 @@ namespace EtnoPapers.UI.Behaviors
                         selectedItems.Add(item);
                     }
                 }
+            }
+            finally
+            {
+                _isSyncing = false;
             }
         }
     }

@@ -187,22 +187,33 @@ namespace EtnoPapers.UI.ViewModels
                     return;
                 }
 
-                // Test connection asynchronously
-                IsMongoDBConnected = await _syncService.TestConnectionAsync(config.MongodbUri);
+                try
+                {
+                    // Test connection asynchronously
+                    IsMongoDBConnected = await _syncService.TestConnectionAsync(config.MongodbUri);
 
-                if (IsMongoDBConnected)
-                {
-                    CurrentSyncStatus = "✓ Conectado ao MongoDB";
-                    HasError = false;
-                    ErrorMessage = "";
-                    _loggerService.Info("MongoDB connection successful");
+                    if (IsMongoDBConnected)
+                    {
+                        CurrentSyncStatus = "✓ Conectado ao MongoDB";
+                        HasError = false;
+                        ErrorMessage = "";
+                        _loggerService.Info("MongoDB connection successful");
+                    }
+                    else
+                    {
+                        CurrentSyncStatus = "✗ Erro ao conectar";
+                        HasError = true;
+                        ErrorMessage = "Não foi possível conectar ao MongoDB. Verifique as configurações e a disponibilidade do serviço.";
+                        _loggerService.Error("MongoDB connection failed");
+                    }
                 }
-                else
+                catch (Exception serviceEx)
                 {
-                    CurrentSyncStatus = "✗ Erro ao conectar";
+                    IsMongoDBConnected = false;
+                    CurrentSyncStatus = "✗ Erro na conexão";
                     HasError = true;
-                    ErrorMessage = "Não foi possível conectar ao MongoDB. Verifique as configurações e a disponibilidade do serviço.";
-                    _loggerService.Error("MongoDB connection failed");
+                    ErrorMessage = $"Erro ao testar conexão: {serviceEx.Message}";
+                    _loggerService.Error($"Error in MongoDBSyncService.TestConnectionAsync: {serviceEx.Message}", serviceEx);
                 }
             }
             catch (Exception ex)
@@ -210,8 +221,8 @@ namespace EtnoPapers.UI.ViewModels
                 IsMongoDBConnected = false;
                 CurrentSyncStatus = "✗ Erro na conexão";
                 HasError = true;
-                ErrorMessage = $"Erro ao testar conexão: {ex.Message}";
-                _loggerService.Error($"Error testing MongoDB connection: {ex.Message}", ex);
+                ErrorMessage = $"Erro inesperado ao testar conexão: {ex.Message}";
+                _loggerService.Error($"Unexpected error testing MongoDB connection: {ex.Message}", ex);
             }
         }
 
@@ -221,7 +232,10 @@ namespace EtnoPapers.UI.ViewModels
         public async Task StartSync()
         {
             if (SelectedRecords.Count == 0 || !IsMongoDBConnected)
+            {
+                _loggerService.Warn("StartSync called but conditions not met: SelectedRecordsCount=" + SelectedRecords.Count + ", IsConnected=" + IsMongoDBConnected);
                 return;
+            }
 
             IsSyncing = true;
             SyncProgress = 0;
@@ -230,30 +244,47 @@ namespace EtnoPapers.UI.ViewModels
 
             try
             {
+                _loggerService.Info("Starting synchronization...");
                 CurrentSyncStatus = "Iniciando sincronização...";
+
                 var config = _configService.LoadConfiguration();
 
                 if (string.IsNullOrWhiteSpace(config?.MongodbUri))
                 {
-                    throw new Exception("URI do MongoDB não configurado");
+                    throw new InvalidOperationException("URI do MongoDB não configurado");
                 }
 
-                var recordsToSync = SelectedRecords.ToList();
+                // Make a copy to avoid modification during iteration
+                var recordsToSync = new List<ArticleRecord>(SelectedRecords);
+                _loggerService.Info($"Preparing to sync {recordsToSync.Count} records");
+
                 int successCount = 0;
 
                 for (int i = 0; i < recordsToSync.Count; i++)
                 {
-                    var record = recordsToSync[i];
                     try
                     {
-                        CurrentSyncStatus = $"Sincronizando: {i + 1}/{recordsToSync.Count}";
+                        var record = recordsToSync[i];
+                        if (record == null)
+                        {
+                            _loggerService.Warn($"Skipping null record at index {i}");
+                            continue;
+                        }
+
+                        CurrentSyncStatus = $"Sincronizando: {i + 1}/{recordsToSync.Count} - {record.Titulo}";
+                        _loggerService.Debug($"Uploading record: {record.Id}");
 
                         // Upload to MongoDB asynchronously
                         if (await _syncService.UploadRecordAsync(record))
                         {
+                            _loggerService.Debug($"Successfully uploaded record: {record.Id}");
                             // Delete local copy on success
                             _storageService.Delete(record.Id);
                             successCount++;
+                        }
+                        else
+                        {
+                            _loggerService.Warn($"Failed to upload record: {record.Id}");
                         }
 
                         // Update progress
@@ -261,7 +292,8 @@ namespace EtnoPapers.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        _loggerService.Error($"Error syncing record {record.Id}: {ex.Message}", ex);
+                        _loggerService.Error($"Error syncing record at index {i}: {ex.Message}", ex);
+                        // Continue with next record even if one fails
                     }
                 }
 
@@ -269,22 +301,30 @@ namespace EtnoPapers.UI.ViewModels
                 LastSyncTime = DateTime.UtcNow;
                 SyncProgress = 100;
 
-                _loggerService.Info($"Sync completed: {successCount} records uploaded successfully");
+                _loggerService.Info($"Sync completed: {successCount}/{recordsToSync.Count} records uploaded successfully");
 
                 // Reload available records after sync
-                SelectedRecords.Clear();
-                LoadAvailableRecords();
+                try
+                {
+                    SelectedRecords.Clear();
+                    LoadAvailableRecords();
+                }
+                catch (Exception ex)
+                {
+                    _loggerService.Error($"Error reloading records after sync: {ex.Message}", ex);
+                }
             }
             catch (Exception ex)
             {
                 HasError = true;
                 ErrorMessage = $"Erro durante sincronização: {ex.Message}";
                 CurrentSyncStatus = "✗ Erro na sincronização";
-                _loggerService.Error($"Sync failed: {ex.Message}", ex);
+                _loggerService.Error($"Sync failed with exception: {ex.GetType().Name}: {ex.Message}", ex);
             }
             finally
             {
                 IsSyncing = false;
+                _loggerService.Info("Sync operation completed (IsSyncing=false)");
             }
         }
 
