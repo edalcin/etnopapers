@@ -38,15 +38,23 @@ namespace EtnoPapers.UI.Views
                     {
                         try
                         {
+                            _logger.Debug($"ListBox SelectionChanged fired. Added: {e.AddedItems.Count}, Removed: {e.RemovedItems.Count}");
+
                             // Sync ListBox selection to ViewModel
                             _viewModel.SelectedRecords.Clear();
+                            int selectedCount = 0;
+
                             foreach (var item in RecordsListBox.SelectedItems)
                             {
                                 if (item is ArticleRecord record)
                                 {
                                     _viewModel.SelectedRecords.Add(record);
+                                    selectedCount++;
+                                    _logger.Debug($"Added record to SelectedRecords: {record.Titulo}");
                                 }
                             }
+
+                            _logger.Info($"Selection sync completed. Total selected: {selectedCount}");
                         }
                         catch (Exception selEx)
                         {

@@ -85,7 +85,7 @@
             <!-- Action Buttons -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
                 <Button Content="🔄 Recarregar Registros" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding LoadRecordsCommand}" ToolTip="Carrega/Atualiza lista de registros disponíveis para sincronização"/>
-                <Button Content="📤 Iniciar Sincronização" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding StartSyncCommand}" ToolTip="Sincroniza registros selecionados com MongoDB"/>
+                <Button Content="📤 Iniciar Sincronização" Padding="16,8" Margin="0,0,8,0" Background="#E8E8E8" Foreground="Black" Command="{Binding StartSyncCommand}" ToolTip="Sincroniza registros selecionados com MongoDB"/>
                 <Button Content="✕ Limpar Seleção" Padding="16,8" Background="Transparent" Foreground="#0078D4" Click="ClearSelection_Click" ToolTip="Remove todas as seleções"/>
             </StackPanel>
 
