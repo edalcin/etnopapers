@@ -172,21 +172,49 @@ namespace EtnoPapers.UI.ViewModels
         {
             try
             {
-                var allRecords = _storageService.LoadAll();
-                AvailableRecords.Clear();
-                foreach (var record in allRecords)
-                {
-                    AvailableRecords.Add(record);
-                }
+                _loggerService.Info("LoadAvailableRecords starting...");
 
-                CheckSyncReminder();
-                _loggerService.Info($"Loaded {AvailableRecords.Count} records for sync");
+                try
+                {
+                    _loggerService.Info("Calling _storageService.LoadAll()...");
+                    var allRecords = _storageService.LoadAll();
+                    _loggerService.Info($"LoadAll returned {allRecords?.Count ?? 0} records");
+
+                    _loggerService.Info("Clearing AvailableRecords...");
+                    AvailableRecords.Clear();
+
+                    if (allRecords != null)
+                    {
+                        _loggerService.Info($"Adding {allRecords.Count} records to AvailableRecords...");
+                        foreach (var record in allRecords)
+                        {
+                            if (record == null)
+                            {
+                                _loggerService.Warn("Skipping null record");
+                                continue;
+                            }
+                            AvailableRecords.Add(record);
+                        }
+                    }
+
+                    _loggerService.Info($"Checking sync reminder with {AvailableRecords.Count} records...");
+                    CheckSyncReminder();
+                    _loggerService.Info($"LoadAvailableRecords completed successfully. Loaded {AvailableRecords.Count} records");
+                }
+                catch (Exception storageEx)
+                {
+                    _loggerService.Error($"CRITICAL ERROR in LoadAvailableRecords (storage): {storageEx.GetType().Name}: {storageEx.Message}", storageEx);
+                    HasError = true;
+                    ErrorMessage = $"Erro ao carregar registros: {storageEx.GetType().Name} - {storageEx.Message}";
+                    throw;
+                }
             }
             catch (Exception ex)
             {
+                _loggerService.Error($"CRITICAL ERROR in LoadAvailableRecords: {ex.GetType().Name}: {ex.Message}", ex);
+                _loggerService.Error($"Stack trace: {ex.StackTrace}");
                 HasError = true;
                 ErrorMessage = $"Erro ao carregar registros: {ex.Message}";
-                _loggerService.Error($"Failed to load records: {ex.Message}", ex);
             }
         }
 

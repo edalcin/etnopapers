@@ -20,19 +20,55 @@ namespace EtnoPapers.UI
             // Add global exception handlers BEFORE startup
             AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
             {
-                LogException("AppDomain", (Exception)e.ExceptionObject);
+                Exception ex = (Exception)e.ExceptionObject;
+                LogException("AppDomain", ex);
+
+                try
+                {
+                    MessageBox.Show(
+                        $"[AppDomain] {ex?.GetType().Name}:\n\n{ex?.Message}\n\nStack Trace:\n{ex?.StackTrace}",
+                        "CRITICAL ERROR",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+                }
+                catch { }
             };
 
             DispatcherUnhandledException += (sender, e) =>
             {
                 LogException("Dispatcher", e.Exception);
-                e.Handled = false;
+
+                try
+                {
+                    MessageBox.Show(
+                        $"[Dispatcher] {e.Exception?.GetType().Name}:\n\n{e.Exception?.Message}\n\nStack Trace:\n{e.Exception?.StackTrace}",
+                        "ERROR",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+                }
+                catch { }
+
+                e.Handled = true;  // Mark as handled to prevent crash
             };
 
             Dispatcher.UnhandledException += (sender, e) =>
             {
                 LogException("DispatcherEvent", e.Exception);
-                e.Handled = false;
+
+                try
+                {
+                    MessageBox.Show(
+                        $"[DispatcherEvent] {e.Exception?.GetType().Name}:\n\n{e.Exception?.Message}\n\nStack Trace:\n{e.Exception?.StackTrace}",
+                        "ERROR",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+                }
+                catch { }
+
+                e.Handled = true;  // Mark as handled to prevent crash
             };
         }
 

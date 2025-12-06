@@ -84,6 +84,7 @@ namespace EtnoPapers.UI.Views
 
         private void NavigateToPage(string pageName)
         {
+            System.Diagnostics.Debug.WriteLine($"[NavigateToPage] Starting navigation to {pageName}");
             try
             {
                 // Mapear nome da página para arquivo XAML
@@ -97,13 +98,34 @@ namespace EtnoPapers.UI.Views
                     _ => "/Views/HomePage.xaml"
                 };
 
+                System.Diagnostics.Debug.WriteLine($"[NavigateToPage] Page URI: {pageUri}");
+
+                // Clear any previous navigation state
+                MainFrame.Source = null;
+                System.Diagnostics.Debug.WriteLine($"[NavigateToPage] Cleared frame");
+
+                // Create and navigate to page
                 MainFrame.Source = new System.Uri(pageUri, System.UriKind.Relative);
-                System.Diagnostics.Debug.WriteLine($"Navigated to: {pageName} ({pageUri})");
+                System.Diagnostics.Debug.WriteLine($"[NavigateToPage] Navigation succeeded for: {pageName}");
             }
             catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Navigation error: {ex.Message}");
-                MessageBox.Show($"Erro ao navegar: {ex.Message}", "Erro de Navegação");
+                System.Diagnostics.Debug.WriteLine($"[NavigateToPage] CRITICAL ERROR: {ex.GetType().Name}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[NavigateToPage] Stack trace: {ex.StackTrace}");
+
+                try
+                {
+                    MessageBox.Show(
+                        $"Erro ao navegar para {pageName}:\n\n{ex.GetType().Name}: {ex.Message}\n\nStack trace:\n{ex.StackTrace}",
+                        "Erro de Navegação",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+                }
+                catch
+                {
+                    // Fallback if MessageBox also fails
+                }
             }
         }
 
