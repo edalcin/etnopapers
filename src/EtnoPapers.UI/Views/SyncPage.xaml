@@ -74,7 +74,6 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="60"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="200"/>
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Checkbox -->
@@ -88,12 +87,6 @@
                                         <!-- Titulo -->
                                         <TextBlock Grid.Column="2" Text="{Binding Titulo}" Foreground="#1F1F1F" FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0,12,0"/>
-
-                                        <!-- Autores -->
-                                        <TextBlock Grid.Column="3" Foreground="#8A8A8A" FontSize="11" TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center">
-                                            <Run Text="{Binding Autores.Count, StringFormat='Autores: {0}', Mode=OneWay}"/>
-                                        </TextBlock>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
