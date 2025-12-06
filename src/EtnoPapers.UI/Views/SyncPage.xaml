@@ -44,9 +44,8 @@
                     <TextBlock Text="Registros Disponíveis para Sincronização" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
                     <!-- Available Records List -->
-                    <ListBox Height="200" Margin="0,0,0,16" Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
-                             ItemsSource="{Binding AvailableRecords}" SelectionMode="Multiple"
-                             local:ListBoxSelectionBehavior.SelectedItems="{Binding SelectedRecords}">
+                    <ListBox x:Name="RecordsListBox" Height="200" Margin="0,0,0,16" Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
+                             ItemsSource="{Binding AvailableRecords}" SelectionMode="Multiple">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <CheckBox Content="{Binding titulo}" Foreground="#505050" IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"/>

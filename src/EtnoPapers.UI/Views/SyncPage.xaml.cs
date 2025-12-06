@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using EtnoPapers.Core.Models;
 using EtnoPapers.Core.Services;
 using EtnoPapers.UI.ViewModels;
 
@@ -28,6 +29,37 @@ namespace EtnoPapers.UI.Views
 
                 DataContext = _viewModel;
                 _logger.Info("DataContext set to SyncViewModel");
+
+                // Setup ListBox selection synchronization manually (avoid binding issues during initialization)
+                try
+                {
+                    _logger.Info("Setting up ListBox selection synchronization...");
+                    RecordsListBox.SelectionChanged += (s, e) =>
+                    {
+                        try
+                        {
+                            // Sync ListBox selection to ViewModel
+                            _viewModel.SelectedRecords.Clear();
+                            foreach (var item in RecordsListBox.SelectedItems)
+                            {
+                                if (item is ArticleRecord record)
+                                {
+                                    _viewModel.SelectedRecords.Add(record);
+                                }
+                            }
+                        }
+                        catch (Exception selEx)
+                        {
+                            _logger.Error($"Error syncing ListBox selection: {selEx.Message}", selEx);
+                        }
+                    };
+                    _logger.Info("ListBox selection synchronization setup completed");
+                }
+                catch (Exception syncEx)
+                {
+                    _logger.Error($"Error setting up ListBox sync: {syncEx.Message}", syncEx);
+                    throw;
+                }
 
                 _viewModel.LoadAvailableRecords();
                 _logger.Info("LoadAvailableRecords called successfully");
