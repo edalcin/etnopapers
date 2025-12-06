@@ -55,7 +55,9 @@
 
                     <!-- Selected Count -->
                     <TextBlock FontSize="12" Foreground="#8A8A8A">
-                        <Run Text="Registros selecionados: "/>
+                        <Run Text="Total de registros: "/>
+                        <Run Text="{Binding AvailableRecords.Count, Mode=OneWay}"/>
+                        <Run Text=" | Selecionados: "/>
                         <Run Text="{Binding SelectedRecordCount, Mode=OneWay}"/>
                     </TextBlock>
                 </StackPanel>
@@ -63,9 +65,9 @@
 
             <!-- Action Buttons -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
-                <Button Content="Carregar Registros" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding LoadRecordsCommand}"/>
-                <Button Content="Iniciar Sincronização" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding StartSyncCommand}"/>
-                <Button Content="Limpar Seleção" Padding="16,8" Background="Transparent" Foreground="#0078D4" Click="ClearSelection_Click"/>
+                <Button Content="🔄 Recarregar Registros" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding LoadRecordsCommand}" ToolTip="Carrega/Atualiza lista de registros disponíveis para sincronização"/>
+                <Button Content="📤 Iniciar Sincronização" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding StartSyncCommand}" ToolTip="Sincroniza registros selecionados com MongoDB"/>
+                <Button Content="✕ Limpar Seleção" Padding="16,8" Background="Transparent" Foreground="#0078D4" Click="ClearSelection_Click" ToolTip="Remove todas as seleções"/>
             </StackPanel>
 
             <!-- Sync Progress Section (visible only during sync) -->

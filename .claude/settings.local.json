@@ -13,7 +13,8 @@
       "Bash(git commit:*)",
       "Bash(dotnet publish:*)",
       "Bash(robocopy:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(Selecionados: Y\"\n  - Mostra dados dinâmicos de ambas as coleções\n  \n- Removido binding problemático em Run element que causava erro\n\n### App.xaml\n- Registrado novo converter EmptyStateConverter globalmente\n\n### Novo Converter: EmptyStateConverter.cs\n- Retorna Visible quando contagem = 0\n- Retorna Collapsed quando contagem > 0\n- Útil para mostrar mensagens de \"estado vazio\"\n\n## Status\n\nA tela agora é muito mais clara sobre:\n- Qual é a função de cada botão (graças aos tooltips)\n- Quantos registros estão carregados vs selecionados\n- O que significa cada elemento\n\nPróximo passo: Investigar por que registros não aparecem após\nclicar em \"Recarregar Registros\" (pode ser que não haja dados em data.json)\n\nRelease: Publicado em bin\\Release\\publish\\\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
