@@ -225,6 +225,10 @@ namespace EtnoPapers.UI.ViewModels
 
                     _loggerService.Info($"Checking sync reminder with {AvailableRecords.Count} records...");
                     CheckSyncReminder();
+
+                    // Atualizar estado do botão Sincronizar
+                    UpdateCanStartSync();
+
                     _loggerService.Info($"LoadAvailableRecords completed successfully. Loaded {AvailableRecords.Count} records");
                 }
                 catch (Exception storageEx)
@@ -283,6 +287,9 @@ namespace EtnoPapers.UI.ViewModels
                         ErrorMessage = "Não foi possível conectar ao MongoDB. Verifique as configurações e a disponibilidade do serviço.";
                         _loggerService.Error("MongoDB connection failed");
                     }
+
+                    // Atualizar estado do botão após testar conexão
+                    UpdateCanStartSync();
                 }
                 catch (Exception serviceEx)
                 {
@@ -459,9 +466,26 @@ namespace EtnoPapers.UI.ViewModels
         /// </summary>
         private void UpdateCanStartSync()
         {
-            bool canStart = SelectedRecords.Count > 0 && IsMongoDBConnected && !IsSyncing;
-            CanStartSync = canStart;
-            _loggerService.Debug($"CanStartSync updated: {canStart} (Selected: {SelectedRecords.Count}, Connected: {IsMongoDBConnected}, Syncing: {IsSyncing})");
+            bool hasSelectedRecords = SelectedRecords.Count > 0;
+            bool isConnected = IsMongoDBConnected;
+            bool notSyncing = !IsSyncing;
+
+            bool canStart = hasSelectedRecords && isConnected && notSyncing;
+
+            _loggerService.Info($"UpdateCanStartSync called: canStart={canStart}");
+            _loggerService.Info($"  - SelectedRecords.Count={SelectedRecords.Count} (hasSelected={hasSelectedRecords})");
+            _loggerService.Info($"  - IsMongoDBConnected={IsMongoDBConnected} (isConnected={isConnected})");
+            _loggerService.Info($"  - IsSyncing={IsSyncing} (notSyncing={notSyncing})");
+
+            if (CanStartSync != canStart)
+            {
+                CanStartSync = canStart;
+                _loggerService.Info($"CanStartSync property updated to: {canStart}");
+            }
+            else
+            {
+                _loggerService.Debug($"CanStartSync value unchanged: {canStart}");
+            }
         }
 
         #endregion
