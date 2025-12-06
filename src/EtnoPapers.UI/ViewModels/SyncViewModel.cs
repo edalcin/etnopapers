@@ -44,8 +44,8 @@ namespace EtnoPapers.UI.ViewModels
             _selectedRecords = new ObservableCollection<ArticleRecord>();
 
             LoadRecordsCommand = new RelayCommand(_ => LoadAvailableRecords());
-            TestConnectionCommand = new RelayCommand(_ => TestMongoDBConnection());
-            StartSyncCommand = new RelayCommand(_ => StartSync(), _ => !IsSyncing && SelectedRecords.Count > 0 && IsMongoDBConnected);
+            TestConnectionCommand = new AsyncRelayCommand(_ => TestMongoDBConnection());
+            StartSyncCommand = new AsyncRelayCommand(_ => StartSync(), _ => !IsSyncing && SelectedRecords.Count > 0 && IsMongoDBConnected);
             CancelSyncCommand = new RelayCommand(_ => CancelSync(), _ => IsSyncing);
             DismissSyncReminderCommand = new RelayCommand(_ => DismissSyncReminder());
 
@@ -170,7 +170,7 @@ namespace EtnoPapers.UI.ViewModels
         /// <summary>
         /// Tests MongoDB connection using current URI configuration.
         /// </summary>
-        public async void TestMongoDBConnection()
+        public async Task TestMongoDBConnection()
         {
             try
             {
@@ -218,7 +218,7 @@ namespace EtnoPapers.UI.ViewModels
         /// <summary>
         /// Starts synchronization of selected records to MongoDB.
         /// </summary>
-        public async void StartSync()
+        public async Task StartSync()
         {
             if (SelectedRecords.Count == 0 || !IsMongoDBConnected)
                 return;

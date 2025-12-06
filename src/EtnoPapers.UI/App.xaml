@@ -9,6 +9,7 @@
         <ResourceDictionary xmlns:sys="clr-namespace:System;assembly=mscorlib">
             <!-- Value Converters -->
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
 
             <!-- Default Fonts -->

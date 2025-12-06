@@ -1,6 +1,7 @@
 <Page x:Class="EtnoPapers.UI.Views.SyncPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:EtnoPapers.UI.Behaviors"
       Background="White"
       Foreground="Black">
 
@@ -21,18 +22,18 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <TextBlock Text="Status:" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0"/>
                         <Border Background="White" CornerRadius="12" Padding="12,6" Margin="0,0,16,0" BorderBrush="#E0E0E0" BorderThickness="1">
-                            <TextBlock Text="Desconectado" FontSize="12" Foreground="#8A8A8A"/>
+                            <TextBlock Text="{Binding CurrentSyncStatus}" FontSize="12" Foreground="#8A8A8A"/>
                         </Border>
-                        <Button Content="Testar Conexão" Padding="12,6" Margin="0,0,8,0" Background="#0078D4" Foreground="White"/>
+                        <Button Content="Testar Conexão" Padding="12,6" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding TestConnectionCommand}"/>
 
                         <!-- Connection Status Indicator (colored dot) -->
-                        <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="#D32F2F"/>
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{Binding IsMongoDBConnected, Converter={StaticResource BoolToBrushConverter}}"/>
                     </StackPanel>
 
                     <!-- Last Sync Time -->
                     <TextBlock FontSize="12" Foreground="#8A8A8A" Margin="0,0,0,16">
                         <Run Text="Última sincronização: "/>
-                        <Run Text="Nunca"/>
+                        <Run Text="{Binding LastSyncTime, StringFormat='dd/MM/yyyy HH:mm', FallbackValue='Nunca'}"/>
                     </TextBlock>
                 </StackPanel>
             </Border>
@@ -43,25 +44,65 @@
                     <TextBlock Text="Registros Disponíveis para Sincronização" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
                     <!-- Available Records List -->
-                    <ListBox Height="200" Margin="0,0,0,16" Background="White" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <ListBox Height="200" Margin="0,0,0,16" Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
+                             ItemsSource="{Binding AvailableRecords}" SelectionMode="Multiple"
+                             local:ListBoxSelectionBehavior.SelectedItems="{Binding SelectedRecords}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox Content="Nenhum registro disponível" Foreground="#505050"/>
+                                <CheckBox Content="{Binding titulo}" Foreground="#505050" IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
 
                     <!-- Selected Count -->
-                    <TextBlock Text="Registros selecionados: 0" FontSize="12" Foreground="#8A8A8A"/>
+                    <TextBlock FontSize="12" Foreground="#8A8A8A">
+                        <Run Text="Registros selecionados: "/>
+                        <Run Text="{Binding SelectedRecordCount}"/>
+                    </TextBlock>
                 </StackPanel>
             </Border>
 
             <!-- Action Buttons -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
-                <Button Content="Carregar Registros" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White"/>
-                <Button Content="Iniciar Sincronização" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White"/>
-                <Button Content="Limpar Seleção" Padding="16,8" Background="Transparent" Foreground="#0078D4"/>
+                <Button Content="Carregar Registros" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding LoadRecordsCommand}"/>
+                <Button Content="Iniciar Sincronização" Padding="16,8" Margin="0,0,8,0" Background="#0078D4" Foreground="White" Command="{Binding StartSyncCommand}"/>
+                <Button Content="Limpar Seleção" Padding="16,8" Background="Transparent" Foreground="#0078D4" Click="ClearSelection_Click"/>
             </StackPanel>
+
+            <!-- Sync Progress Section (visible only during sync) -->
+            <Border Background="#E8F5E9" Padding="20" CornerRadius="8" Margin="0,0,0,24" Visibility="{Binding IsSyncing, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Text="Sincronização em Progresso" FontSize="16" FontWeight="Bold" Foreground="#1B5E20" Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding CurrentSyncStatus}" FontSize="12" Foreground="#2E7D32" Margin="0,0,0,12"/>
+                    <ProgressBar Height="20" Value="{Binding SyncProgress}" Maximum="100" Foreground="#4CAF50" Background="#C8E6C9" CornerRadius="4"/>
+                    <TextBlock Text="{Binding SyncProgress, StringFormat='{0}% completo'}" FontSize="11" Foreground="#558B2F" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Error Message Section -->
+            <Border Background="#FFEBEE" BorderBrush="#C62828" BorderThickness="1" Padding="16" CornerRadius="8" Margin="0,0,0,24"
+                    Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Text="⚠️ Erro" FontSize="14" FontWeight="Bold" Foreground="#B71C1C" Margin="0,0,0,8"/>
+                    <TextBlock Text="{Binding ErrorMessage}" FontSize="12" Foreground="#C62828" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Sync Reminder Section -->
+            <Border Background="#FFF3E0" BorderBrush="#E65100" BorderThickness="1" Padding="16" CornerRadius="8" Margin="0,0,0,24"
+                    Visibility="{Binding ShowSyncReminder, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="ℹ️ Lembrança de Sincronização" FontSize="14" FontWeight="Bold" Foreground="#E65100" Margin="0,0,0,8"/>
+                        <TextBlock Text="{Binding SyncReminderMessage}" FontSize="12" Foreground="#BF360C" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="✕" Padding="8,4" Background="Transparent" Foreground="#BF360C" VerticalAlignment="Top" Click="DismissSyncReminder_Click"/>
+                </Grid>
+            </Border>
 
             <!-- Info Box -->
             <Border Background="#F3F3F3" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="16">
