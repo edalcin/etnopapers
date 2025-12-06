@@ -37,10 +37,12 @@ graph TB
 graph TB
     User[👤 Usuário]
 
-    subgraph EtnoPapers["EtnoPapers Application"]
+    subgraph EtnoPapers["EtnoPapers Application v1.1"]
         UI[WPF Desktop UI<br/>C# .NET 8<br/>---<br/>Páginas: Upload, Registros,<br/>Configurações]
 
-        Services[Camada de Serviços<br/>---<br/>ExtractionService<br/>DataStorageService<br/>MongoSyncService<br/>LoggerService]
+        Services[Camada de Serviços<br/>---<br/>MarkdownConverter v1.1<br/>ExtractionService<br/>DataStorageService<br/>MongoSyncService<br/>LoggerService]
+
+        PdfPig[PdfPig Library<br/>v0.1.12<br/>---<br/>PDF Structure<br/>Analysis]
 
         LocalDB[(JSON Local<br/>---<br/>Documents/<br/>EtnoPapers/<br/>data.json)]
     end
@@ -50,12 +52,14 @@ graph TB
 
     User -->|Interage| UI
     UI -->|Chama| Services
-    Services -->|POST /api/generate| OLLAMA
+    Services -->|Usa| PdfPig
+    Services -->|POST Markdown| OLLAMA
     Services -->|Lê/Escreve| LocalDB
     Services -->|Insert Documents| MongoDB
 
     style UI fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:black
     style Services fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:black
+    style PdfPig fill:#ffe0b2,stroke:#f57c00,stroke-width:2px,color:black
     style LocalDB fill:#fff9c4,stroke:#f57c00,stroke-width:2px,color:black
     style OLLAMA fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:black
     style MongoDB fill:#b2dfdb,stroke:#00796b,stroke-width:2px,color:black
@@ -78,11 +82,17 @@ graph LR
         CVM[ConfigViewModel]
     end
 
-    subgraph Services["Serviços"]
+    subgraph Services["Serviços v1.1"]
+        MC[MarkdownConverter<br/>PDF→Markdown<br/>v1.1 NEW]
+        PDFS[PDFProcessingService<br/>Orquestração PDF]
         ES[ExtractionService<br/>Integração OLLAMA]
         DSS[DataStorageService<br/>Persistência JSON]
         MSS[MongoSyncService<br/>Upload MongoDB]
         LS[LoggerService<br/>Logs e Rastreamento]
+    end
+
+    subgraph Libraries["Bibliotecas Externas"]
+        PdfPig[PdfPig v0.1.12<br/>Análise de Estrutura PDF]
     end
 
     UploadPage --> UVM
@@ -90,12 +100,17 @@ graph LR
     ConfigPage --> CVM
     UVM --> EditDialog
 
+    UVM --> PDFS
+    PDFS --> MC
+    MC --> PdfPig
     UVM --> ES
     UVM --> DSS
     RVM --> DSS
     RVM --> MSS
     CVM --> MSS
 
+    MC --> LS
+    PDFS --> LS
     ES --> LS
     DSS --> LS
     MSS --> LS
@@ -103,6 +118,9 @@ graph LR
     style UI fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:black
     style ViewModels fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:black
     style Services fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:black
+    style Libraries fill:#ffe0b2,stroke:#f57c00,stroke-width:2px,color:black
+    style MC fill:#fff9c4,stroke:#f57c00,stroke-width:2px,color:black
+    style PdfPig fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:black
 ```
 
 ---
