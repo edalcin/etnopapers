@@ -68,7 +68,8 @@ namespace EtnoPapers.UI.ViewModels
                 _loggerService.Info("Creating commands...");
                 LoadRecordsCommand = new RelayCommand(_ => LoadAvailableRecords());
                 TestConnectionCommand = new AsyncRelayCommand(_ => TestMongoDBConnection());
-                StartSyncCommand = new AsyncRelayCommand(_ => StartSync(), _ => !IsSyncing && SelectedRecords.Count > 0 && IsMongoDBConnected);
+                // StartSyncCommand: sem predicate - deixar o IsEnabled binding no XAML controlar
+                StartSyncCommand = new AsyncRelayCommand(_ => StartSync());
                 CancelSyncCommand = new RelayCommand(_ => CancelSync(), _ => IsSyncing);
                 DismissSyncReminderCommand = new RelayCommand(_ => DismissSyncReminder());
                 _loggerService.Info("Commands created");
@@ -315,11 +316,18 @@ namespace EtnoPapers.UI.ViewModels
         /// </summary>
         public async Task StartSync()
         {
+            _loggerService.Info("StartSync method called");
+            _loggerService.Info($"  - SelectedRecords.Count={SelectedRecords.Count}");
+            _loggerService.Info($"  - IsMongoDBConnected={IsMongoDBConnected}");
+            _loggerService.Info($"  - IsSyncing={IsSyncing}");
+
             if (SelectedRecords.Count == 0 || !IsMongoDBConnected)
             {
                 _loggerService.Warn("StartSync called but conditions not met: SelectedRecordsCount=" + SelectedRecords.Count + ", IsConnected=" + IsMongoDBConnected);
                 return;
             }
+
+            _loggerService.Info("Conditions met. Proceeding with synchronization...");
 
             IsSyncing = true;
             SyncProgress = 0;
