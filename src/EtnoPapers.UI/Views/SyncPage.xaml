@@ -74,8 +74,11 @@
                 <StackPanel>
                     <TextBlock Text="Sincronização em Progresso" FontSize="16" FontWeight="Bold" Foreground="#1B5E20" Margin="0,0,0,12"/>
                     <TextBlock Text="{Binding CurrentSyncStatus}" FontSize="12" Foreground="#2E7D32" Margin="0,0,0,12"/>
-                    <ProgressBar Height="20" Value="{Binding SyncProgress}" Maximum="100" Foreground="#4CAF50" Background="#C8E6C9" CornerRadius="4"/>
-                    <TextBlock Text="{Binding SyncProgress, StringFormat='{0}% completo'}" FontSize="11" Foreground="#558B2F" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+                    <ProgressBar Height="20" Value="{Binding SyncProgress}" Maximum="100" Foreground="#4CAF50" Background="#C8E6C9"/>
+                    <TextBlock FontSize="11" Foreground="#558B2F" Margin="0,8,0,0" HorizontalAlignment="Center">
+                        <Run Text="{Binding SyncProgress}"/>
+                        <Run Text="% completo"/>
+                    </TextBlock>
                 </StackPanel>
             </Border>
 

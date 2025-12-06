@@ -10,7 +10,10 @@
       "Bash(findstr:*)",
       "Bash(dotnet build:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(robocopy:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []
