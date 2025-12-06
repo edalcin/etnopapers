@@ -35,21 +35,44 @@ namespace EtnoPapers.UI.ViewModels
 
         public SyncViewModel()
         {
-            _storageService = new DataStorageService();
-            _syncService = new MongoDBSyncService();
-            _configService = new ConfigurationService();
-            _loggerService = new LoggerService();
+            try
+            {
+                _loggerService = new LoggerService();
+                _loggerService.Info("SyncViewModel constructor started");
 
-            _availableRecords = new ObservableCollection<ArticleRecord>();
-            _selectedRecords = new ObservableCollection<ArticleRecord>();
+                _loggerService.Info("Creating DataStorageService...");
+                _storageService = new DataStorageService();
+                _loggerService.Info("DataStorageService created");
 
-            LoadRecordsCommand = new RelayCommand(_ => LoadAvailableRecords());
-            TestConnectionCommand = new AsyncRelayCommand(_ => TestMongoDBConnection());
-            StartSyncCommand = new AsyncRelayCommand(_ => StartSync(), _ => !IsSyncing && SelectedRecords.Count > 0 && IsMongoDBConnected);
-            CancelSyncCommand = new RelayCommand(_ => CancelSync(), _ => IsSyncing);
-            DismissSyncReminderCommand = new RelayCommand(_ => DismissSyncReminder());
+                _loggerService.Info("Creating MongoDBSyncService...");
+                _syncService = new MongoDBSyncService();
+                _loggerService.Info("MongoDBSyncService created");
 
-            _loggerService.Info("SyncViewModel initialized");
+                _loggerService.Info("Creating ConfigurationService...");
+                _configService = new ConfigurationService();
+                _loggerService.Info("ConfigurationService created");
+
+                _loggerService.Info("Creating ObservableCollections...");
+                _availableRecords = new ObservableCollection<ArticleRecord>();
+                _selectedRecords = new ObservableCollection<ArticleRecord>();
+                _loggerService.Info("ObservableCollections created");
+
+                _loggerService.Info("Creating commands...");
+                LoadRecordsCommand = new RelayCommand(_ => LoadAvailableRecords());
+                TestConnectionCommand = new AsyncRelayCommand(_ => TestMongoDBConnection());
+                StartSyncCommand = new AsyncRelayCommand(_ => StartSync(), _ => !IsSyncing && SelectedRecords.Count > 0 && IsMongoDBConnected);
+                CancelSyncCommand = new RelayCommand(_ => CancelSync(), _ => IsSyncing);
+                DismissSyncReminderCommand = new RelayCommand(_ => DismissSyncReminder());
+                _loggerService.Info("Commands created");
+
+                _loggerService.Info("SyncViewModel initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.Error($"CRITICAL ERROR in SyncViewModel constructor: {ex.GetType().Name}: {ex.Message}", ex);
+                _loggerService.Error($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         #region Properties
