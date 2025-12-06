@@ -9,7 +9,7 @@
 | Versão | Data | Tipo | Resumo |
 |--------|------|------|--------|
 | [1.1.0](#versão-110---dezembro-2025) | Dezembro 2025 | Feature | Camada PDF→Markdown para eliminar alucinações |
-| [1.0.0](#versão-100---dezembro-2024) | Dezembro 2024 | Major | Release inicial - Migração Electron → C# WPF |
+| [1.0.0](#versão-100---novembro-2025) | Novembro 2025 | Major | Release inicial - Migração Electron → C# WPF |
 
 ---
 
@@ -280,9 +280,9 @@ PDF → [iTextSharp] → Texto Bruto → OLLAMA → JSON → ArticleRecord
 
 ---
 
-## Versão 1.0.0 - Dezembro 2024
+## Versão 1.0.0 - Novembro 2025
 
-**Release Date**: Dezembro de 2024
+**Release Date**: Novembro de 2025
 **Branch**: `main`
 **Tipo**: Major Release
 

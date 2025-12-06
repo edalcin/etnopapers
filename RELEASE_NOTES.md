@@ -1,6 +1,6 @@
 # EtnoPapers 1.0.0 Release Notes
 
-**Release Date**: December 2024
+**Release Date**: November 2025
 **Platform**: Windows 10+ (x64)
 **License**: MIT
 
