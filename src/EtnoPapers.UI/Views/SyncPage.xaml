@@ -33,7 +33,7 @@
                     <!-- Last Sync Time -->
                     <TextBlock FontSize="12" Foreground="#8A8A8A" Margin="0,0,0,16">
                         <Run Text="Última sincronização: "/>
-                        <Run Text="{Binding LastSyncTime, StringFormat='dd/MM/yyyy HH:mm', FallbackValue='Nunca'}"/>
+                        <Run Text="{Binding LastSyncTime, StringFormat='dd/MM/yyyy HH:mm', FallbackValue='Nunca', Mode=OneWay}"/>
                     </TextBlock>
                 </StackPanel>
             </Border>
@@ -56,7 +56,7 @@
                     <!-- Selected Count -->
                     <TextBlock FontSize="12" Foreground="#8A8A8A">
                         <Run Text="Registros selecionados: "/>
-                        <Run Text="{Binding SelectedRecordCount}"/>
+                        <Run Text="{Binding SelectedRecordCount, Mode=OneWay}"/>
                     </TextBlock>
                 </StackPanel>
             </Border>
@@ -73,9 +73,9 @@
                 <StackPanel>
                     <TextBlock Text="Sincronização em Progresso" FontSize="16" FontWeight="Bold" Foreground="#1B5E20" Margin="0,0,0,12"/>
                     <TextBlock Text="{Binding CurrentSyncStatus}" FontSize="12" Foreground="#2E7D32" Margin="0,0,0,12"/>
-                    <ProgressBar Height="20" Value="{Binding SyncProgress}" Maximum="100" Foreground="#4CAF50" Background="#C8E6C9"/>
+                    <ProgressBar Height="20" Value="{Binding SyncProgress, Mode=OneWay}" Maximum="100" Foreground="#4CAF50" Background="#C8E6C9"/>
                     <TextBlock FontSize="11" Foreground="#558B2F" Margin="0,8,0,0" HorizontalAlignment="Center">
-                        <Run Text="{Binding SyncProgress}"/>
+                        <Run Text="{Binding SyncProgress, Mode=OneWay}"/>
                         <Run Text="% completo"/>
                     </TextBlock>
                 </StackPanel>
