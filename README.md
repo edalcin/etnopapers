@@ -4,6 +4,10 @@
 
 **Aplicação Desktop para Extração Automatizada de Metadados Etnobotânicos**
 
+**Versão Atual**: 1.1.0 | [Ver Histórico de Versões](VERSION_HISTORY.md)
+
+> **✨ Novidade na v1.1.0**: Extração de PDFs agora usa conversão para Markdown estruturado, eliminando alucinações de metadados pelo modelo de IA. [Saiba mais](VERSION_HISTORY.md#versão-110---dezembro-2025)
+
 ---
 
 ## Sobre o EtnoPapers
@@ -21,9 +25,11 @@ Com o EtnoPapers, você pode:
 
 ## Funcionalidades Principais
 
-### 🤖 Extração Inteligente com IA
+### 🤖 Extração Inteligente com IA (Melhorada na v1.1!)
 
-Carregue seus artigos em PDF e deixe a inteligência artificial extrair automaticamente:
+Carregue seus artigos em PDF e deixe a inteligência artificial extrair automaticamente com **maior precisão**:
+
+**💡 Nova tecnologia v1.1**: PDFs são convertidos para Markdown estruturado antes da extração, preservando hierarquia de seções, tabelas e formatação. Isso reduz drasticamente alucinações de dados pelo modelo de IA.
 
 - **Metadados obrigatórios**: título (normalizado), autores (formato APA), ano de publicação, resumo (em português brasileiro)
 - **Dados etnobotânicos**: espécies de plantas (nomes vernaculares e científicos), tipos de uso, comunidades estudadas

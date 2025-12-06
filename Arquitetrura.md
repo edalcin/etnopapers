@@ -10,7 +10,7 @@ O EtnoPapers segue uma arquitetura em camadas que integra componentes locais e e
 graph TB
     User[👤 Pesquisador<br/>Etnobotânico]
 
-    subgraph Sistema["EtnoPapers"]
+    subgraph Sistema["EtnoPapers v1.1"]
         App[EtnoPapers]
     end
 
@@ -18,7 +18,7 @@ graph TB
     MongoDB[☁️ MongoDB<br/>Atlas ou Local]
 
     User -->|Upload PDFs<br/>Gerencia Registros| App
-    App -->|Texto do PDF| OLLAMA
+    App -->|Markdown Estruturado| OLLAMA
     OLLAMA -->|Metadados Extraídos| App
     App -->|Sincroniza Dados| MongoDB
     MongoDB -->|Confirma Upload| App
@@ -28,6 +28,8 @@ graph TB
     style MongoDB fill:#e8f5e9,stroke:#4caf50,stroke-width:2px,color:black
     style User fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:black
 ```
+
+**💡 Mudança v1.1**: O sistema agora envia **Markdown Estruturado** para o OLLAMA (não mais texto bruto), reduzindo alucinações de metadados.
 
 ### Containers (C4 Model - Nível 2: Containers)
 
@@ -119,8 +121,8 @@ flowchart TD
     CheckOLLAMA{OLLAMA<br/>disponível?}
     ErrorOLLAMA[❌ Erro: OLLAMA<br/>não conectado]
 
-    ExtractText[📖 Extração de texto<br/>do PDF]
-    SendOLLAMA[🤖 Envio para OLLAMA<br/>com prompt configurado]
+    ConvertMarkdown[📝 Conversão para Markdown<br/>PdfPig: estrutura preservada]
+    SendOLLAMA[🤖 Envio Markdown para OLLAMA<br/>com prompt otimizado]
 
     ProcessAI[⚙️ Processamento IA<br/>Análise do conteúdo]
 
@@ -153,8 +155,8 @@ flowchart TD
     ValidPDF -->|Não| ErrorOLLAMA
     ValidPDF -->|Sim| CheckOLLAMA
     CheckOLLAMA -->|Não| ErrorOLLAMA
-    CheckOLLAMA -->|Sim| ExtractText
-    ExtractText --> SendOLLAMA
+    CheckOLLAMA -->|Sim| ConvertMarkdown
+    ConvertMarkdown --> SendOLLAMA
     SendOLLAMA --> ProcessAI
     ProcessAI --> ExtractMetadata
     ExtractMetadata --> Validate
@@ -200,11 +202,18 @@ flowchart TD
 
 O EtnoPapers utiliza OLLAMA como serviço de IA local para extração de metadados. A integração é feita via **API REST HTTP** na porta padrão `11434`.
 
-**Fluxo Técnico:**
+**Fluxo Técnico (v1.1):**
 
 ```
-PDF → Texto Extraído → OLLAMAService → Prompt Estruturado → API /api/generate → JSON Response → Validação → ArticleRecord
+PDF → MarkdownConverter (PdfPig) → Markdown Estruturado → OLLAMAService → Prompt Otimizado → API /api/generate → JSON Response → Validação → ArticleRecord
 ```
+
+**Vs. Fluxo Anterior (v1.0):**
+```
+PDF → iTextSharp → Texto Bruto → OLLAMAService → Prompt → API /api/generate → JSON Response → Validação → ArticleRecord
+```
+
+**💡 Benefício**: A camada de conversão para Markdown preserva a estrutura do documento (headings, tabelas, seções), reduzindo drasticamente alucinações de metadados pelo modelo LLM.
 
 ### Modelo Recomendado: Qwen 2.5 7B
 
