@@ -50,13 +50,13 @@ namespace EtnoPapers.Core.Services
                 _client = new MongoClient(connectionUri);
                 _logger.Info("Initialize: MongoClient created successfully");
 
-                _logger.Info("Initialize: Connecting to database 'etnopapers'...");
-                _database = _client.GetDatabase("etnopapers");
-                _logger.Info("Initialize: Database 'etnopapers' connected");
+                _logger.Info("Initialize: Connecting to database 'useflora'...");
+                _database = _client.GetDatabase("useflora");
+                _logger.Info("Initialize: Database 'useflora' connected");
 
-                _logger.Info("Initialize: Connecting to collection 'records'...");
-                _collection = _database.GetCollection<BsonDocument>("records");
-                _logger.Info("Initialize: Collection 'records' connected");
+                _logger.Info("Initialize: Connecting to collection 'etnopapers'...");
+                _collection = _database.GetCollection<BsonDocument>("etnopapers");
+                _logger.Info("Initialize: Collection 'etnopapers' connected");
 
                 _logger.Info("Initialize: MongoDB initialization completed successfully");
             }
