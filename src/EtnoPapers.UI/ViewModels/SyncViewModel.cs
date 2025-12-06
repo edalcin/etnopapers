@@ -316,7 +316,8 @@ namespace EtnoPapers.UI.ViewModels
         /// </summary>
         public async Task StartSync()
         {
-            _loggerService.Info("StartSync method called");
+            _loggerService.Info("================================");
+            _loggerService.Info("StartSync method CALLED");
             _loggerService.Info($"  - SelectedRecords.Count={SelectedRecords.Count}");
             _loggerService.Info($"  - IsMongoDBConnected={IsMongoDBConnected}");
             _loggerService.Info($"  - IsSyncing={IsSyncing}");
@@ -324,6 +325,7 @@ namespace EtnoPapers.UI.ViewModels
             if (SelectedRecords.Count == 0 || !IsMongoDBConnected)
             {
                 _loggerService.Warn("StartSync called but conditions not met: SelectedRecordsCount=" + SelectedRecords.Count + ", IsConnected=" + IsMongoDBConnected);
+                System.Windows.MessageBox.Show("Não é possível sincronizar:\n- Registros selecionados: " + SelectedRecords.Count + "\n- MongoDB conectado: " + IsMongoDBConnected, "Sincronização Bloqueada");
                 return;
             }
 
@@ -334,11 +336,12 @@ namespace EtnoPapers.UI.ViewModels
             HasError = false;
             ErrorMessage = "";
 
+            _loggerService.Info("SET IsSyncing = true");
+            _loggerService.Info("Starting synchronization...");
+            CurrentSyncStatus = "Iniciando sincronização...";
+
             try
             {
-                _loggerService.Info("Starting synchronization...");
-                CurrentSyncStatus = "Iniciando sincronização...";
-
                 var config = _configService.LoadConfiguration();
 
                 if (string.IsNullOrWhiteSpace(config?.MongodbUri))
@@ -395,6 +398,9 @@ namespace EtnoPapers.UI.ViewModels
 
                 _loggerService.Info($"Sync completed: {successCount}/{recordsToSync.Count} records uploaded successfully");
 
+                // Mostrar messageBox de sucesso
+                System.Windows.MessageBox.Show($"Sincronização concluída com sucesso!\n\n{successCount} de {recordsToSync.Count} registros enviados para MongoDB.", "Sincronização OK");
+
                 // Reload available records after sync
                 try
                 {
@@ -412,11 +418,15 @@ namespace EtnoPapers.UI.ViewModels
                 ErrorMessage = $"Erro durante sincronização: {ex.Message}";
                 CurrentSyncStatus = "✗ Erro na sincronização";
                 _loggerService.Error($"Sync failed with exception: {ex.GetType().Name}: {ex.Message}", ex);
+
+                // Mostrar messageBox de erro
+                System.Windows.MessageBox.Show($"Erro na sincronização:\n\n{ex.Message}", "Erro na Sincronização");
             }
             finally
             {
                 IsSyncing = false;
                 _loggerService.Info("Sync operation completed (IsSyncing=false)");
+                _loggerService.Info("================================");
             }
         }
 
