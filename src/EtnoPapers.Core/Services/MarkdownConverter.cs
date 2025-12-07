@@ -33,6 +33,7 @@ namespace EtnoPapers.Core.Services
             try
             {
                 _logger.Information("Starting PDF to Markdown conversion: {PdfPath}", pdfPath);
+                System.Diagnostics.Debug.WriteLine($"\n>>> MarkdownConverter.ConvertToMarkdown() called with: {pdfPath}");
 
                 using (var document = PdfDocument.Open(pdfPath))
                 {
@@ -40,6 +41,7 @@ namespace EtnoPapers.Core.Services
                     var pageCount = document.NumberOfPages;
 
                     _logger.Debug("PDF has {PageCount} pages", pageCount);
+                    System.Diagnostics.Debug.WriteLine($">>> PDF opened successfully: {pageCount} pages");
 
                     for (int pageNumber = 1; pageNumber <= pageCount; pageNumber++)
                     {
@@ -58,12 +60,16 @@ namespace EtnoPapers.Core.Services
 
                     var result = markdown.ToString();
                     _logger.Information("Successfully converted PDF to Markdown ({CharCount} characters)", result.Length);
+                    System.Diagnostics.Debug.WriteLine($">>> ConvertToMarkdown() returning {result.Length} characters");
+                    var preview = result.Length > 300 ? result.Substring(0, 300) : result;
+                    System.Diagnostics.Debug.WriteLine($">>> Result preview (first 300 chars):\n{preview}...");
                     return result;
                 }
             }
             catch (Exception ex)
             {
                 _logger.Warning(ex, "Structured Markdown conversion failed, falling back to raw text extraction");
+                System.Diagnostics.Debug.WriteLine($"\n>>> FALLBACK TO RAW TEXT: {ex.Message}");
                 return ConvertToMarkdownWithFallback(pdfPath);
             }
         }

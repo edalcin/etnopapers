@@ -8,7 +8,10 @@
       "Bash(ConvertFrom-Json)",
       "Bash(ConvertTo-Json -Depth 10)",
       "Bash(git checkout:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(\" and \"==========\"\n5. Report the output to diagnose the issue\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
