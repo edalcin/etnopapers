@@ -12,6 +12,7 @@ namespace EtnoPapers.Core.Services
     {
         private readonly ILogger _logger;
         private readonly string _logPath;
+        public ILogger Logger => _logger;
 
         public LoggerService()
         {

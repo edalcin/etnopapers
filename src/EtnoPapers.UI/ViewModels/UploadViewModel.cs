@@ -36,13 +36,16 @@ namespace EtnoPapers.UI.ViewModels
         private string _errorMessage = "";
         private bool _hasExtractionError = false;
 
-        public UploadViewModel()
+                public UploadViewModel()
         {
             _storageService = new DataStorageService();
-            _pdfService = new PDFProcessingService();
             _configService = new ConfigurationService();
             _validationService = new ValidationService();
             _loggerService = new LoggerService();
+
+            // Initialize MarkdownConverter for PDF structure analysis
+            var markdownConverter = new MarkdownConverter(_loggerService.Logger);
+            _pdfService = new PDFProcessingService(markdownConverter, _loggerService.Logger);
 
             // Load OLLAMA configuration
             var config = _configService.LoadConfiguration();
@@ -485,3 +488,4 @@ namespace EtnoPapers.UI.ViewModels
         #endregion
     }
 }
+
