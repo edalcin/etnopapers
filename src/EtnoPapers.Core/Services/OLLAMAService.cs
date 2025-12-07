@@ -122,7 +122,9 @@ namespace EtnoPapers.Core.Services
                         throw new InvalidOperationException($"Model '{_model}' not found and no alternative found. Available: {string.Join(", ", models)}");
                 }
 
-                var prompt = customPrompt ?? GenerateDefaultPrompt(pdfText);
+                var prompt = customPrompt != null
+                    ? $"{customPrompt}\n\n{pdfText}"  // Append markdown content to custom prompt
+                    : GenerateDefaultPrompt(pdfText);  // Use default prompt with markdown already included
                 return await ExtractWithRetryAsync(_model, prompt);
             }
             catch (Exception ex)
