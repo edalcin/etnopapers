@@ -71,17 +71,43 @@ namespace EtnoPapers.Core.Services
         public async Task<ArticleRecord> ExtractFromPdfAsync(string filePath)
         {
             IsExtracting = true;
+            var debugLogFile = System.IO.Path.Combine(
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData),
+                "EtnoPapers", "logs", "extraction-markdown-debug.log");
+
             try
             {
+                // Log extraction start
+                LogToFile(debugLogFile, $"\n{'='*60}");
+                LogToFile(debugLogFile, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] STARTING EXTRACTION");
+                LogToFile(debugLogFile, $"File: {filePath}");
+                LogToFile(debugLogFile, $"{'='*60}");
+
                 UpdateProgress(10, "Validating PDF", "Validando arquivo PDF...");
 
                 if (!_pdfService.ValidatePDF(filePath))
                     throw new InvalidOperationException("Invalid PDF file");
 
+                LogToFile(debugLogFile, $"[{DateTime.Now:HH:mm:ss}] PDF validated successfully");
+
                 UpdateProgress(25, "Converting to Markdown", "Convertendo PDF para Markdown estruturado...");
                 var markdown = _pdfService.ProcessPDF(filePath);
 
+                // Log markdown result
+                LogToFile(debugLogFile, $"\n>>> MARKDOWN CONVERSION RESULT");
+                LogToFile(debugLogFile, $"Total length: {markdown.Length} characters");
+                LogToFile(debugLogFile, $"Contains ## headings: {markdown.Contains("##")}");
+                LogToFile(debugLogFile, $"Contains --- separators: {markdown.Contains("---")}");
+                var markdownPreview = markdown.Length > 800 ? markdown.Substring(0, 800) + "\n[... truncated ...]" : markdown;
+                LogToFile(debugLogFile, $"\nFirst 800 characters of Markdown:\n{markdownPreview}\n");
+
                 UpdateProgress(50, "Processing with AI", $"Processando Markdown com IA (OLLAMA - modelo: {_ollamaService.CurrentModel})...");
+
+                LogToFile(debugLogFile, $"\n>>> SENDING TO OLLAMA");
+                LogToFile(debugLogFile, $"Input length: {markdown.Length} characters");
+                LogToFile(debugLogFile, $"Model: {_ollamaService.CurrentModel}");
+                LogToFile(debugLogFile, $"Using custom prompt: {(_customPrompt != null ? "YES" : "NO")}");
+
                 var metadata = await _ollamaService.ExtractMetadataAsync(markdown, _customPrompt);
 
                 // Log OLLAMA response for debugging
@@ -227,6 +253,25 @@ namespace EtnoPapers.Core.Services
         public (string step, int progress, bool isExtracting) GetExtractionStatus()
         {
             return (CurrentStep, Progress, IsExtracting);
+        }
+
+        /// <summary>
+        /// Logs a message to a file (for debug tracing when not in Visual Studio)
+        /// </summary>
+        private void LogToFile(string filePath, string message)
+        {
+            try
+            {
+                var directory = System.IO.Path.GetDirectoryName(filePath);
+                if (!System.IO.Directory.Exists(directory))
+                    System.IO.Directory.CreateDirectory(directory);
+
+                System.IO.File.AppendAllText(filePath, message + Environment.NewLine);
+            }
+            catch
+            {
+                // Silently fail if can't write log (don't interrupt extraction)
+            }
         }
     }
 }
