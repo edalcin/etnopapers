@@ -256,14 +256,7 @@ Tasks are organized by phase and user story priority. Each task includes:
   - **Test Cases**: v1.0 config to v2.0 parser with unknown fields, handles gracefully
   - **Note**: Prevents data loss if Electron config has fields unknown to WPF version
 
-- [ ] T093 [US4] Implement simultaneous version detection and warning
-  - **File**: `src/EtnoPapers.Core/Services/ApplicationLockService.cs`
-  - **Acceptance**: Detect if both Electron and WPF are running against same JSON file
-  - **Methods**: CheckApplicationLock(), LockDataFile(), WarnUserOfConflict()
-  - **Behavior**: If Electron running and WPF tries to open same data file, warn user: "Electron version detected as running. Multiple versions accessing the same data file may cause conflicts. Close Electron first."
-  - **Technical**: Use file locking (FileStream with FileShare.None) or marker file in data directory
-
-- [ ] T094 [US4] Create incomplete migration detection and rollback
+- [ ] T093 [US4] Create incomplete migration detection and rollback
   - **File**: `src/EtnoPapers.Core/Services/MigrationCompletionService.cs`
   - **Acceptance**: Detect and handle incomplete migrations (mixed v1 + v2 records)
   - **Methods**: DetectMixedFormats(), ValidateConsistency(), BackupBeforeMigration()
@@ -727,36 +720,36 @@ Tasks are organized by phase and user story priority. Each task includes:
 
 ### GitHub Release
 
-- [ ] T092 Create GitHub release
+- [ ] T094 Create GitHub release
   - **File**: GitHub Release page
   - **Acceptance**: v1.0.0 release created with installer attachments
   - **Content**: Release notes, download links, installation instructions, known issues
 
-- [ ] T093 Update README.md for release
+- [ ] T095 Update README.md for release
   - **File**: `README.md`
   - **Acceptance**: Update with download link, installation instructions, feature list
   - **Sections**: Features, Installation, Usage, Troubleshooting, Support Contact
 
 ### Support Infrastructure
 
-- [ ] T094 Create user support email template
+- [ ] T096 Create user support email template
   - **File**: `docs/SUPPORT_EMAIL_TEMPLATE.md`
   - **Acceptance**: Template for responding to user bug reports and support requests
   - **Content**: Troubleshooting steps, log collection instructions, contact info
 
-- [ ] T095 Set up issue tracking
+- [ ] T097 Set up issue tracking
   - **File**: GitHub Issues configuration
   - **Acceptance**: Create labels (bug, feature-request, documentation), enable discussions
   - **Template**: Issue template for bug reports
 
 ### Post-Release Monitoring
 
-- [ ] T096 Set up crash reporting (optional)
+- [ ] T098 Set up crash reporting (optional)
   - **File**: `src/EtnoPapers.UI/Services/CrashReporter.cs`
   - **Acceptance**: Optional Sentry or similar integration for crash reports
   - **User Control**: Opt-in only, can be disabled in settings
 
-- [ ] T097 Create monitoring dashboard setup
+- [ ] T099 Create monitoring dashboard setup
   - **File**: `docs/MONITORING_SETUP.md`
   - **Acceptance**: Instructions for setting up error tracking/monitoring
   - **Tools**: Sentry (optional), application logs review
@@ -815,15 +808,15 @@ Release
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Total Tasks | 100 | ✅ |
+| Total Tasks | 99 | ✅ |
 | Setup Phase (T001-T011) | 11 | ✅ |
-| Foundational Phase (T012-T094) | 21 | ✅ |
+| Foundational Phase (T012-T093) | 82 | ✅ |
 | US1 Phase (T030-T049) | 20 | ✅ |
 | US2 Phase (incorporated in T030-T074) | Integrated | ✅ |
 | US4 Phase (incorporated in T012-T069) | Integrated | ✅ |
 | US3 Phase (T070-T074) | 5 | ✅ |
 | Testing Phase (T075-T083) | 9 | ✅ |
-| Build & Release (T084-T100) | 14 | ✅ |
+| Build & Release (T084-T099) | 16 | ✅ |
 | Tasks with [P] parallel marker | 25 | ✅ |
 | Tasks with [US#] story label | 74 | ✅ |
 | Format Compliance | 100% | ✅ |
@@ -864,9 +857,9 @@ Release
 
 ## Checklist Format Validation
 
-All 100 tasks follow the required format:
+All 99 tasks follow the required format:
 - ✅ All start with `- [ ]` (markdown checkbox)
-- ✅ All have sequential Task ID (T001...T100)
+- ✅ All have sequential Task ID (T001...T099)
 - ✅ Story labels ([US#]) present for phases 3-6
 - ✅ Parallelizable tasks marked with [P]
 - ✅ All have clear description with file path

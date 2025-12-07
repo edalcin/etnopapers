@@ -36,10 +36,9 @@ A researcher working on Windows systems expects the EtnoPapers application to fe
 **Acceptance Scenarios**:
 
 1. **Given** the application launches, **When** user views the interface, **Then** it uses Windows-native controls (buttons, text fields, menus) consistent with Windows 11 design language
-2. **Given** user interacts with the application, **When** they use common Windows shortcuts (Ctrl+S, Ctrl+Q, Alt+F4, Tab navigation), **Then** these work intuitively
-3. **Given** user minimizes the application, **When** they click the taskbar icon, **Then** window restores with proper state preservation
-4. **Given** application has completed operations, **When** processing finishes, **Then** system notifications (if configured) appear using Windows notification system
-5. **Given** user is using the application, **When** they access File, Edit, View menus, **Then** menu organization follows Windows conventions
+2. **Given** user minimizes the application, **When** they click the taskbar icon, **Then** window restores with proper state preservation
+3. **Given** application has completed operations, **When** processing finishes, **Then** system notifications (if configured) appear using Windows notification system
+4. **Given** user is using the application, **When** they access File, Edit, View menus, **Then** menu organization follows Windows conventions
 
 ---
 
@@ -81,7 +80,6 @@ A researcher who was using the Electron version with existing local JSON data an
 
 - What happens if JSON configuration file from Electron version has a different schema or unknown fields?
 - How does WPF version handle MongoDB connections that were configured in Electron version with potentially different driver versions?
-- What happens if WPF and Electron versions run simultaneously on the same machine (shared JSON file)?
 - How does the application handle incomplete migrations (some files in Electron format, some in WPF)?
 
 ## Requirements *(mandatory)*
@@ -115,12 +113,11 @@ A researcher who was using the Electron version with existing local JSON data an
 
 - **FR-011**: System MUST use Windows-native UI controls throughout the application
 - **FR-012**: System MUST respect Windows system colors and themes (light/dark mode support)
-- **FR-013**: System MUST support standard Windows keyboard shortcuts (Ctrl+S, Ctrl+Q, Alt+F4, Tab navigation)
-- **FR-014**: System MUST implement proper window state preservation (size, position, maximized state) on exit/restart
-- **FR-015**: System MUST use Windows file dialogs for file selection (no custom file pickers)
-- **FR-016**: System MUST provide menu structure following Windows conventions (File, Edit, View, Help)
-- **FR-017**: System MUST display Windows notification alerts for important events when appropriate
-- **FR-018**: System MUST support drag-and-drop of PDF files from Windows Explorer
+- **FR-013**: System MUST implement proper window state preservation (size, position, maximized state) on exit/restart
+- **FR-014**: System MUST use Windows file dialogs for file selection (no custom file pickers)
+- **FR-015**: System MUST provide menu structure following Windows conventions (File, Edit, View, Help)
+- **FR-016**: System MUST display Windows notification alerts for important events when appropriate
+- **FR-017**: System MUST support drag-and-drop of PDF files from Windows Explorer
 
 #### Performance Requirements
 
