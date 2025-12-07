@@ -1,0 +1,58 @@
+{
+  "titulo": "Rapid ethnobotanical diagnosis of the Fulni-o Indigenous lands (NE Brazil): floristic survey and local conservation priorities for medicinal plants",
+  "autores": ["Ulysses Paulino de Albuquerque", "Gustavo Taboada Soldati", "Shana Sampaio Sieber", "Patrícia Muniz de Medeiros", "Jemerson Caetano da Silva", "Liliane Cunha de Souza"],
+  "ano": 2010,
+  "resumo": null,
+  "especies": [
+    {
+      "nome_vernacular": "Angicobranco",
+      "nome_cientifico": "Piptadenia stipulacea",
+      "tipo_uso": null,
+      "parte_usada": null,
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Bauhiniacheilantha",
+      "nome_cientifico": "Bauhinia cheilantha",
+      "tipo_uso": null,
+      "parte_usada": null,
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Catingueira",
+      "nome_cientifico": "Caesalpinia pyramidalis",
+      "tipo_uso": null,
+      "parte_usada": null,
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Aroeira",
+      "nome_cientifico": "Myracrodruon urundeuva",
+      "tipo_uso": "medicinal",
+      "parte_usada": "raiz",
+      "preparacao": "chá"
+    },
+    {
+      "nome_vernacular": "Imburanabrava, imburanadecamba",
+      "nome_cientifico": "Sideroxylon obtusifolium",
+      "tipo_uso": null,
+      "parte_usada": null,
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Angicodecaroc",
+      "nome_cientifico": "Anadenanthera colubrina",
+      "tipo_uso": null,
+      "parte_usada": null,
+      "preparacao": null
+    }
+  ],
+  "comunidade": {"nome": "Fulni-o", "localizacao": "A´guas Belas, Pernambuco, NE Brazil"},
+  "pais": "Brasil",
+  "estado": "Pernambuco",
+  "municipio": "A´guas Belas",
+  "local": "Ouricuri Forest, Fulni-o Indigenous Land",
+  "bioma": null,
+  "metodologia": "Research-action methodology involving multidisciplinary and multiethnic team with indigenous collaboration for ethnobotanical diagnosis and phytosociological survey.",
+  "ano_coleta": 2007
+}
