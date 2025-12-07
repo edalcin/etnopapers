@@ -147,7 +147,20 @@ namespace EtnoPapers.Core.Services
                 var timeoutMinutes = baseTimeoutMinutes * (retryCount + 1);
                 if (timeoutMinutes > 10) timeoutMinutes = 10;
 
-                var requestBody = new { model, prompt, stream = false };
+                // Add generation parameters for better quality extraction
+                // max_tokens: Prevent response truncation (OLLAMA default is often too low)
+                // temperature: Lower = more deterministic, follows instructions strictly
+                var requestBody = new {
+                    model,
+                    prompt,
+                    stream = false,
+                    options = new {
+                        temperature = 0.1,      // Very low = strict instruction following
+                        top_p = 0.3,            // Conservative nucleus sampling
+                        top_k = 10,             // Very conservative
+                        num_predict = 8000      // Allow full response (metodologia, ano_coleta)
+                    }
+                };
                 var content = new StringContent(
                     JsonConvert.SerializeObject(requestBody),
                     Encoding.UTF8,

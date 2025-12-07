@@ -118,8 +118,9 @@ namespace EtnoPapers.Core.Services
                 // Log OLLAMA response for debugging
                 LogToFile(debugLogFile, $"\n>>> OLLAMA RESPONSE RECEIVED");
                 LogToFile(debugLogFile, $"Response length: {metadata.Length} characters");
-                var responsePreview = metadata.Length > 800 ? metadata.Substring(0, 800) + "\n[... truncated ...]" : metadata;
-                LogToFile(debugLogFile, $"\nFirst 800 characters of OLLAMA response:\n{responsePreview}\n");
+                LogToFile(debugLogFile, $"\n--- FULL OLLAMA RESPONSE ---");
+                LogToFile(debugLogFile, metadata);
+                LogToFile(debugLogFile, $"--- END OLLAMA RESPONSE ---\n");
 
                 UpdateProgress(75, "Validating extracted data", "Validando dados extraídos...");
 
