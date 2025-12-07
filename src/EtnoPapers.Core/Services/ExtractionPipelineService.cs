@@ -104,9 +104,14 @@ namespace EtnoPapers.Core.Services
                 UpdateProgress(50, "Processing with AI", $"Processando Markdown com IA (OLLAMA - modelo: {_ollamaService.CurrentModel})...");
 
                 LogToFile(debugLogFile, $"\n>>> SENDING TO OLLAMA");
-                LogToFile(debugLogFile, $"Input length: {markdown.Length} characters");
+                LogToFile(debugLogFile, $"Markdown length: {markdown.Length} characters");
                 LogToFile(debugLogFile, $"Model: {_ollamaService.CurrentModel}");
                 LogToFile(debugLogFile, $"Using custom prompt: {(_customPrompt != null ? "YES" : "NO")}");
+                if (_customPrompt != null)
+                {
+                    LogToFile(debugLogFile, $"Custom prompt length: {_customPrompt.Length} characters");
+                    LogToFile(debugLogFile, $"First 500 chars of custom prompt:\n{_customPrompt.Substring(0, Math.Min(500, _customPrompt.Length))}");
+                }
 
                 var metadata = await _ollamaService.ExtractMetadataAsync(markdown, _customPrompt);
 
