@@ -1,9 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet clean:*)",
-      "Bash(taskkill:*)",
-      "Bash(cmd /c:*)"
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: Resolve HIGH-severity issues from /speckit.analyze\n\nREMEDIATION SUMMARY:\nAddressed 4 of 4 HIGH-severity issues from specification analysis report.\n\nISSUE #1 - CRITICAL: Constitution Template Unfilled (FIXED)\n- Replaced placeholder constitution with actual principles\n- Documented 6 core principles from plan.md:\n  * Functional Parity (NON-NEGOTIABLE)\n  * Native Windows Design (NON-NEGOTIABLE)\n  * Performance First (HARD REQUIREMENT)\n  * Data Integrity (NON-NEGOTIABLE)\n  * Simplicity & Maintainability\n  * Quality Assurance (NON-NEGOTIABLE)\n- Added single-branch workflow deviation (project-specific)\n- Documented phase gates for implementation\n\nISSUE #2 - HIGH: Spec-Plan Divergence (FIXED)\n- Added clarification note in spec.md after FR-037\n- Confirmed PDF->Markdown conversion (FR-033-037) as core requirement\n- Clarified that Markdown layer is NOT optional enhancement\n\nISSUE #3 - HIGH: Startup Metrics Undefined (FIXED)\n- Removed vague metric definitions in spec.md US3 acceptance criteria\n- Added precise measurement methodology:\n  * Cold start: from EtnoPapers.exe invocation to MainWindow responsive\n  * Measurement tool: System.Diagnostics.Stopwatch\n  * Baseline reference: T070 benchmark task\n- Added idle memory measurement details:\n  * Condition: MainWindow loaded, no records\n  * Timing: after 30 seconds\n  * Measurement: Task Manager or Process.WorkingSet64\n  * Baseline reference: T072 benchmark task\n\nISSUE #4 - HIGH: Edge Cases Uncovered (FIXED)\n- Added 3 new tasks (T092, T093, T094) to handle critical edge cases:\n  * T092: JSON schema migration detection & validation\n    - Detects Electron v1 config with unknown fields\n    - Preserves backward/forward compatibility\n  * T093: Simultaneous version detection & warning\n    - Prevents data corruption from running Electron + WPF together\n    - Uses file locking or marker files\n  * T094: Incomplete migration detection & rollback\n    - Detects mixed v1/v2 records\n    - Provides rollback to last known good backup\n- Updated task counts: 97 -> 100 tasks\n- Updated phase metrics in summary table\n\nCONSTITUTION AUTHORITY:\n- Constitution now enforces phase gates for all remaining phases\n- Performance targets (SC-002, SC-003) validated by T070/T071/T072\n- Data integrity validated by T016/new T092-T094 tasks\n\nIMPACT:\n- Spec-plan-tasks alignment improved from 82/100 to 95/100\n- Coverage: 40/40 requirements now have task mapping\n- All 4 HIGH-severity issues resolved\n- Ready for /speckit.implement workflow\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(powershell:*)",
+      "Bash(ConvertFrom-Json)",
+      "Bash(ConvertTo-Json -Depth 10)",
+      "Bash(git checkout:*)",
+      "Bash(dotnet build:*)"
     ],
     "deny": [],
     "ask": []
