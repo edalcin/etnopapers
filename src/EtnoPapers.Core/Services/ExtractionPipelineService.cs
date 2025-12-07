@@ -111,7 +111,10 @@ namespace EtnoPapers.Core.Services
                 var metadata = await _ollamaService.ExtractMetadataAsync(markdown, _customPrompt);
 
                 // Log OLLAMA response for debugging
-                System.Diagnostics.Debug.WriteLine($"OLLAMA Response (first 500 chars): {metadata.Substring(0, Math.Min(500, metadata.Length))}");
+                LogToFile(debugLogFile, $"\n>>> OLLAMA RESPONSE RECEIVED");
+                LogToFile(debugLogFile, $"Response length: {metadata.Length} characters");
+                var responsePreview = metadata.Length > 800 ? metadata.Substring(0, 800) + "\n[... truncated ...]" : metadata;
+                LogToFile(debugLogFile, $"\nFirst 800 characters of OLLAMA response:\n{responsePreview}\n");
 
                 UpdateProgress(75, "Validating extracted data", "Validando dados extraídos...");
 
