@@ -1,214 +1,214 @@
-# Feature Specification: EtnoPapers Desktop Migration - Electron to C# WPF
+# Feature Specification: Cloud-Based AI Provider Migration
 
 **Feature Branch**: `main` (single-branch workflow)
-**Created**: 2025-12-01 | **Updated**: 2025-12-02
+**Created**: 2025-12-09
 **Status**: Draft
-**Input**: User description: "Refactor EtnoPapers from Electron (Node.js/TypeScript) to C# WPF for better Windows desktop integration, improved performance, and native Windows experience. Core functionality (PDF extraction, local record management, MongoDB sync, configuration) remains unchanged."
+**Input**: User description: "Quero refatorar este projeto para usar agentes de inteligência artificial baseados na WEB, via API-KEY. O desempenho com OLLAMA local foi péssimo. Faça referência ao OLLAMA apenas como histórico de versão do projeto. Nesta nova versão vamos manter todo fluxo de trabalho, interface etc e vamos mudar apenas a entrega do texto do artigo para o agente de AI externo, não mais o OLLAMA. A interface de configuração agora irá pedir a chave de API para os agentes 'Gemini', 'OpenAI' e 'Anthropic'. O usuário vai escolher o agente, via pulldown, e preencher o valor da chave. Apenas um agente será permitido escolher e salvar a chave correspondente no arquivo de configuração local, que nunca será commitado para o repositório público, pois tem informação sensível. Em resumo, vamos apenas substituir o OLLAMA pelo 'Gemini', 'OpenAI' ou 'Anthropic'. A interface de configuração e todo o processo de entrega do artigo e recebimento dos dados deve ser ajustado para este novo cenário, assim como a interface de configuração, para receber a chave API do agente escolhido. Atualize o planejamento e as tasks com base nesta nova especificação. Atualize também toda documentação, eliminando todos os arquivos desnecessários, testes e relacionados ao OLLAMA."
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Maintain Full Feature Parity (Priority: P1)
+### User Story 1 - Configure Cloud AI Provider (Priority: P1)
 
-A researcher using EtnoPapers with Electron expects all existing features to work identically after migration to C# WPF. All functionality for PDF extraction, record management, cloud sync, and configuration must be preserved with identical behavior and user experience.
+A researcher wants to configure the application to use their preferred cloud AI provider for metadata extraction. They need to select a provider (Gemini, OpenAI, or Anthropic), enter their API key, and save the configuration securely on their local machine.
 
-**Why this priority**: The application must deliver the same value as before migration. Feature parity ensures no loss of capability and justifies the refactoring effort from a user perspective.
+**Why this priority**: This is the foundational configuration that enables all other functionality. Without a properly configured AI provider, no PDF processing can occur. This represents the minimum viable change to move from OLLAMA to cloud-based AI.
 
-**Independent Test**: Can be tested by using the same workflows (extract PDF, view records, edit record, delete record, sync to MongoDB, configure settings) in WPF version and verifying identical results to Electron version.
+**Independent Test**: Can be fully tested by opening the configuration interface, selecting each provider from the dropdown, entering a test API key, saving the configuration, and verifying the key is stored locally in a secure configuration file that is excluded from version control.
 
 **Acceptance Scenarios**:
 
-1. **Given** a PDF is uploaded, **When** processing occurs, **Then** PDF is converted to structured Markdown and extracted metadata (title, authors, year, abstract in Portuguese) is accurate without hallucinations
-2. **Given** records exist in local storage, **When** user accesses the records management interface, **Then** all records display with identical data and formatting as Electron version
-3. **Given** user edits a record, **When** they save changes, **Then** JSON file updates with identical structure and data format as Electron version
-4. **Given** user selects records for MongoDB sync, **When** sync occurs, **Then** records upload identically and are deleted from local storage as in Electron version
-5. **Given** user configures AI and MongoDB settings, **When** they are saved, **Then** settings persist and behave identically across application restarts as in Electron version
+1. **Given** the application is installed and no AI provider is configured, **When** the user opens the configuration area, **Then** they see a dropdown list with three options (Gemini, OpenAI, Anthropic) and an empty API key input field
+2. **Given** the user has selected "Gemini" from the provider dropdown, **When** they enter their API key and click Save, **Then** the configuration is saved to a local file and a success message is displayed
+3. **Given** the user has previously configured OpenAI, **When** they select "Anthropic" from the dropdown, **Then** the API key field is cleared and they can enter a new Anthropic API key
+4. **Given** the user tries to save configuration, **When** the API key field is empty, **Then** a validation error message is displayed preventing save
+5. **Given** the configuration file exists with an API key, **When** the user reopens the configuration interface, **Then** the previously selected provider is shown in the dropdown and the API key field shows masked characters (for security)
 
 ---
 
-### User Story 2 - Improve Windows Native Integration (Priority: P1)
+### User Story 2 - Process PDF with Cloud AI Provider (Priority: P2)
 
-A researcher working on Windows systems expects the EtnoPapers application to feel like a native Windows application with proper Windows integration, native controls, and Windows conventions rather than a web-like interface.
+A researcher wants to upload a scientific PDF and have its ethnobotanical metadata extracted using the configured cloud AI provider. The extraction process should work identically to the previous OLLAMA-based flow, but use the cloud API instead.
 
-**Why this priority**: Moving to WPF enables true Windows integration, improving perceived application quality and user satisfaction. Native Windows appearance and behavior are fundamental benefits of this migration.
+**Why this priority**: This is the core value delivery of the application. Once configuration is complete (P1), users need to process PDFs to extract metadata. This validates that the cloud AI migration actually works end-to-end.
 
-**Independent Test**: Can be tested by verifying Windows-native visual appearance, control behavior, Windows keyboard shortcuts, system tray integration, and compliance with Windows 11 UI conventions.
+**Independent Test**: Can be fully tested by uploading a sample ethnobotanical PDF after configuring a valid API key in P1, initiating the extraction process, and verifying that metadata is extracted and stored in the local JSON file with the same structure as before.
 
 **Acceptance Scenarios**:
 
-1. **Given** the application launches, **When** user views the interface, **Then** it uses Windows-native controls (buttons, text fields, menus) consistent with Windows 11 design language
-2. **Given** user minimizes the application, **When** they click the taskbar icon, **Then** window restores with proper state preservation
-3. **Given** application has completed operations, **When** processing finishes, **Then** system notifications (if configured) appear using Windows notification system
-4. **Given** user is using the application, **When** they access File, Edit, View menus, **Then** menu organization follows Windows conventions
+1. **Given** a valid AI provider is configured with an active API key, **When** the user uploads a PDF file and initiates extraction, **Then** the PDF text is sent to the cloud AI provider's API for processing
+2. **Given** the cloud AI provider returns extracted metadata, **When** the processing completes, **Then** the data is saved to the local JSON file with all mandatory fields (título, autores, ano, resumo, espécies, geographic data, comunidade, metodologia)
+3. **Given** the user is processing a PDF, **When** the extraction is in progress, **Then** a progress indicator shows the current status (e.g., "Extracting metadata from cloud AI...")
+4. **Given** the cloud AI API returns an error (invalid key, rate limit, network issue), **When** the error occurs, **Then** the user sees a clear error message explaining the issue and the extraction stops gracefully
+5. **Given** multiple PDFs are queued for processing, **When** one extraction fails, **Then** the remaining PDFs continue to process independently
 
 ---
 
-### User Story 3 - Improve Performance and Resource Efficiency (Priority: P2)
+### User Story 3 - Migrate Existing OLLAMA References (Priority: P3)
 
-A researcher working on older hardware or with limited system resources expects the WPF version to use significantly fewer system resources (memory, CPU) compared to Electron, enabling faster startup and smoother operation especially on machines with limited specs.
+A developer or documentation reader wants to understand that OLLAMA was used in a previous version but is now deprecated. All documentation, code comments, and configuration files should reflect that cloud AI providers are the current standard.
 
-**Why this priority**: Performance improvement is a major benefit of C# WPF over Electron. While functional parity is critical, performance enables better user experience on diverse hardware. This is important but secondary to feature parity.
+**Why this priority**: This is housekeeping work that ensures the codebase is clean and maintainable. It doesn't directly deliver user value but prevents confusion for future developers and users reading documentation.
 
-**Independent Test**: Can be tested by measuring startup time, memory footprint, CPU usage during PDF extraction, and record management operations, comparing WPF version to Electron version.
-
-**Acceptance Scenarios**:
-
-1. **Given** the application launches on a Windows machine, **When** measuring startup time from EtnoPapers.exe invocation to MainWindow rendered and responsive (cold start, .NET runtime initialization included), **Then** WPF version starts in under 2 seconds measured with System.Diagnostics.Stopwatch (baseline: T070 benchmark)
-2. **Given** application is idle (MainWindow loaded, no records loaded), **When** measuring memory usage after 30 seconds via Task Manager or Process.WorkingSet64, **Then** WPF version uses less than 150MB RAM (baseline: T072 benchmark)
-3. **Given** user performs record management operations (sorting, filtering, searching 100+ records), **When** measuring responsiveness, **Then** all interactions complete in under 200ms
-4. **Given** user uploads and processes a PDF, **When** measuring CPU usage, **Then** WPF version maintains lower CPU utilization during extraction
-
----
-
-### User Story 4 - Maintain Data Compatibility (Priority: P1)
-
-A researcher who was using the Electron version with existing local JSON data and MongoDB records expects to seamlessly transition to WPF version without any data migration or loss of existing records.
-
-**Why this priority**: Data preservation is critical. Users must be able to migrate to WPF with zero data loss and zero migration effort. This ensures adoption is friction-free.
-
-**Independent Test**: Can be tested by copying Electron version's local JSON file to WPF version's data directory and verifying all records display and function identically.
+**Independent Test**: Can be fully tested by searching the entire codebase for "OLLAMA" references, verifying that production code has no OLLAMA functionality, documentation mentions it only as historical context, and all OLLAMA-specific test files are removed.
 
 **Acceptance Scenarios**:
 
-1. **Given** an Electron version has local JSON data, **When** this JSON file is used by WPF version, **Then** all records load and display without corruption or parsing errors
-2. **Given** MongoDB contains records synced from Electron version, **When** WPF version connects using same MongoDB URI, **Then** records display identically and can be managed without issues
-3. **Given** WPF version uses inherited JSON data from Electron, **When** user adds new records in WPF, **Then** data format matches exactly and mixed records (Electron + WPF created) coexist seamlessly
-4. **Given** user moves between Electron and WPF versions, **When** they share the same local JSON file, **Then** both versions read and write identical data without conflicts
+1. **Given** the codebase contains OLLAMA integration code, **When** the migration is complete, **Then** all OLLAMA-specific code files are removed or refactored to use cloud AI providers
+2. **Given** README and documentation mention OLLAMA setup instructions, **When** documentation is updated, **Then** OLLAMA is mentioned only in a "Previous Versions" or "Migration History" section, and current setup instructions reference cloud AI providers
+3. **Given** configuration files have OLLAMA-related settings, **When** cleanup is complete, **Then** OLLAMA settings are removed and replaced with cloud provider configuration schema
+4. **Given** test files exist for OLLAMA integration, **When** cleanup is complete, **Then** OLLAMA-specific test files are deleted and new tests validate cloud AI provider integration
 
 ---
 
 ### Edge Cases
 
-- What happens if JSON configuration file from Electron version has a different schema or unknown fields?
-- How does WPF version handle MongoDB connections that were configured in Electron version with potentially different driver versions?
-- How does the application handle incomplete migrations (some files in Electron format, some in WPF)?
+- What happens when the user's API key expires or becomes invalid during a PDF processing session?
+- How does the system handle rate limiting from the cloud AI provider (e.g., max requests per minute)?
+- What happens when the user switches AI providers mid-session while there are queued PDFs to process?
+- How does the system handle network connectivity loss during API calls?
+- What happens when the cloud AI provider returns incomplete or malformed metadata?
+- How does the system handle PDFs that exceed the cloud provider's token/size limits?
+- What happens if the configuration file is corrupted or manually edited incorrectly?
+- How does the system behave if the user tries to process a PDF before configuring any AI provider?
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-#### Feature Parity Requirements
+#### Configuration Management
 
-- **FR-001**: System MUST support PDF file uploads identically to Electron version
-- **FR-002**: System MUST extract metadata (title, authors, year, abstract) with identical output format as Electron version
-- **FR-003**: System MUST store extracted records in identical JSON schema as Electron version
-- **FR-004**: System MUST provide complete CRUD interface (Create, Read, Update, Delete) for records matching Electron version behavior
-- **FR-005**: System MUST support MongoDB synchronization with identical protocol and behavior as Electron version
-- **FR-006**: System MUST persist configuration settings (AI prompt, MongoDB URI) in identical format as Electron version
-- **FR-007**: System MUST validate AI and MongoDB connections with identical error messages as Electron version
-- **FR-008**: System MUST handle all edge cases (scanned PDFs, duplicate detection, large records, connection failures) identically to Electron version
-- **FR-009**: System MUST maintain maximum local record limit enforcement with identical warnings as Electron version
-- **FR-010**: System MUST display abstract data in Brazilian Portuguese with identical handling as Electron version
+- **FR-001**: System MUST provide a configuration interface with a dropdown selector containing exactly three options: "Gemini", "OpenAI", and "Anthropic"
+- **FR-002**: System MUST allow the user to enter an API key as text input associated with the selected AI provider
+- **FR-003**: System MUST enforce that only one AI provider can be configured and active at any given time
+- **FR-004**: System MUST save the selected provider and API key to a local configuration file on the user's machine
+- **FR-005**: System MUST exclude the configuration file containing API keys from version control (e.g., via .gitignore)
+- **FR-006**: System MUST validate that an API key is provided before allowing configuration to be saved
+- **FR-007**: System MUST display the selected provider and mask the API key (e.g., show only last 4 characters or asterisks) when loading an existing configuration
+- **FR-008**: System MUST clear the API key input field when the user changes the selected provider in the dropdown
 
-#### PDF Processing and Extraction Accuracy Requirements
+#### PDF Processing with Cloud AI
 
-- **FR-033**: System MUST convert PDF documents to structured Markdown format before AI extraction to preserve document hierarchy and reduce metadata hallucinations
-- **FR-034**: System MUST detect and preserve document structure including headings, sections, tables, and lists during PDF to Markdown conversion
-- **FR-035**: System MUST extract metadata from structured Markdown with higher accuracy than raw text extraction
-- **FR-036**: System MUST handle scientific papers with complex layouts (multi-column, tables, equations) by converting to clean Markdown representation
-- **FR-037**: System MUST provide fallback to raw text extraction if Markdown conversion fails
+- **FR-009**: System MUST send extracted PDF text to the configured cloud AI provider's API endpoint using the saved API key
+- **FR-010**: System MUST include the ethnobotanical extraction prompt in the API request (same prompt structure previously used with OLLAMA)
+- **FR-011**: System MUST parse the cloud AI provider's response and extract metadata into the same JSON structure defined in `docs/estrutura.json`
+- **FR-012**: System MUST maintain all mandatory extracted fields: título, autores, ano, resumo (in Brazilian Portuguese), espécies, pais, estado, municipio, local, bioma, comunidade, metodologia
+- **FR-013**: System MUST display a progress indicator during cloud API processing with appropriate status messages
+- **FR-014**: System MUST handle API errors gracefully and display user-friendly error messages for common issues (invalid key, rate limits, network failures, timeout)
+- **FR-015**: System MUST allow processing to continue for remaining PDFs if one extraction fails in a batch
+- **FR-016**: System MUST maintain the same CRUD interface and MongoDB synchronization functionality that existed with OLLAMA
 
-**Implementation Note**: FR-033 through FR-037 introduce structured Markdown conversion as the solution to reduce AI hallucinations. This architectural layer (using PdfPig library) is a core requirement of this migration, not an optional enhancement. Success of the WPF version depends on accurate Markdown-based extraction matching Electron version output quality.
+#### OLLAMA Deprecation and Cleanup
 
-#### Windows Native Integration Requirements
+- **FR-017**: System MUST remove all OLLAMA integration code from the production codebase
+- **FR-018**: System MUST update all user-facing documentation (README.md in Brazilian Portuguese) to reference cloud AI providers as the current configuration method
+- **FR-019**: System MUST mention OLLAMA only in historical/migration context in documentation (e.g., "Previous versions used OLLAMA...")
+- **FR-020**: System MUST remove OLLAMA-specific configuration settings from configuration files
+- **FR-021**: System MUST remove OLLAMA-specific test files and replace with cloud AI provider integration tests
+- **FR-022**: System MUST update any setup/installation guides to remove OLLAMA prerequisites and replace with cloud API key instructions
 
-- **FR-011**: System MUST use Windows-native UI controls throughout the application
-- **FR-012**: System MUST respect Windows system colors and themes (light/dark mode support)
-- **FR-013**: System MUST implement proper window state preservation (size, position, maximized state) on exit/restart
-- **FR-014**: System MUST use Windows file dialogs for file selection (no custom file pickers)
-- **FR-015**: System MUST provide menu structure following Windows conventions (File, Edit, View, Help)
-- **FR-016**: System MUST display Windows notification alerts for important events when appropriate
-- **FR-017**: System MUST support drag-and-drop of PDF files from Windows Explorer
+### Non-Functional Requirements
 
-#### Performance Requirements
-
-- **FR-019**: System MUST start in under 2 seconds on modern Windows systems
-- **FR-020**: System MUST maintain memory footprint under 150MB during idle state
-- **FR-021**: System MUST handle 1000+ local records without performance degradation in record management UI
-- **FR-022**: System MUST complete record management operations (sort, filter, search, pagination) in under 200ms
-- **FR-023**: System MUST process PDF extraction with CPU efficiency equal to or better than Electron version
-
-#### Data Compatibility Requirements
-
-- **FR-024**: System MUST read and parse JSON configuration files created by Electron version without modification
-- **FR-025**: System MUST read and display JSON record files created by Electron version with 100% compatibility
-- **FR-026**: System MUST write records in identical JSON format, maintaining compatibility with Electron version
-- **FR-027**: System MUST connect to MongoDB instances configured in Electron version using identical connection strings
-- **FR-028**: System MUST handle MongoDB document formats created by Electron version without transformation
-
-#### Installation & Distribution Requirements
-
-- **FR-029**: System MUST provide Windows installer (.msi or .exe) for professional deployment
-- **FR-030**: Installer MUST handle installation of .NET 8 runtime dependency if not present
-- **FR-031**: Installer MUST preserve existing configuration and JSON data during upgrades from Electron version
-- **FR-032**: Installer MUST provide uninstall capability that preserves user data
+- **NFR-001**: API keys MUST be stored securely in a local file that is never committed to the repository
+- **NFR-002**: API communication MUST use HTTPS for all cloud provider endpoints
+- **NFR-003**: System SHOULD implement retry logic with exponential backoff for transient API failures
+- **NFR-004**: Error messages MUST be clear and actionable for non-technical users
+- **NFR-005**: The configuration interface MUST use the same UI framework and design patterns as the existing application
 
 ### Key Entities
 
-- **Application State**: Migrated unchanged from Electron
-- **Local JSON Storage**: Identical schema and format to Electron version
-- **MongoDB Record Format**: Unchanged from Electron version
-- **Configuration Schema**: Identical to Electron version (AI prompt, MongoDB URI)
-- **User Interface Components**: Functional equivalents using WPF native controls
+- **AI Provider Configuration**: Represents the user's cloud AI setup with three attributes: provider name (enum: Gemini, OpenAI, Anthropic), API key (encrypted string), and timestamp of last update. Relationship: One active configuration per application instance.
+
+- **Extracted Metadata Record**: Represents ethnobotanical data extracted from a PDF. Attributes remain unchanged from existing structure (título, autores, ano, resumo, espécies, geographic fields, comunidade, metodologia). Relationship: Created by AI Provider via API call, stored in local JSON, optionally synced to MongoDB.
+
+- **Processing Queue**: Represents PDFs awaiting or undergoing extraction. Attributes: PDF file reference, processing status (pending, in-progress, completed, failed), associated AI provider used, timestamp, error message (if failed). Relationship: Each queue item processes one PDF and creates one Extracted Metadata Record.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: WPF version successfully completes all test cases that passed in Electron version (100% functional parity)
-- **SC-002**: WPF version startup time is under 2 seconds (vs. Electron ~5-10 seconds)
-- **SC-003**: WPF version idle memory usage is under 150MB (vs. Electron ~300-500MB)
-- **SC-004**: Users can migrate from Electron to WPF by simply copying configuration and JSON data files
-- **SC-005**: WPF version handles 1000+ local records with record management operations completing in under 200ms
-- **SC-006**: 100% of existing JSON data from Electron version displays without corruption in WPF version
-- **SC-007**: WPF version looks and feels like a native Windows 10/11 application (user perception test)
-- **SC-008**: Application can be installed and run on Windows 10 and later without external dependencies beyond .NET 8 runtime
-- **SC-009**: PDF extraction output is identical between Electron and WPF versions when processing same file
-- **SC-010**: MongoDB synchronization success rate is maintained at 95% or higher in WPF version
-
-## Out of Scope
-
-- New feature additions during migration (strictly refactoring only)
-- UI redesign or significant UX changes (preserve existing user interface layout and flow)
-- Changes to core extraction logic or AI prompting (maintain identical behavior)
-- Database schema changes (preserve MongoDB document format)
-- Support for non-Windows platforms (Windows-only application)
-- Simultaneous support for both Electron and WPF versions
-- Cross-version data synchronization (users must fully migrate, not run both versions)
+- **SC-001**: Users can successfully configure any of the three cloud AI providers (Gemini, OpenAI, Anthropic) in under 2 minutes
+- **SC-002**: PDF metadata extraction completes with the same accuracy and field completeness as the OLLAMA-based version (100% of mandatory fields populated)
+- **SC-003**: API key is never exposed in application logs, version control, or unencrypted storage
+- **SC-004**: Users receive clear, actionable error messages for API failures within 5 seconds of error occurrence
+- **SC-005**: Extraction processing time is at least 50% faster than the previous OLLAMA local implementation (based on user's reported poor OLLAMA performance)
+- **SC-006**: Zero references to OLLAMA exist in production code, and documentation mentions it only in historical context
+- **SC-007**: 100% of existing CRUD and MongoDB sync functionality continues to work identically with cloud-based AI extraction
+- **SC-008**: Application successfully processes at least 10 consecutive PDFs without degradation or rate limit issues (with valid API keys and standard rate limits)
 
 ## Assumptions
 
-1. Users will migrate to WPF version after it reaches feature parity
-2. .NET 8 runtime is acceptable as application dependency
-3. Target deployment is Windows 10 and later
-4. Visual Studio or build tools are available for compilation
-5. Existing JSON data and configuration files are valid and corruption-free
-6. MongoDB connection strings remain unchanged during migration
-7. OLLAMA integration remains identical to Electron version (no changes to AI extraction)
-8. File system permissions are consistent between Electron and WPF versions
-9. Windows Defender and antivirus software will recognize WPF executable as legitimate
-10. User data directory location can be consistent between versions
+1. **API Key Acquisition**: Users are responsible for obtaining their own API keys from Gemini, OpenAI, or Anthropic. The application does not provide key generation or signup flows.
+
+2. **API Response Format**: All three cloud providers return text responses that can be parsed into the existing JSON structure. If structured output (JSON mode) is available, it will be used; otherwise, text parsing logic will extract metadata.
+
+3. **Rate Limits**: Users have API keys with sufficient rate limits for their typical workload. The application will implement basic retry logic but will not manage sophisticated rate limit pooling or queueing across hours/days.
+
+4. **Network Connectivity**: Users have stable internet connection. The application will handle transient failures with retries but is not designed for offline operation.
+
+5. **Prompt Compatibility**: The existing ethnobotanical extraction prompt used with OLLAMA is compatible with cloud AI providers with minimal or no modification.
+
+6. **Cost Awareness**: Users understand that cloud AI providers charge per API call/token, unlike the free local OLLAMA. The application will not track or display cost estimates.
+
+7. **Windows Platform**: Application remains Windows-only as specified in project overview.
+
+8. **Configuration File Location**: Local configuration file will be stored in a standard user application data directory (e.g., AppData/Local or AppData/Roaming on Windows).
+
+9. **Existing Data Compatibility**: All existing JSON files with metadata extracted via OLLAMA remain valid and compatible with the new version.
+
+10. **No Multi-Provider Support**: The requirement explicitly states "only one agent will be allowed" - users cannot configure multiple providers simultaneously or switch between them without reconfiguring.
 
 ## Dependencies
 
-- **.NET 8 Runtime**: Required for WPF application execution
-- **Windows 10+**: Target operating system (WPF is Windows-only)
-- **OLLAMA**: Unchanged dependency for PDF extraction (pre-installed by user)
-- **MongoDB**: Unchanged dependency for cloud sync (Atlas or local)
-- **Visual Studio 2022 or Build Tools**: Required for compilation
-- **WPF Framework**: Part of .NET 8
+### External Dependencies
 
-## Risks
+- **Cloud AI Provider APIs**: Gemini API (Google), OpenAI API (OpenAI Platform), Anthropic API (Claude)
+- **Internet Connectivity**: Required for all PDF processing operations
+- **User API Keys**: Users must have valid, active API keys from their chosen provider
 
-1. **Testing Coverage**: Ensuring complete feature parity requires comprehensive testing across all features and edge cases
-2. **User Migration**: Users familiar with Electron might need guidance to migrate to new version
-3. **Third-party Library Availability**: Some Node.js packages may not have direct C# equivalents
-4. **PDF Processing Library**: Quality of C# PDF libraries (Spire.Pdf, iTextSharp, etc.) may differ from Node.js libraries
-5. **MongoDB Driver Compatibility**: C# MongoDB driver version may need careful selection for compatibility
-6. **Build Complexity**: .NET/WPF build process is different from Node.js/TypeScript build
-7. **Installer Creation**: Creating professional Windows installer requires additional tooling (WiX, NSIS, etc.)
-8. **Performance Regression**: Despite C# advantages, specific operations might perform worse than Electron if not optimized
-9. **External API Changes**: OLLAMA and MongoDB API changes could affect both versions identically or differently
+### Internal Dependencies
 
-## Clarifications
+- **Existing Configuration System**: Modifications to add provider dropdown and API key input
+- **Existing PDF Processing Pipeline**: Extraction logic must be refactored to call cloud APIs instead of local OLLAMA
+- **Existing JSON Storage**: Data structure remains unchanged (defined in `docs/estrutura.json`)
+- **Existing CRUD Interface**: No changes required, continues to operate on local JSON files
+- **Existing MongoDB Sync**: No changes required, continues to sync from local JSON to MongoDB
 
-None at this stage. Migration scope is clear: refactor implementation language while maintaining 100% functional equivalence.
+### Documentation Dependencies
+
+- **README.md**: Must be updated with new cloud AI provider setup instructions (in Brazilian Portuguese)
+- **docs/estrutura.json**: No changes required (data structure unchanged)
+- **Installation Guide**: Must remove OLLAMA setup steps and add API key acquisition guidance
+
+## Security and Privacy Considerations
+
+1. **API Key Storage**: Configuration file containing API keys must be excluded from version control via .gitignore. File should be stored with appropriate OS-level permissions (user-only read/write).
+
+2. **Key Display**: When configuration is loaded, API keys should be masked in the UI (e.g., show only """""""""" or last 4 characters).
+
+3. **Transmission Security**: All API communications must use HTTPS/TLS encryption.
+
+4. **Error Logging**: API keys must never appear in log files, error messages, or debugging output.
+
+5. **Data Privacy**: PDF content and extracted metadata are transmitted to third-party cloud AI providers. Users should be aware of this in documentation, especially for sensitive research data.
+
+6. **Key Rotation**: Users should be able to update/change API keys at any time without data loss.
+
+## Out of Scope
+
+The following are explicitly NOT included in this feature:
+
+1. **Multiple Provider Support**: Users cannot configure multiple AI providers simultaneously or switch between them without overwriting configuration.
+
+2. **Cost Tracking**: Application will not track API usage costs or display estimated/actual charges.
+
+3. **API Key Validation**: Application will not pre-validate API keys against provider APIs before saving (validation happens on first use).
+
+4. **Offline Mode**: Application requires internet connectivity for PDF processing. No offline fallback is provided.
+
+5. **Provider-Specific Features**: Advanced features unique to specific providers (e.g., OpenAI's function calling, Anthropic's prompt caching) are not exposed in the configuration.
+
+6. **Custom Prompts per Provider**: The same extraction prompt is used for all three providers. No provider-specific prompt customization is available in the UI.
+
+7. **OLLAMA Migration Tool**: No automated migration tool is provided. Users simply reconfigure to a cloud provider and continue working.
+
+8. **Historical OLLAMA Data**: No changes to metadata previously extracted with OLLAMA. All existing JSON records remain valid.
