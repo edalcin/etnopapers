@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using EtnoPapers.Core.Models;
 using EtnoPapers.Core.Services;
 using EtnoPapers.UI.Commands;
 
@@ -9,22 +10,24 @@ namespace EtnoPapers.UI.ViewModels
 {
     /// <summary>
     /// ViewModel for managing application settings and configuration.
-    /// Handles OLLAMA, MongoDB, and application preference settings.
+    /// Handles Cloud AI provider, MongoDB, and application preference settings.
     /// </summary>
     public class SettingsViewModel : ViewModelBase
     {
         private readonly ConfigurationService _configService;
-        private readonly OLLAMAService _ollamaService;
         private readonly MongoDBSyncService _mongodbService;
         private readonly LoggerService _loggerService;
 
-        // OLLAMA Settings
+        // Cloud AI Provider Settings
+        private int _selectedProviderIndex = -1;
+        private string _apiKey = "";
+        private string _maskedApiKey = "";
+        private string _providerTestStatus = "";
+
+        // Legacy OLLAMA Settings (kept for backward compatibility, not displayed in UI)
         private string _ollamaUrl = "http://localhost:11434";
         private string _ollamaModel = "llama2";
         private string _ollamaPrompt = "";
-        private bool _isOllamaConnected = false;
-        private string _ollamaTestStatus = "";
-        private ObservableCollection<string> _availableModels = new();
 
         // MongoDB Settings
         private string _mongodbUri = "";
@@ -46,14 +49,12 @@ namespace EtnoPapers.UI.ViewModels
         public SettingsViewModel()
         {
             _configService = new ConfigurationService();
-            _ollamaService = new OLLAMAService();
             _mongodbService = new MongoDBSyncService();
             _loggerService = new LoggerService();
 
             LoadSettingsCommand = new RelayCommand(_ => LoadSettings());
             SaveSettingsCommand = new RelayCommand(_ => SaveSettings(), _ => !IsSaving);
             ResetToDefaultsCommand = new RelayCommand(_ => ResetToDefaults());
-            TestOllamaCommand = new AsyncRelayCommand(_ => TestOllamaConnectionAsync());
             TestMongodbCommand = new AsyncRelayCommand(_ => TestMongodbConnectionAsync());
             ClearErrorCommand = new RelayCommand(_ => ClearError());
 
@@ -61,42 +62,55 @@ namespace EtnoPapers.UI.ViewModels
             LoadSettings();
         }
 
-        #region OLLAMA Properties
+        #region Cloud AI Provider Properties
 
-        public string OllamaUrl
+        /// <summary>
+        /// Selected AI provider index (0=Gemini, 1=OpenAI, 2=Anthropic).
+        /// -1 means no provider selected.
+        /// </summary>
+        public int SelectedProviderIndex
         {
-            get => _ollamaUrl;
-            set => SetProperty(ref _ollamaUrl, value);
+            get => _selectedProviderIndex;
+            set
+            {
+                if (SetProperty(ref _selectedProviderIndex, value))
+                {
+                    OnProviderChanged();
+                }
+            }
         }
 
-        public string OllamaModel
+        /// <summary>
+        /// API key for the selected provider (stored encrypted).
+        /// </summary>
+        public string ApiKey
         {
-            get => _ollamaModel;
-            set => SetProperty(ref _ollamaModel, value);
+            get => _apiKey;
+            set
+            {
+                if (SetProperty(ref _apiKey, value))
+                {
+                    UpdateMaskedApiKey();
+                }
+            }
         }
 
-        public string OllamaPrompt
+        /// <summary>
+        /// Masked version of API key for display (e.g., "••••abcd").
+        /// </summary>
+        public string MaskedApiKey
         {
-            get => _ollamaPrompt;
-            set => SetProperty(ref _ollamaPrompt, value);
+            get => _maskedApiKey;
+            private set => SetProperty(ref _maskedApiKey, value);
         }
 
-        public bool IsOllamaConnected
+        /// <summary>
+        /// Status message for provider configuration/testing.
+        /// </summary>
+        public string ProviderTestStatus
         {
-            get => _isOllamaConnected;
-            set => SetProperty(ref _isOllamaConnected, value);
-        }
-
-        public string OllamaTestStatus
-        {
-            get => _ollamaTestStatus;
-            set => SetProperty(ref _ollamaTestStatus, value);
-        }
-
-        public ObservableCollection<string> AvailableModels
-        {
-            get => _availableModels;
-            set => SetProperty(ref _availableModels, value);
+            get => _providerTestStatus;
+            set => SetProperty(ref _providerTestStatus, value);
         }
 
         #endregion
@@ -190,7 +204,6 @@ namespace EtnoPapers.UI.ViewModels
         public ICommand LoadSettingsCommand { get; }
         public ICommand SaveSettingsCommand { get; }
         public ICommand ResetToDefaultsCommand { get; }
-        public ICommand TestOllamaCommand { get; }
         public ICommand TestMongodbCommand { get; }
         public ICommand ClearErrorCommand { get; }
 
@@ -207,9 +220,24 @@ namespace EtnoPapers.UI.ViewModels
             {
                 var config = _configService.LoadConfiguration();
 
-                OllamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
-                OllamaModel = config?.OllamaModel ?? "llama2";
-                OllamaPrompt = config?.OllamaPrompt ?? "";
+                // Load cloud AI provider settings
+                if (config?.AIProvider.HasValue == true)
+                {
+                    SelectedProviderIndex = (int)config.AIProvider.Value;
+                }
+                else
+                {
+                    SelectedProviderIndex = -1;
+                }
+
+                ApiKey = config?.ApiKey ?? "";
+
+                // Load legacy OLLAMA settings (for backward compatibility, not displayed)
+                _ollamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
+                _ollamaModel = config?.OllamaModel ?? "llama2";
+                _ollamaPrompt = config?.OllamaPrompt ?? "";
+
+                // Load other settings
                 MongodbUri = config?.MongodbUri ?? "";
                 Language = config?.Language ?? "pt-BR";
                 WindowWidth = config?.WindowWidth ?? 1200;
@@ -240,21 +268,35 @@ namespace EtnoPapers.UI.ViewModels
 
             try
             {
-                // Validate settings
-                if (string.IsNullOrWhiteSpace(OllamaUrl))
+                // Validate cloud AI provider settings
+                if (SelectedProviderIndex >= 0)
                 {
-                    throw new Exception("A URL do OLLAMA é obrigatória.");
-                }
-
-                if (string.IsNullOrWhiteSpace(OllamaModel))
-                {
-                    throw new Exception("O modelo do OLLAMA é obrigatório.");
+                    if (string.IsNullOrWhiteSpace(ApiKey))
+                    {
+                        throw new Exception("A chave de API é obrigatória quando um provedor está selecionado.");
+                    }
                 }
 
                 var config = _configService.LoadConfiguration();
-                config.OllamaUrl = OllamaUrl.Trim();
-                config.OllamaModel = OllamaModel.Trim();
-                config.OllamaPrompt = OllamaPrompt?.Trim() ?? "";
+
+                // Save cloud AI provider settings
+                if (SelectedProviderIndex >= 0)
+                {
+                    config.AIProvider = (AIProviderType)SelectedProviderIndex;
+                    config.ApiKey = ApiKey.Trim();
+                }
+                else
+                {
+                    config.AIProvider = null;
+                    config.ApiKey = null;
+                }
+
+                // Save legacy OLLAMA settings (for backward compatibility)
+                config.OllamaUrl = _ollamaUrl;
+                config.OllamaModel = _ollamaModel;
+                config.OllamaPrompt = _ollamaPrompt;
+
+                // Save other settings
                 config.MongodbUri = MongodbUri?.Trim() ?? "";
                 config.Language = Language;
                 config.WindowWidth = WindowWidth;
@@ -283,89 +325,61 @@ namespace EtnoPapers.UI.ViewModels
         /// </summary>
         public void ResetToDefaults()
         {
-            OllamaUrl = "http://localhost:11434";
-            OllamaModel = "llama2";
-            OllamaPrompt = "";
+            SelectedProviderIndex = -1;
+            ApiKey = "";
             MongodbUri = "";
             Language = "pt-BR";
             WindowWidth = 1200;
             WindowHeight = 800;
             WindowMaximized = false;
 
-            IsOllamaConnected = false;
             IsMongodbConnected = false;
-            OllamaTestStatus = "";
             MongodbTestStatus = "";
+            ProviderTestStatus = "";
 
             ClearError();
             _loggerService.Info("Settings reset to defaults");
         }
 
         /// <summary>
-        /// Tests connection to OLLAMA service.
+        /// Called when provider selection changes. Clears API key field.
         /// </summary>
-        public async Task TestOllamaConnectionAsync()
+        private void OnProviderChanged()
         {
-            try
+            // Clear API key when provider changes to avoid confusion
+            ApiKey = "";
+            ProviderTestStatus = "";
+            ClearError();
+
+            var providerName = SelectedProviderIndex switch
             {
-                if (string.IsNullOrWhiteSpace(OllamaUrl))
-                {
-                    OllamaTestStatus = "URL do OLLAMA não configurada";
-                    IsOllamaConnected = false;
-                    return;
-                }
+                0 => "Google Gemini",
+                1 => "OpenAI",
+                2 => "Anthropic Claude",
+                _ => "nenhum"
+            };
 
-                OllamaTestStatus = "Testando...";
+            _loggerService.Info($"AI provider changed to: {providerName}");
+        }
 
-                // Create a temporary OLLAMAService with the configured URL
-                var tempService = new OLLAMAService(OllamaUrl, OllamaModel);
-                var isConnected = await tempService.CheckHealthAsync();
-
-                if (isConnected)
-                {
-                    IsOllamaConnected = true;
-
-                    // Load available models
-                    var models = await tempService.GetAvailableModelsAsync();
-                    AvailableModels.Clear();
-                    foreach (var model in models)
-                    {
-                        AvailableModels.Add(model);
-                    }
-
-                    if (models.Count > 0)
-                    {
-                        OllamaTestStatus = $"✓ Conectado ao OLLAMA ({models.Count} modelo(s) disponível)";
-                        // If current model is not in list, select first available
-                        if (!AvailableModels.Contains(OllamaModel) && AvailableModels.Count > 0)
-                        {
-                            OllamaModel = AvailableModels[0];
-                        }
-                    }
-                    else
-                    {
-                        OllamaTestStatus = "✓ Conectado ao OLLAMA (nenhum modelo disponível)";
-                    }
-
-                    _loggerService.Info("OLLAMA connection test successful");
-
-                    // Update MainWindow connection status
-                    var mainWindow = System.Windows.Application.Current.MainWindow as Views.MainWindow;
-                    mainWindow?.RefreshConnectionStatus();
-                }
-                else
-                {
-                    IsOllamaConnected = false;
-                    OllamaTestStatus = "✗ Erro ao conectar ao OLLAMA";
-                    AvailableModels.Clear();
-                    _loggerService.Warn("OLLAMA connection test failed");
-                }
+        /// <summary>
+        /// Updates the masked API key for display.
+        /// Shows last 4 characters as "••••abcd" or empty if key is empty.
+        /// </summary>
+        private void UpdateMaskedApiKey()
+        {
+            if (string.IsNullOrEmpty(ApiKey))
+            {
+                MaskedApiKey = "";
             }
-            catch (Exception ex)
+            else if (ApiKey.Length <= 4)
             {
-                IsOllamaConnected = false;
-                OllamaTestStatus = $"✗ Erro: {ex.Message}";
-                _loggerService.Error($"OLLAMA connection test error: {ex.Message}", ex);
+                MaskedApiKey = "Chave atual: " + new string('•', ApiKey.Length);
+            }
+            else
+            {
+                var lastFour = ApiKey.Substring(ApiKey.Length - 4);
+                MaskedApiKey = "Chave atual: ••••" + lastFour;
             }
         }
 

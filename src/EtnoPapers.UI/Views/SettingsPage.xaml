@@ -9,37 +9,50 @@
             <!-- Header -->
             <StackPanel Margin="0,0,0,24">
                 <TextBlock Text="Configurações" FontSize="28" FontWeight="Bold" Foreground="#0078D4" Margin="0,0,0,8"/>
-                <TextBlock Text="Configure a integração com OLLAMA, MongoDB e preferências da aplicação" FontSize="14" Foreground="#505050" TextWrapping="Wrap"/>
+                <TextBlock Text="Configure a integração com IA em nuvem, MongoDB e preferências da aplicação" FontSize="14" Foreground="#505050" TextWrapping="Wrap"/>
             </StackPanel>
 
-            <!-- OLLAMA Settings -->
+            <!-- Cloud AI Provider Settings -->
             <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">
                 <StackPanel>
-                    <TextBlock Text="Configuração OLLAMA" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+                    <TextBlock Text="Configuração do Provedor de IA" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
-                    <TextBlock Text="URL do OLLAMA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding OllamaUrl, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
+                    <TextBlock Text="Provedor de IA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="ProviderComboBox"
+                              SelectedIndex="{Binding SelectedProviderIndex, UpdateSourceTrigger=PropertyChanged}"
+                              Padding="8,6"
+                              Margin="0,0,0,12"
+                              Background="White"
+                              BorderBrush="#E0E0E0">
+                        <ComboBoxItem Content="Google Gemini" Tag="0"/>
+                        <ComboBoxItem Content="OpenAI" Tag="1"/>
+                        <ComboBoxItem Content="Anthropic Claude" Tag="2"/>
+                    </ComboBox>
 
-                    <TextBlock Text="Modelo OLLAMA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <Grid Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableModels}" SelectedItem="{Binding OllamaModel, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Background="White" BorderBrush="#E0E0E0"/>
-                        <Button Grid.Column="1" Content="Atualizar" Margin="8,0,0,0" Padding="12,6" Background="#0078D4" Foreground="White" Command="{Binding TestOllamaCommand}"/>
-                    </Grid>
+                    <TextBlock Text="Chave de API" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="ApiKeyPasswordBox"
+                                 PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
+                                 Padding="8,6"
+                                 Margin="0,0,0,4"
+                                 Background="White"
+                                 BorderBrush="#E0E0E0"/>
 
-                    <TextBlock Text="ℹ Deixe em branco ou selecione 'Autodetectar' para usar o melhor modelo disponível" FontSize="11" Foreground="#8A8A8A" Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding MaskedApiKey}"
+                               FontSize="11"
+                               Foreground="#8A8A8A"
+                               Margin="0,0,0,12"
+                               Visibility="{Binding MaskedApiKey, Converter={StaticResource StringToVisibilityConverter}}"/>
 
-                    <TextBlock Text="Prompt Personalizado (Deixe em branco para usar prompt padrão)" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding OllamaPrompt, UpdateSourceTrigger=PropertyChanged}" Height="300" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" Padding="10,8" Margin="0,0,0,12" Background="White" BorderBrush="#CCCCCC" FontFamily="Courier New" FontSize="11"/>
+                    <TextBlock Text="ℹ A chave de API será armazenada de forma criptografada usando Windows DPAPI"
+                               FontSize="11"
+                               Foreground="#8A8A8A"
+                               Margin="0,0,0,12"/>
 
-                    <TextBlock Text="ℹ Dica: Cole um prompt completo (ex: instrução de como extrair dados etnobotânicos)" FontSize="10" Foreground="#8A8A8A" Margin="0,-8,0,12" FontStyle="Italic"/>
-
-                    <Button Content="Testar Conexão" Command="{Binding TestOllamaCommand}" Padding="16,8" Background="#0078D4" Foreground="White" Margin="0,0,0,12"/>
-
-                    <TextBlock Text="{Binding OllamaTestStatus}" FontSize="12" Foreground="#505050" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding ProviderTestStatus}"
+                               FontSize="12"
+                               Foreground="#505050"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding ProviderTestStatus, Converter={StaticResource StringToVisibilityConverter}}"/>
                 </StackPanel>
             </Border>
 

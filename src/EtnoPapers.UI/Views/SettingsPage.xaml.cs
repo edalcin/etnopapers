@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Controls;
 using EtnoPapers.UI.ViewModels;
 
@@ -5,16 +6,32 @@ namespace EtnoPapers.UI.Views
 {
     /// <summary>
     /// Interaction logic for SettingsPage.xaml
-    /// Provides configuration UI for OLLAMA, MongoDB, and application settings.
+    /// Provides configuration UI for Cloud AI providers, MongoDB, and application settings.
     /// </summary>
     public partial class SettingsPage : Page
     {
+        private SettingsViewModel ViewModel => DataContext as SettingsViewModel;
+
         public SettingsPage()
         {
             try
             {
                 InitializeComponent();
                 DataContext = new SettingsViewModel();
+
+                // Initialize PasswordBox with masked API key after ViewModel loads
+                if (ViewModel != null)
+                {
+                    Loaded += (s, e) =>
+                    {
+                        // If there's an existing API key, show placeholder dots (actual key is in ViewModel)
+                        if (!string.IsNullOrEmpty(ViewModel.ApiKey))
+                        {
+                            // Set placeholder password to indicate there's a saved key
+                            ApiKeyPasswordBox.Password = "••••••••";
+                        }
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -37,6 +54,21 @@ namespace EtnoPapers.UI.Views
                     Foreground = System.Windows.Media.Brushes.DarkRed
                 });
                 Content = errorPanel;
+            }
+        }
+
+        /// <summary>
+        /// Handles PasswordBox text changes and updates ViewModel.
+        /// </summary>
+        private void ApiKeyPasswordBox_PasswordChanged(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (ViewModel != null && sender is PasswordBox passwordBox)
+            {
+                // Don't update if it's just the placeholder dots
+                if (passwordBox.Password != "••••••••")
+                {
+                    ViewModel.ApiKey = passwordBox.Password;
+                }
             }
         }
     }
