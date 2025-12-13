@@ -14,7 +14,10 @@ namespace EtnoPapers.Core.Services;
 /// </summary>
 public class GeminiService : AIProviderService
 {
-    private const string ApiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    // Endpoint supports both gemini-1.5-flash and gemini-pro models for broader compatibility
+    private const string ApiEndpointFlash = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private const string ApiEndpointPro = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    private string _apiEndpoint = ApiEndpointFlash;
 
     protected override string ProviderName => "Gemini";
 
@@ -96,7 +99,7 @@ public class GeminiService : AIProviderService
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Add API key to query parameter (Gemini uses this instead of headers)
-        var urlWithKey = $"{ApiEndpoint}?key={ApiKey}";
+        var urlWithKey = $"{_apiEndpoint}?key={ApiKey}";
 
         Logger.Debug("[{Provider}] Sending extraction request (prompt length: {Length})",
             ProviderName, prompt.Length);
@@ -108,6 +111,15 @@ public class GeminiService : AIProviderService
             var errorContent = await response.Content.ReadAsStringAsync();
             Logger.Error("[{Provider}] API returned {StatusCode}: {Error}",
                 ProviderName, response.StatusCode, errorContent);
+
+            // Try fallback to gemini-pro if gemini-1.5-flash fails with 404
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound && _apiEndpoint == ApiEndpointFlash)
+            {
+                Logger.Information("[{Provider}] Model gemini-1.5-flash not available, trying gemini-pro fallback",
+                    ProviderName);
+                _apiEndpoint = ApiEndpointPro;
+                return await CallGeminiApiAsync(prompt, cancellationToken);
+            }
 
             // Throw HttpRequestException - the StatusCode will be available in .NET 5+
             response.EnsureSuccessStatusCode();
