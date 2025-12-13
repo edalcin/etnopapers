@@ -111,7 +111,7 @@
                 <Button Content="📤 Iniciar Sincronização" Padding="16,8" Margin="0,0,8,0" Background="#E8E8E8" Foreground="Black"
                         Command="{Binding StartSyncCommand}" IsEnabled="{Binding CanStartSync, Mode=OneWay}"
                         ToolTip="Sincroniza registros selecionados com MongoDB"/>
-                <Button Content="🗑️ Deletar Selecionados" Padding="16,8" Margin="0,0,8,0" Background="#FF6B6B" Foreground="White"
+                <Button Content="🗑️ Deletar Selecionados" Padding="16,8" Margin="0,0,8,0" Background="#FF6B6B" Foreground="Black"
                         Command="{Binding DeleteSelectedRecordsCommand}" IsEnabled="{Binding SelectedRecords.Count, Converter={StaticResource CountToBoolConverter}, Mode=OneWay}"
                         ToolTip="Deleta permanentemente os registros selecionados"/>
                 <Button Content="✕ Limpar Seleção" Padding="16,8" Background="Transparent" Foreground="#0078D4"
