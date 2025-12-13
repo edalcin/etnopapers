@@ -84,6 +84,10 @@ config.json
 logs/
 *.log
 
+# AppData configuration (contains API keys)
+AppData/Local/EtnoPapers/
+AppData/Roaming/EtnoPapers/
+
 # ReSharper
 .resharper
 .resharper.user
