@@ -205,7 +205,7 @@ namespace EtnoPapers.UI.ViewModels
                     _loggerService.Info("Calling ExtractFromPdfAsync...");
                     ExtractedData = await _extractionService.ExtractFromPdfAsync(SelectedFilePath);
 
-                    // Stop extraction timer and save elapsed time
+                    // Stop extraction timer and save elapsed time and agent
                     if (_extractionStopwatch != null)
                     {
                         _extractionStopwatch.Stop();
@@ -213,7 +213,15 @@ namespace EtnoPapers.UI.ViewModels
                         if (ExtractedData != null)
                         {
                             ExtractedData.TempoExtracao = elapsedSeconds;
-                            _loggerService.Info($"Extraction completed in {elapsedSeconds:F2} seconds");
+
+                            // Record the AI agent/provider used
+                            var config = _configService.LoadConfiguration();
+                            if (config?.AIProvider.HasValue == true)
+                            {
+                                ExtractedData.AgenteIA = config.AIProvider.Value.ToString();
+                            }
+
+                            _loggerService.Info($"Extraction completed in {elapsedSeconds:F2} seconds using {ExtractedData.AgenteIA}");
                         }
                     }
 

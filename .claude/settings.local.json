@@ -21,7 +21,8 @@
       "Bash(test:*)",
       "Bash(git check-ignore:*)",
       "Bash(dotnet publish:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(dotnet clean:*)"
     ],
     "deny": [],
     "ask": []

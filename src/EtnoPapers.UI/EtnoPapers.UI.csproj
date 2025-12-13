@@ -17,12 +17,11 @@
     <Description>Automated extraction and cataloging of ethnobotanical metadata from scientific papers</Description>
     <Copyright>Copyright © 2024 EtnoPapers Contributors</Copyright>
 
-    <!-- Self-contained executable configuration -->
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
+    <!-- Portable framework-dependent configuration for USB/pen-drive distribution -->
+    <!-- Requires .NET 8.0 runtime installed on target machine, but much smaller size (~100MB vs 500MB) -->
+    <SelfContained>false</SelfContained>
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishSingleFile>false</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>

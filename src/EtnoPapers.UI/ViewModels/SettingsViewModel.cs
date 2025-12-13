@@ -155,8 +155,7 @@ namespace EtnoPapers.UI.ViewModels
 
         public ObservableCollection<string> AvailableLanguages { get; } = new()
         {
-            "pt-BR",
-            "en-US"
+            "pt-BR"
         };
 
         public string Language

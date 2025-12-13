@@ -66,5 +66,8 @@ namespace EtnoPapers.Core.Models
 
         [JsonProperty("tempo_extracao_segundos")]
         public double? TempoExtracao { get; set; }
+
+        [JsonProperty("agente_ia")]
+        public string AgenteIA { get; set; }
     }
 }
