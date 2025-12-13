@@ -19,7 +19,9 @@
       "Bash(dir /s /b *.cs)",
       "Bash(dotnet test:*)",
       "Bash(test:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

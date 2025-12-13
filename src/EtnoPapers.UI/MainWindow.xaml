@@ -64,20 +64,20 @@
 
                 <!-- Cloud AI Status -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="12" Height="12" Fill="{Binding OllamaConnected, Converter={StaticResource BoolToBrushConverter}}" Margin="0,0,8,0"/>
+                    <Ellipse Width="12" Height="12" Fill="{Binding CloudAIConfigured, Converter={StaticResource BoolToBrushConverter}, Mode=OneWay}" Margin="0,0,8,0"/>
                     <TextBlock Text="Cloud AI:" Margin="0,0,4,0" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding OllamaConnected, StringFormat={}{0:Configurado;Não configurado}}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding CloudAIConfigured, StringFormat={}{0:Configurado;Não configurado}, Mode=OneWay}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- MongoDB Status -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Ellipse Width="12" Height="12" Fill="{Binding MongodbConnected, Converter={StaticResource BoolToBrushConverter}}" Margin="0,0,8,0"/>
+                    <Ellipse Width="12" Height="12" Fill="{Binding MongodbConnected, Converter={StaticResource BoolToBrushConverter}, Mode=OneWay}" Margin="0,0,8,0"/>
                     <TextBlock Text="MongoDB:" Margin="0,0,4,0" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding MongodbConnected, StringFormat={}{0:Conectado;Desconectado}}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding MongodbConnected, StringFormat={}{0:Conectado;Desconectado}, Mode=OneWay}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Version Info -->
-                <TextBlock Grid.Column="3" Text="{Binding Version, StringFormat=v{0}}" VerticalAlignment="Center" Foreground="#505050"/>
+                <TextBlock Grid.Column="3" Text="{Binding Version, StringFormat=v{0}, Mode=OneWay}" VerticalAlignment="Center" Foreground="#505050"/>
             </Grid>
         </Border>
     </Grid>
