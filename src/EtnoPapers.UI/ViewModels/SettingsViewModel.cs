@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using EtnoPapers.Core.Models;
@@ -60,6 +61,7 @@ namespace EtnoPapers.UI.ViewModels
             SaveSettingsCommand = new RelayCommand(_ => SaveSettings(), _ => !IsSaving);
             ResetToDefaultsCommand = new RelayCommand(_ => ResetToDefaults());
             TestMongodbCommand = new AsyncRelayCommand(_ => TestMongodbConnectionAsync());
+            TestProviderConnectionCommand = new AsyncRelayCommand(_ => TestProviderConnectionAsync());
             ClearErrorCommand = new RelayCommand(_ => ClearError());
             DismissMigrationBannerCommand = new RelayCommand(_ => DismissMigrationBanner());
 
@@ -227,6 +229,7 @@ namespace EtnoPapers.UI.ViewModels
         public ICommand SaveSettingsCommand { get; }
         public ICommand ResetToDefaultsCommand { get; }
         public ICommand TestMongodbCommand { get; }
+        public ICommand TestProviderConnectionCommand { get; }
         public ICommand ClearErrorCommand { get; }
         public ICommand DismissMigrationBannerCommand { get; }
 
@@ -461,6 +464,95 @@ namespace EtnoPapers.UI.ViewModels
                 IsMongodbConnected = false;
                 MongodbTestStatus = $"✗ Erro: {ex.Message}";
                 _loggerService.Error($"MongoDB connection test error: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Tests connection to the selected cloud AI provider and validates the API key.
+        /// </summary>
+        public async Task TestProviderConnectionAsync()
+        {
+            try
+            {
+                ClearError();
+
+                // Validate provider selection
+                if (SelectedProviderIndex < 0)
+                {
+                    ProviderTestStatus = "✗ Nenhum provedor de IA selecionado";
+                    _loggerService.Warn("Provider test requested but no provider selected");
+                    return;
+                }
+
+                // Validate API key
+                if (string.IsNullOrWhiteSpace(ApiKey))
+                {
+                    ProviderTestStatus = "✗ Chave de API não foi inserida";
+                    _loggerService.Warn("Provider test requested but no API key provided");
+                    return;
+                }
+
+                ProviderTestStatus = "Testando conexão...";
+                var providerType = (AIProviderType)SelectedProviderIndex;
+                var providerName = providerType.ToString();
+
+                _loggerService.Info($"Testing connection to {providerName} with API key...");
+
+                // Create provider instance
+                var provider = AIProviderFactory.CreateProvider(providerType);
+                provider.SetApiKey(ApiKey.Trim());
+
+                // Test with a simple extraction request (empty text to test connectivity)
+                var testPrompt = "Responda com 'OK' se conseguiu processar esta mensagem.";
+                var testText = "Teste de conexão";
+
+                try
+                {
+                    var result = await provider.ExtractMetadataAsync(testPrompt + "\n\n" + testText);
+
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        ProviderTestStatus = $"✓ Conexão com {providerName} bem-sucedida! API key válida.";
+                        HasError = false;
+                        ErrorMessage = "";
+                        _loggerService.Info($"Provider {providerName} connection test successful");
+                    }
+                    else
+                    {
+                        ProviderTestStatus = $"✗ Resposta vazia de {providerName}. Verifique sua chave de API.";
+                        _loggerService.Warn($"Provider {providerName} returned empty response");
+                    }
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("API key"))
+                {
+                    ProviderTestStatus = $"✗ Chave de API inválida para {providerName}";
+                    _loggerService.Error($"Invalid API key for {providerName}: {ex.Message}");
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode.HasValue && ex.StatusCode.Value == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    ProviderTestStatus = $"✗ Chave de API não autorizada no {providerName}";
+                    _loggerService.Error($"Unauthorized API key for {providerName}: {ex.Message}");
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode.HasValue && ex.StatusCode.Value == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    ProviderTestStatus = $"✗ Limite de requisições excedido no {providerName}. Aguarde um momento.";
+                    _loggerService.Error($"Rate limit exceeded for {providerName}: {ex.Message}");
+                }
+                catch (HttpRequestException ex)
+                {
+                    ProviderTestStatus = $"✗ Erro de conexão com {providerName}: {ex.Message}";
+                    _loggerService.Error($"Connection error with {providerName}: {ex.Message}", ex);
+                }
+                catch (Exception ex)
+                {
+                    ProviderTestStatus = $"✗ Erro ao testar {providerName}: {ex.Message}";
+                    _loggerService.Error($"Test error for {providerName}: {ex.Message}", ex);
+                }
+            }
+            catch (Exception ex)
+            {
+                ProviderTestStatus = $"✗ Erro inesperado: {ex.Message}";
+                _loggerService.Error($"Unexpected error in TestProviderConnectionAsync: {ex.Message}", ex);
             }
         }
 
