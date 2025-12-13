@@ -12,6 +12,65 @@
                 <TextBlock Text="Configure a integração com IA em nuvem, MongoDB e preferências da aplicação" FontSize="14" Foreground="#505050" TextWrapping="Wrap"/>
             </StackPanel>
 
+            <!-- Migration Banner (shows when legacy OLLAMA config detected) -->
+            <Border Background="#FFF4CE"
+                    BorderBrush="#F0C419"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,20"
+                    Visibility="{Binding ShowMigrationBanner, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Icon -->
+                    <TextBlock Grid.Column="0"
+                               Text="⚠"
+                               FontSize="24"
+                               VerticalAlignment="Top"
+                               Margin="0,0,12,0"
+                               Foreground="#D68910"/>
+
+                    <!-- Message -->
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Migração para Provedores de IA em Nuvem"
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   Foreground="#333333"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock TextWrapping="Wrap"
+                                   FontSize="12"
+                                   Foreground="#333333"
+                                   Margin="0,0,0,8">
+                            Você estava usando OLLAMA localmente. Agora você pode usar provedores de IA em nuvem (Gemini, OpenAI, Anthropic) para melhor desempenho e qualidade.
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap"
+                                   FontSize="11"
+                                   Foreground="#666666">
+                            • 50% mais rápido que OLLAMA local<LineBreak/>
+                            • Melhor precisão e menos alucinações<LineBreak/>
+                            • Não requer instalação de software adicional ou GPU
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- Close button -->
+                    <Button Grid.Column="2"
+                            Content="✕"
+                            Command="{Binding DismissMigrationBannerCommand}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontSize="16"
+                            Foreground="#666666"
+                            VerticalAlignment="Top"
+                            Cursor="Hand"
+                            ToolTip="Fechar este aviso"/>
+                </Grid>
+            </Border>
+
             <!-- Cloud AI Provider Settings -->
             <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">
                 <StackPanel>

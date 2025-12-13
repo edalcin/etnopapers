@@ -8,7 +8,17 @@
       "Bash(powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/setup-plan.ps1\" -Json)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(powershell -ExecutionPolicy Bypass -File:*)"
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(powershell:*)",
+      "Bash(if [ -d \"src/EtnoPapers.Core\" ])",
+      "Bash(then echo \"C# WPF project structure found\")",
+      "Bash(else echo \"No C# project found\")",
+      "Bash(fi:*)",
+      "Bash(dotnet build:*)",
+      "Bash(findstr:*)",
+      "Bash(dir /s /b *.cs)",
+      "Bash(dotnet test:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

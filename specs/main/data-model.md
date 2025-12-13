@@ -165,7 +165,7 @@ Details about the AI extraction process.
 
 ```typescript
 interface ExtractionMetadata {
-  model: string                // OLLAMA model used (e.g., "llama2")
+  model: string                // Cloud AI provider model used (e.g., "gemini-1.5-flash", "gpt-4o-mini", "claude-3-5-haiku")
   extractedAt: Date            // When extraction occurred
   processingTimeMs: number     // Time taken to extract
   promptVersion: string        // Version/hash of prompt used
@@ -173,7 +173,7 @@ interface ExtractionMetadata {
     overall?: number           // 0-1 confidence score
     fieldScores?: Record<string, number>  // Per-field confidence
   }
-  rawResponse?: string         // Raw OLLAMA response (for debugging)
+  rawResponse?: string         // Raw AI provider response (for debugging)
   manuallyEdited: boolean      // Has user edited after extraction?
   editedFields?: string[]      // Which fields were edited
 }
@@ -187,19 +187,23 @@ interface ExtractionMetadata {
 
 ```typescript
 interface AppConfiguration {
-  ollama: OLLAMAConfig
+  aiProvider: AIProviderConfig
   mongodb: MongoDBConfig
   storage: StorageConfig
   ui: UIConfig
   version: string              // Config schema version
 }
 
-interface OLLAMAConfig {
-  url: string                  // Default: http://localhost:11434
-  model: string                // Default: llama2
+interface AIProviderConfig {
+  provider: 'gemini' | 'openai' | 'anthropic'  // Selected cloud AI provider
+  apiKey: string               // Encrypted API key
+  model?: string               // Optional: specific model override
   timeout: number              // Seconds, default: 60
-  prompt: string               // Customizable extraction prompt
-  streamingEnabled: boolean    // Default: true
+
+  // Legacy OLLAMA fields (deprecated, kept for backward compatibility)
+  ollamaUrl?: string           // Legacy: http://localhost:11434
+  ollamaModel?: string         // Legacy: llama2
+  ollamaPrompt?: string        // Legacy: customizable extraction prompt
 }
 
 interface MongoDBConfig {
@@ -289,7 +293,7 @@ function detectLanguage(text: string): 'pt' | 'en' | 'es' | 'other' {
 
 async function ensurePortugueseAbstract(
   abstract: string,
-  ollamaClient: OLLAMAClient
+  aiProvider: IAIProvider
 ): Promise<string> {
   const lang = detectLanguage(abstract)
 
@@ -297,8 +301,8 @@ async function ensurePortugueseAbstract(
     return abstract  // Already Portuguese
   }
 
-  // Request translation from OLLAMA
-  return ollamaClient.translate(abstract, targetLang: 'pt-BR')
+  // Request translation from cloud AI provider
+  return aiProvider.translate(abstract, targetLang: 'pt-BR')
 }
 ```
 
@@ -425,9 +429,9 @@ db.articles.createIndex({ "externalId": 1 }, { unique: true })
 
 ### 1. Creation (PDF Upload)
 ```
-PDF → Text Extraction → OLLAMA API → Raw JSON →
+PDF → Markdown Conversion → Cloud AI Provider API → Raw JSON →
 Validation → Normalization → ArticleRecord (local) →
-User Review/Edit → Save to lowdb
+User Review/Edit → Save to local storage
 ```
 
 ### 2. Update (User Edit)

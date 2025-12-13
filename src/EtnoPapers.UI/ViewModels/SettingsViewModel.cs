@@ -46,6 +46,9 @@ namespace EtnoPapers.UI.ViewModels
         private string _errorMessage = "";
         private string _successMessage = "";
 
+        // Migration Banner
+        private bool _showMigrationBanner = false;
+
         public SettingsViewModel()
         {
             _configService = new ConfigurationService();
@@ -57,6 +60,7 @@ namespace EtnoPapers.UI.ViewModels
             ResetToDefaultsCommand = new RelayCommand(_ => ResetToDefaults());
             TestMongodbCommand = new AsyncRelayCommand(_ => TestMongodbConnectionAsync());
             ClearErrorCommand = new RelayCommand(_ => ClearError());
+            DismissMigrationBannerCommand = new RelayCommand(_ => DismissMigrationBanner());
 
             _loggerService.Info("SettingsViewModel initialized");
             LoadSettings();
@@ -197,6 +201,15 @@ namespace EtnoPapers.UI.ViewModels
             set => SetProperty(ref _successMessage, value);
         }
 
+        /// <summary>
+        /// Shows migration banner when legacy OLLAMA config is detected.
+        /// </summary>
+        public bool ShowMigrationBanner
+        {
+            get => _showMigrationBanner;
+            set => SetProperty(ref _showMigrationBanner, value);
+        }
+
         #endregion
 
         #region Commands
@@ -206,6 +219,7 @@ namespace EtnoPapers.UI.ViewModels
         public ICommand ResetToDefaultsCommand { get; }
         public ICommand TestMongodbCommand { get; }
         public ICommand ClearErrorCommand { get; }
+        public ICommand DismissMigrationBannerCommand { get; }
 
         #endregion
 
@@ -243,6 +257,9 @@ namespace EtnoPapers.UI.ViewModels
                 WindowWidth = config?.WindowWidth ?? 1200;
                 WindowHeight = config?.WindowHeight ?? 800;
                 WindowMaximized = config?.WindowMaximized ?? false;
+
+                // Detect legacy OLLAMA configuration
+                DetectLegacyOllamaConfig(config);
 
                 ClearError();
                 _loggerService.Info("Settings loaded successfully");
@@ -443,6 +460,34 @@ namespace EtnoPapers.UI.ViewModels
             HasError = false;
             ErrorMessage = "";
             SuccessMessage = "";
+        }
+
+        /// <summary>
+        /// Detects if the configuration contains legacy OLLAMA settings
+        /// and shows migration banner if needed.
+        /// </summary>
+        private void DetectLegacyOllamaConfig(Configuration config)
+        {
+            if (config == null) return;
+
+            if (config.IsLegacyOllamaConfig)
+            {
+                ShowMigrationBanner = true;
+                _loggerService.Info("Legacy OLLAMA configuration detected - showing migration banner");
+            }
+            else
+            {
+                ShowMigrationBanner = false;
+            }
+        }
+
+        /// <summary>
+        /// Dismisses the migration banner for this session.
+        /// </summary>
+        private void DismissMigrationBanner()
+        {
+            ShowMigrationBanner = false;
+            _loggerService.Info("Migration banner dismissed");
         }
 
         #endregion

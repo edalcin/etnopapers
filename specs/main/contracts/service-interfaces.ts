@@ -75,22 +75,22 @@ export enum PDFErrorCode {
 }
 
 // ============================================================================
-// OLLAMA AI Service
+// Cloud AI Provider Service
 // ============================================================================
 
-export interface IOLLAMAService {
+export interface IAIProviderService {
   /**
-   * Check if OLLAMA service is available and responding
+   * Check if AI provider service is available and responding
    * @returns true if connected, false otherwise
    */
   checkHealth(): Promise<boolean>
 
   /**
    * Extract structured metadata from text using AI
-   * @param text - Extracted PDF text
+   * @param text - Extracted markdown text from PDF
    * @param prompt - Custom extraction prompt (optional)
    * @returns Extracted article data
-   * @throws OLLAMAError if extraction fails
+   * @throws AIProviderError if extraction fails
    */
   extractMetadata(
     text: string,
@@ -99,7 +99,7 @@ export interface IOLLAMAService {
 
   /**
    * Stream extraction progress for large documents
-   * @param text - Extracted PDF text
+   * @param text - Extracted markdown text
    * @param prompt - Custom extraction prompt (optional)
    * @param onProgress - Callback for partial results
    * @returns Final extracted data
@@ -122,29 +122,23 @@ export interface IOLLAMAService {
   ): Promise<string>
 
   /**
-   * Get available OLLAMA models
-   * @returns List of installed models
-   */
-  getAvailableModels(): Promise<string[]>
-
-  /**
    * Get current configuration
-   * @returns OLLAMA configuration
+   * @returns AI provider configuration
    */
-  getConfig(): OLLAMAConfig
+  getConfig(): AIProviderConfig
 
   /**
-   * Update configuration
+   * Update configuration (including API key)
    * @param config - New configuration
    */
-  updateConfig(config: Partial<OLLAMAConfig>): void
+  updateConfig(config: Partial<AIProviderConfig>): void
 }
 
-export interface OLLAMAConfig {
-  url: string
-  model: string
-  timeout: number
-  streamingEnabled: boolean
+export interface AIProviderConfig {
+  provider: 'gemini' | 'openai' | 'anthropic'
+  apiKey: string  // Encrypted
+  model?: string  // Optional model override
+  timeout: number // Request timeout in seconds
 }
 
 export interface ExtractedArticleData {
@@ -174,23 +168,24 @@ export interface ExtractedArticleData {
   }
 }
 
-export class OLLAMAError extends Error {
+export class AIProviderError extends Error {
   constructor(
     message: string,
-    public readonly code: OLLAMAErrorCode,
+    public readonly code: AIProviderErrorCode,
     public readonly originalError?: Error
   ) {
     super(message)
-    this.name = 'OLLAMAError'
+    this.name = 'AIProviderError'
   }
 }
 
-export enum OLLAMAErrorCode {
+export enum AIProviderErrorCode {
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
   TIMEOUT = 'TIMEOUT',
   INVALID_RESPONSE = 'INVALID_RESPONSE',
-  MODEL_NOT_FOUND = 'MODEL_NOT_FOUND',
+  INVALID_API_KEY = 'INVALID_API_KEY',
   RATE_LIMIT = 'RATE_LIMIT',
+  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
 }
 
 // ============================================================================

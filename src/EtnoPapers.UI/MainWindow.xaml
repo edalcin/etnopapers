@@ -62,11 +62,11 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- OLLAMA Status -->
+                <!-- Cloud AI Status -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Ellipse Width="12" Height="12" Fill="{Binding OllamaConnected, Converter={StaticResource BoolToBrushConverter}}" Margin="0,0,8,0"/>
-                    <TextBlock Text="OLLAMA:" Margin="0,0,4,0" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding OllamaConnected, StringFormat={}{0:Conectado;Desconectado}}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Cloud AI:" Margin="0,0,4,0" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding OllamaConnected, StringFormat={}{0:Configurado;Não configurado}}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- MongoDB Status -->

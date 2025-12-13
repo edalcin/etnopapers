@@ -56,8 +56,8 @@
 
                     <TextBlock FontSize="13" TextWrapping="Wrap" Margin="0,0,0,12">
                         <Run Text="1. " FontWeight="Bold"/>
-                        <Run Text="Configure OLLAMA - " FontWeight="Bold"/>
-                        <Run Text="Acesse Configurações e defina a URL do OLLAMA (padrão: http://localhost:11434)"/>
+                        <Run Text="Configure Provedor de IA - " FontWeight="Bold"/>
+                        <Run Text="Acesse Configurações e escolha um provedor de IA em nuvem (Gemini, OpenAI ou Anthropic) e insira sua chave de API"/>
                     </TextBlock>
 
                     <TextBlock FontSize="13" TextWrapping="Wrap" Margin="0,0,0,12">
@@ -101,7 +101,7 @@
                     </TextBlock>
 
                     <TextBlock FontSize="12" Margin="0,4,0,0" Foreground="#505050">• .NET 8.0 Runtime</TextBlock>
-                    <TextBlock FontSize="12" Margin="0,2,0,0" Foreground="#505050">• OLLAMA instalado e em execução</TextBlock>
+                    <TextBlock FontSize="12" Margin="0,2,0,0" Foreground="#505050">• Chave de API de provedor de IA (Gemini, OpenAI ou Anthropic)</TextBlock>
                     <TextBlock FontSize="12" Margin="0,2,0,0" Foreground="#505050">• (Opcional) MongoDB Atlas ou instância local</TextBlock>
                 </StackPanel>
             </Border>

@@ -1,0 +1,222 @@
+{
+  "titulo": "Rapid ethnobotanical diagnosis of the Fulni-ô Indigenous lands (NE Brazil): floristic survey and local conservation priorities for medicinal plants",
+  "autores": [
+    "Ulysses Paulino de Albuquerque",
+    "Gustavo Taboada Soldati.",
+    "Shana Sampaio Sieber",
+    "Patrícia Muniz de Medeiros",
+    "Jemerson Caetano de Sá",
+    "Liliane Cunha de Souza"
+  ],
+  "ano": 2010,
+  "resumo": "This study was developed as part of the project \"Studies for Environmental and Cultural Sustainability of the Fulni-ô Medical System: Office on handling medicinal plants\". The Fulni-ô people are located in Pernambuco State, Northeastern Brazil. One of the components of this project was an ethnobotanical diagnosis of the indigenous land, where a phytosociological survey was performed in an area of Caatinga vegetation, located at Ouricuri settlement. Based on these ethnobotanical data, we calculated a conservation priority index aiming to rank species that should receive immediate attention from the Fulni-ô people. We identified 44 woody plants, 50% of which have a medicinal use. Among these, six plants were considered highly vulnerable and in need of immediate conservationist attention, in order to ensure the perpetuation of these species and the sustainability of traditional therapeutic practices of the Fulni-ô: Anadenanthera colubrina, Myracrodruon urundeuva, Lippia sp., Spondias tuberosa, Maytenus rigida, and Sideroxylon obtusifolium. We recommend the direct involvement of the Fulni-ô people in the conservation and the management of local resources by implementing a management plan and monitoring strategies for the populations of plants considered most important by the indigenous group.",
+  "especies": [
+    {
+      "nome_vernacular": "Alenta cavalo",
+      "nome_cientifico": "Gomphrena vaga Mart.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "leaves",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Aroeira",
+      "nome_cientifico": "Myracrodruon urundeuva Allemão",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Braúna",
+      "nome_cientifico": "Schinopsis brasiliensis Engl.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Umbuzeiro",
+      "nome_cientifico": "Spondias tuberosa Arruda",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Pereiro",
+      "nome_cientifico": "Aspidosperma pyrifolium Mart.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Barriguda",
+      "nome_cientifico": "Chorisia sp.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Imburana, imburana brava, imburana de cambão",
+      "nome_cientifico": "Commiphora leptophloeos (Mart.) J.B. Gillett",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Feijão bravo",
+      "nome_cientifico": "Capparis flexuosa (L.) L.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Bom nome",
+      "nome_cientifico": "Maytenus rigida Mart.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Velame",
+      "nome_cientifico": "Croton rhamnifolius Willd.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "leaves",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Sassafrás, sassafrás fêmea",
+      "nome_cientifico": "Ditaxis malpighiacea (Ule) Pax & K. Hoffm.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Pinhão, pinhão bravo",
+      "nome_cientifico": "Jatropha mollissima (Pohl) Baill.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Angico de caroço",
+      "nome_cientifico": "Anadenanthera colubrina (Vell.) Brenan var. cebil (Griseb) Altschul",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Mororó",
+      "nome_cientifico": "Bauhinia cheilantha (Bong.) Steud.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Pau ferro",
+      "nome_cientifico": "Caesalpinia leiostachya (Benth.) Ducke",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Catingueira",
+      "nome_cientifico": "Caesalpinia pyramidalis Tul.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Arapiraca, espinheiro vermelho, jurema branca",
+      "nome_cientifico": "Chloroleucon foliolosum (Benth.) G.P. Lewis",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Jurema preta, jurema vermelha",
+      "nome_cientifico": "Mimosa tenuiflora (Willd.) Poir.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Angico monjolo",
+      "nome_cientifico": "Parapiptadenia zehntneri (Harms) M.P. Lima & H.C. Lima",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Angico branco, espinheiro branco",
+      "nome_cientifico": "Piptadenia stipulacea (Benth.) Ducke",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Piranha",
+      "nome_cientifico": "Guapira noxia (Netto) Lundell",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Juazeiro",
+      "nome_cientifico": "Ziziphus joazeiro Mart.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Canela de veado, baia",
+      "nome_cientifico": "Coutarea hexandra (Jacq.) K. Schum.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Quixaba",
+      "nome_cientifico": "Sideroxylon obtusifolium (Humb. ex Roem. & Schult.) T.D. Penn.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Camará branco ou chumbinho",
+      "nome_cientifico": "Lantana camara L.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "stem bark",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Alecrim bravo",
+      "nome_cientifico": "Lippia sp.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "leaves",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": "Canela de nambu",
+      "nome_cientifico": "Acalypha multicaulis Müll. Arg.",
+      "tipo_uso": "medicinal",
+      "parte_usada": "leaves",
+      "preparacao": null
+    },
+    {
+      "nome_vernacular": null,
+      "nome_cientifico": "Amburana cearensis",
+      "tipo_uso": null,
+      "parte_usada": null,
+      "preparacao": null
+    }
+  ],
+  "comunidade": {
+    "nome": "Fulni-ô",
+    "localizacao": "Pernambuco State, Northeastern Brazil"
+  },
+  "pais": "Brazil",
+  "estado": "Pernambuco State",
+  "municipio": "Águas Belas",
+  "local": "Ouricuri settlement",
+  "bioma": "Caatinga vegetation",
+  "metodologia": "research-action methodology",
+  "ano_coleta": null
+}

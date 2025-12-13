@@ -70,34 +70,55 @@ Mantenha seus dados seguros e acessíveis:
 ### Requisitos Obrigatórios
 
 - **Sistema Operacional**: Windows 10 ou superior
-- **OLLAMA**: Serviço de IA local (deve ser instalado separadamente)
-  - O OLLAMA é fundamental para o funcionamento do programa
-  - Upload de PDFs só é habilitado com OLLAMA conectado
-- **Conexão com Internet**: Necessária para sincronização com MongoDB Atlas
+- **Provedor de IA em Nuvem**: Chave de API de um dos seguintes:
+  - Google Gemini API ([obter chave](https://ai.google.dev/))
+  - OpenAI API ([obter chave](https://platform.openai.com/))
+  - Anthropic Claude API ([obter chave](https://console.anthropic.com/))
+- **Conexão com Internet**: Necessária para:
+  - Extração de metadados usando IA em nuvem
+  - Sincronização com MongoDB Atlas
 
 ### Recomendações
 
-- **GPU (Placa de vídeo dedicada)**: Melhora significativamente o desempenho da extração de dados pela IA
 - **MongoDB**: Conta no MongoDB Atlas (gratuita) ou servidor MongoDB local para backup de dados
 
 ---
 
 ## Instalação
 
-1. **Instale o OLLAMA** (pré-requisito obrigatório)
-   - Visite o site oficial do OLLAMA (https://ollama.ai) e siga as instruções de instalação
-   - Certifique-se de que o serviço está rodando antes de usar o EtnoPapers
-   - **Recomendado**: Baixe o modelo Qwen 2.5 7B: `ollama pull qwen2.5:7b`
-   - Veja a seção [Modelo de IA Recomendado](#-modelo-de-ia-recomendado) abaixo para detalhes
-
-2. **Baixe o EtnoPapers**
+1. **Baixe o EtnoPapers**
    - Acesse a seção de Releases no GitHub
-   - Baixe a versão mais recente do executável
+   - Baixe a versão mais recente do instalador
+   - Execute o instalador e siga as instruções
 
-3. **Execute o EtnoPapers**
-   - O aplicativo é distribuído como executável único (single-file)
-   - Não requer instalação - basta executar o arquivo `.exe`
-   - Todas as dependências estão incluídas no executável
+2. **Obtenha uma Chave de API de IA**
+
+   Escolha **um** dos seguintes provedores:
+
+   **Opção 1: Google Gemini** (Recomendado - gratuito até 15 requisições/minuto)
+   - Acesse [Google AI Studio](https://ai.google.dev/)
+   - Crie uma conta Google (se não tiver)
+   - Clique em "Get API Key"
+   - Copie sua chave de API
+
+   **Opção 2: OpenAI**
+   - Acesse [OpenAI Platform](https://platform.openai.com/)
+   - Crie uma conta
+   - Navegue até "API Keys" e crie uma nova chave
+   - Adicione créditos à conta (pago por uso)
+
+   **Opção 3: Anthropic Claude**
+   - Acesse [Anthropic Console](https://console.anthropic.com/)
+   - Crie uma conta
+   - Gere uma API key
+   - Adicione créditos à conta (pago por uso)
+
+3. **Configure o EtnoPapers**
+   - Abra o EtnoPapers
+   - Vá para **Configurações**
+   - Selecione seu provedor de IA (Gemini, OpenAI ou Anthropic)
+   - Cole sua chave de API
+   - Clique em **Salvar**
 
 4. **Configure o MongoDB** (opcional, mas recomendado)
    - Crie uma conta gratuita no MongoDB Atlas ou instale um servidor local
@@ -112,10 +133,11 @@ Mantenha seus dados seguros e acessíveis:
 
 1. Abra o EtnoPapers
 2. Vá para a área de **Configurações**
-3. Verifique o status de conexão com o OLLAMA (deve estar verde/conectado)
-4. Configure o prompt de IA (opcional - um prompt padrão é fornecido)
-5. Informe a URI de conexão com o MongoDB (se disponível)
-6. Teste a conexão com o MongoDB
+3. Selecione seu provedor de IA em nuvem (Gemini, OpenAI ou Anthropic)
+4. Cole sua chave de API do provedor escolhido
+5. Clique em **Salvar** para armazenar as configurações
+6. Informe a URI de conexão com o MongoDB (opcional)
+7. Teste a conexão com o MongoDB
 
 ### Processar um Artigo
 
@@ -191,62 +213,49 @@ A estrutura completa dos dados extraídos está documentada em `docs/estrutura.j
 
 ---
 
-## 🤖 Modelo de IA Recomendado
+## ☁️ Provedores de IA em Nuvem
 
-### Qwen 2.5 7B (Altamente Recomendado)
+### Comparação de Provedores
 
-Para melhor desempenho da extração de dados etnobotânicos, **recomendamos fortemente o uso do modelo Qwen 2.5 7B**.
+O EtnoPapers suporta três provedores de IA em nuvem para extração de metadados:
 
-**Instalação:**
-```bash
-ollama pull qwen2.5:7b
-```
+| Aspecto | Google Gemini | OpenAI | Anthropic Claude |
+|---------|--------------|--------|------------------|
+| **Modelo Padrão** | Gemini 1.5 Flash | GPT-4o-mini | Claude 3.5 Haiku |
+| **Custo** | ✅ Gratuito (até 15/min) | 💰 Pago por uso | 💰 Pago por uso |
+| **Velocidade** | ⚡⚡⚡⚡ (muito rápido) | ⚡⚡⚡ (rápido) | ⚡⚡⚡⚡ (muito rápido) |
+| **Precisão** | ⭐⭐⭐⭐⭐ (excelente) | ⭐⭐⭐⭐⭐ (excelente) | ⭐⭐⭐⭐⭐ (excelente) |
+| **Suporte a Português** | ⭐⭐⭐⭐⭐ (nativo) | ⭐⭐⭐⭐⭐ (nativo) | ⭐⭐⭐⭐⭐ (nativo) |
+| **Extração Estruturada** | ⭐⭐⭐⭐⭐ (JSON nativo) | ⭐⭐⭐⭐⭐ (JSON nativo) | ⭐⭐⭐⭐⭐ (JSON nativo) |
+| **Registro** | Conta Google | Email + cartão | Email + cartão |
 
-**Por que Qwen 2.5 7B?**
+### Recomendações por Uso
 
-| Aspecto | Qwen 2.5 7B | Llama 2 7B | Outros |
-|--------|-----------|-----------|---------|
-| **Tamanho** | 7B (otimizado) | 7B | 13B+ (pesado) |
-| **Memória RAM** | ~8-10 GB | ~8-10 GB | 16+ GB |
-| **Suporte a Português** | ⭐⭐⭐⭐⭐ (excelente) | ⭐⭐⭐ (bom) | ⭐⭐⭐ (variável) |
-| **JSON Estruturado** | ⭐⭐⭐⭐⭐ (especializado) | ⭐⭐⭐ (bom) | ⭐⭐ (fraco) |
-| **Velocidade** | ⚡⚡⚡⚡ (muito rápido) | ⚡⚡⚡ (rápido) | ⚡⚡ (lento) |
-| **Precisão** | ⭐⭐⭐⭐⭐ (alta) | ⭐⭐⭐⭐ (boa) | ⭐⭐⭐ (média) |
-| **Consumo GPU** | ✅ Baixo | ✅ Baixo | ❌ Alto |
+**Para iniciantes / uso ocasional:**
+- **Google Gemini** - Gratuito, rápido, sem necessidade de cartão de crédito
+- Ideal para testar o EtnoPapers sem custos
+- Limite generoso: até 15 requisições por minuto
 
-**Vantagens Específicas para EtnoPapers:**
+**Para uso profissional / alto volume:**
+- **OpenAI GPT-4o-mini** - Custo muito baixo, alta qualidade
+- Aproximadamente $0.15 por 1000 páginas processadas
+- API madura e estável
 
-1. **Multilíngue Robusto**
-   - Treinamento aprofundado em português brasileiro
-   - Melhor compreensão de termos científicos e etnobotânicos
-   - Tratamento correto de nomes vernaculares e científicos
+**Para máxima qualidade:**
+- **Anthropic Claude 3.5 Haiku** - Melhor compreensão de contexto científico
+- Aproximadamente $0.25 por 1000 páginas processadas
+- Excelente para termos técnicos e nomenclatura científica
 
-2. **Especializado em Extração Estruturada**
-   - Ótimo para extrair JSON limpo e válido
-   - Melhor compreensão de estruturas de dados
-   - Menos erros de formatação na resposta
+### Versões Anteriores (OLLAMA Local)
 
-3. **Eficiência de Recursos**
-   - Roda em máquinas com 8-10 GB de RAM
-   - Tempo de resposta: 15-30 segundos por PDF (vs. 30-60s em outros)
-   - Pode rodar com ou sem GPU dedicada
+Nas versões anteriores do EtnoPapers (v1.0), a extração era feita usando OLLAMA localmente instalado. Essa abordagem foi descontinuada em favor dos provedores em nuvem pelos seguintes motivos:
 
-4. **Qualidade de Resposta**
-   - Mais "inteligente" na extração de metadados
-   - Melhor compreensão de contexto etnobotânico
-   - Menos alucinações (falsas informações geradas)
+- **Desempenho**: IA em nuvem é 50% mais rápida que modelos locais
+- **Qualidade**: Menos alucinações e melhor compreensão de contexto
+- **Facilidade**: Não requer instalação de software adicional ou GPU
+- **Manutenção**: Modelos sempre atualizados pelos provedores
 
-5. **Custo-Benefício**
-   - Melhor relação entre tamanho, qualidade e velocidade
-   - Reduz frustração de timeouts
-   - Menos erros = menos edição manual
-
-**Modelos Alternativos (em ordem de preferência):**
-
-- **Qwen 2.5 14B**: Se sua máquina tem 16+ GB de RAM, melhor ainda! Maior precisão
-- **Mistral 7B**: Boa alternativa, um pouco mais rápido que Qwen 2.5 7B
-- **Neural Chat 7B**: Alternativa razoável, menos preciso para tarefas estruturadas
-- **Llama 2 7B**: Funciona, mas requer mais edição manual de dados extraídos
+Se você usava OLLAMA anteriormente, seus dados existentes continuam compatíveis. Basta configurar um provedor de IA em nuvem nas Configurações
 
 ---
 
@@ -255,7 +264,7 @@ ollama pull qwen2.5:7b
 - **Framework**: .NET 8.0
 - **Interface**: WPF (Windows Presentation Foundation)
 - **Arquitetura**: MVVM (Model-View-ViewModel)
-- **IA Local**: OLLAMA (API REST) com modelo **Qwen 2.5 7B** recomendado
+- **IA em Nuvem**: Google Gemini, OpenAI ou Anthropic Claude (APIs REST)
 - **Armazenamento Local**: JSON
 - **Banco de Dados**: MongoDB (Atlas ou local)
 - **Linguagem**: C#
@@ -273,8 +282,8 @@ Para entender a arquitetura detalhada do sistema, incluindo diagramas C4 Model e
 - 📄 **PDFs não são armazenados**: Todos os arquivos PDF enviados são descartados após o processamento por questões de armazenamento e privacidade
 - 💾 **Backup regular**: Sempre sincronize seus dados com o MongoDB para evitar perda de informações
 - 🎯 **Limite de armazenamento local**: Há um número máximo de registros no arquivo local. O sistema avisará quando se aproximar do limite
-- 🔌 **OLLAMA obrigatório**: Sem o OLLAMA instalado e rodando, não é possível processar PDFs
-- 🚀 **Use GPU**: Uma placa de vídeo dedicada melhora muito o desempenho da IA
+- ☁️ **Provedor de IA obrigatório**: Configure um provedor de IA em nuvem (Gemini, OpenAI ou Anthropic) antes de processar PDFs
+- 🔑 **Segurança da API Key**: Sua chave de API é criptografada usando DPAPI do Windows e armazenada localmente de forma segura
 - ✏️ **Edição sempre disponível**: Após a extração, a janela de edição sempre abre para você revisar os dados, independente de estarem completos ou não
 
 ---

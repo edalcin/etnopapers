@@ -5,16 +5,16 @@
 
 ## Project Overview
 
-EtnoPapers is an Electron-based Windows desktop application that extracts ethnobotanical metadata from scientific papers using AI (OLLAMA) and syncs data to MongoDB.
+EtnoPapers is a Windows desktop application (.NET 8.0 / WPF) that extracts ethnobotanical metadata from scientific papers using cloud AI providers (Google Gemini, OpenAI, Anthropic) and syncs data to MongoDB.
 
 **Key Technologies**:
-- **Frontend**: Electron + React + TypeScript + Tailwind CSS
-- **State**: Zustand
-- **Local Storage**: lowdb (JSON file)
+- **Framework**: .NET 8.0 / WPF
+- **Architecture**: MVVM
+- **Local Storage**: JSON file
 - **Cloud Storage**: MongoDB (official driver)
-- **PDF Processing**: pdf.js
-- **AI Integration**: OLLAMA REST API
-- **Testing**: Vitest + React Testing Library + Playwright
+- **PDF Processing**: Custom Markdown converter
+- **AI Integration**: Google Gemini, OpenAI, or Anthropic APIs
+- **Testing**: xUnit + WPF UI tests
 
 ---
 
@@ -22,12 +22,15 @@ EtnoPapers is an Electron-based Windows desktop application that extracts ethnob
 
 Before starting, ensure you have:
 
-1. **Node.js 20 LTS**: [https://nodejs.org](https://nodejs.org)
-2. **pnpm**: `npm install -g pnpm` (or use npm)
+1. **.NET 8.0 SDK**: [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+2. **Visual Studio 2022** (recommended): Community edition or higher
+   - With ".NET desktop development" workload
 3. **Git**: For version control
-4. **Windows 10+**: Required for testing Windows-specific features
-5. **OLLAMA**: [https://ollama.ai](https://ollama.ai) - Install and start service
-6. **VS Code** (recommended): With ESLint, Prettier, TypeScript extensions
+4. **Windows 10+**: Required for WPF development and testing
+5. **Cloud AI API Key**: Get a free API key from:
+   - Google Gemini: [https://ai.google.dev/](https://ai.google.dev/) (recommended - free tier)
+   - OpenAI: [https://platform.openai.com/](https://platform.openai.com/)
+   - Anthropic: [https://console.anthropic.com/](https://console.anthropic.com/)
 
 ---
 
@@ -76,37 +79,36 @@ etnopapers/
 └── resources/             # App icons, installers
 ```
 
-### 3. Environment Configuration
+### 3. Configuration for Development
 
-Create `.env.local` file in root:
+**Option 1: Use Visual Studio**
+- Open `EtnoPapers.sln` in Visual Studio 2022
+- Set `EtnoPapers.UI` as startup project
+- Press F5 to build and run
 
-```env
-# OLLAMA Configuration
-VITE_OLLAMA_URL=http://localhost:11434
-VITE_DEFAULT_MODEL=llama2
-
-# Development Settings
-VITE_LOG_LEVEL=debug
-VITE_MAX_LOCAL_RECORDS=1000
-
-# MongoDB (optional for development)
-VITE_MONGODB_URI=mongodb://localhost:27017
-```
-
-### 4. Start Development
-
+**Option 2: Use Command Line**
 ```bash
-# Start Electron in development mode with hot reload
-pnpm dev
+# Build the solution
+dotnet build
 
-# In separate terminal: Run tests in watch mode
-pnpm test:watch
+# Run the application
+dotnet run --project src/EtnoPapers.UI/EtnoPapers.UI.csproj
+
+# Run tests
+dotnet test
 ```
 
-The app will open automatically with:
-- Main window showing the UI
-- DevTools open (F12)
-- Hot reload enabled for both main and renderer
+### 4. Configure Cloud AI Provider
+
+On first run, the app will prompt you to configure a cloud AI provider:
+
+1. Click on **Configurações** (Settings)
+2. Select your AI provider (Gemini, OpenAI, or Anthropic)
+3. Paste your API key
+4. Click **Salvar** (Save)
+5. The app will encrypt and store your API key securely
+
+**For testing without real API calls**, you can mock the AI service in your unit tests
 
 ---
 
@@ -568,12 +570,14 @@ pnpm type-check
 pnpm install @types/node @types/react --save-dev
 ```
 
-### Issue: OLLAMA connection fails
+### Issue: Cloud AI provider connection fails
 
 **Solution**:
-1. Verify OLLAMA is running: `ollama list`
-2. Check URL in config: `http://localhost:11434`
-3. Test connection manually: `curl http://localhost:11434/api/tags`
+1. Verify your API key is correct
+2. Check that you have internet connection
+3. Ensure you haven't exceeded rate limits (especially on free tiers)
+4. Check the logs in `%AppData%\EtnoPapers\logs\` for detailed error messages
+5. Try a different provider if one is consistently failing
 
 ---
 
