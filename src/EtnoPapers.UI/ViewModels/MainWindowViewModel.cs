@@ -14,10 +14,9 @@ namespace EtnoPapers.UI.ViewModels
     {
         private readonly ConfigurationService _configService;
         private readonly LoggerService _loggerService;
-        private readonly OLLAMAService _ollamaService;
         private readonly MongoDBSyncService _mongodbService;
         private string _currentPage = "Home";
-        private bool _ollamaConnected = false;
+        private bool _cloudAIConfigured = false;
         private bool _mongodbConnected = false;
         private string _applicationTitle = "EtnoPapers - Gerenciador de Pesquisa Etnobotânica";
 
@@ -26,7 +25,6 @@ namespace EtnoPapers.UI.ViewModels
             // Placeholder - services will be injected from App.xaml resources
             _configService = new ConfigurationService();
             _loggerService = new LoggerService();
-            _ollamaService = new OLLAMAService();
             _mongodbService = new MongoDBSyncService();
 
             _loggerService.Info("MainWindowViewModel initialized");
@@ -43,10 +41,10 @@ namespace EtnoPapers.UI.ViewModels
             set => SetProperty(ref _currentPage, value);
         }
 
-        public bool OllamaConnected
+        public bool CloudAIConfigured
         {
-            get => _ollamaConnected;
-            set => SetProperty(ref _ollamaConnected, value);
+            get => _cloudAIConfigured;
+            set => SetProperty(ref _cloudAIConfigured, value);
         }
 
         public bool MongodbConnected
@@ -61,7 +59,7 @@ namespace EtnoPapers.UI.ViewModels
             set => SetProperty(ref _applicationTitle, value);
         }
 
-        public string Version => "1.0.0";
+        public string Version => "2.0.0";
 
         #endregion
 
@@ -89,12 +87,12 @@ namespace EtnoPapers.UI.ViewModels
                 // Small delay to ensure file system writes are complete
                 await Task.Delay(100);
 
-                // Check OLLAMA connection
-                var ollamaConnected = await _ollamaService.CheckHealthAsync();
-                OllamaConnected = ollamaConnected;
+                // Check Cloud AI configuration
+                var config = _configService.LoadConfiguration();
+                CloudAIConfigured = config?.IsCloudAIConfigured ?? false;
+                _loggerService.Info($"Cloud AI configured: {CloudAIConfigured}, Provider: {config?.AIProvider}");
 
                 // Check MongoDB connection if URI is configured
-                var config = _configService.LoadConfiguration();
                 if (!string.IsNullOrWhiteSpace(config?.MongodbUri))
                 {
                     var mongodbConnected = await _mongodbService.TestConnectionAsync(config.MongodbUri);
@@ -107,7 +105,7 @@ namespace EtnoPapers.UI.ViewModels
                     _loggerService.Info("MongoDB URI not configured");
                 }
 
-                _loggerService.Info($"Connection check completed - OLLAMA: {OllamaConnected}, MongoDB: {MongodbConnected}");
+                _loggerService.Info($"Connection check completed - Cloud AI: {CloudAIConfigured}, MongoDB: {MongodbConnected}");
             }
             catch (Exception ex)
             {

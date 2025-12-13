@@ -20,7 +20,6 @@ namespace EtnoPapers.UI.ViewModels
         private readonly DataStorageService _storageService;
         private readonly ExtractionPipelineService _extractionService;
         private readonly PDFProcessingService _pdfService;
-        private readonly OLLAMAService _ollamaService;
         private readonly ValidationService _validationService;
         private readonly LoggerService _loggerService;
         private readonly ConfigurationService _configService;
@@ -43,23 +42,16 @@ namespace EtnoPapers.UI.ViewModels
             _validationService = new ValidationService();
             _loggerService = new LoggerService();
 
-            // Initialize MarkdownConverter for PDF structure analysis
-            var markdownConverter = new MarkdownConverter(_loggerService.Logger);
-            _pdfService = new PDFProcessingService(markdownConverter, _loggerService.Logger);
+            // Initialize PDF processing service
+            _pdfService = new PDFProcessingService();
 
-            // Load OLLAMA configuration
-            var config = _configService.LoadConfiguration();
-            var ollamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
-            var ollamaModel = config?.OllamaModel ?? "llama2";
-            var customPrompt = config?.OllamaPrompt;  // Load custom prompt from configuration
-
-            _ollamaService = new OLLAMAService(ollamaUrl, ollamaModel);
+            // ExtractionPipelineService now uses cloud AI providers (Gemini, OpenAI, Anthropic)
+            // Configuration is loaded from ConfigurationService which manages API keys securely
             _extractionService = new ExtractionPipelineService(
                 _pdfService,
-                _ollamaService,
                 _validationService,
                 _storageService,
-                customPrompt);  // Pass custom prompt to extraction pipeline
+                _configService);
 
             SelectFileCommand = new RelayCommand(_ => SelectFile());
             _startExtractionCommand = new RelayCommand(_ => StartExtraction(), _ => CanStartExtraction());
@@ -68,7 +60,7 @@ namespace EtnoPapers.UI.ViewModels
             SaveResultsCommand = new RelayCommand(_ => SaveResults(), _ => AllowSave && !IsExtracting);
             ClearCommand = new RelayCommand(_ => Clear());
 
-            _loggerService.Info($"UploadViewModel initialized with OLLAMA: {ollamaUrl}, Model: {ollamaModel}");
+            _loggerService.Info("UploadViewModel initialized with cloud AI provider support (Gemini, OpenAI, Anthropic)");
         }
 
         #region Properties
