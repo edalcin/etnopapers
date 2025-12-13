@@ -12,6 +12,7 @@
             <converters:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <converters:EmptyStateConverter x:Key="EmptyStateConverter"/>
+            <converters:CountToBoolConverter x:Key="CountToBoolConverter"/>
 
             <!-- Default Fonts -->
             <FontFamily x:Key="DefaultFontFamily">Segoe UI</FontFamily>

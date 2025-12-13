@@ -23,6 +23,7 @@ namespace EtnoPapers.UI.ViewModels
         private string _apiKey = "";
         private string _maskedApiKey = "";
         private string _providerTestStatus = "";
+        private string _customExtractionPrompt = "";
 
         // Legacy OLLAMA Settings (kept for backward compatibility, not displayed in UI)
         private string _ollamaUrl = "http://localhost:11434";
@@ -115,6 +116,15 @@ namespace EtnoPapers.UI.ViewModels
         {
             get => _providerTestStatus;
             set => SetProperty(ref _providerTestStatus, value);
+        }
+
+        /// <summary>
+        /// Custom extraction prompt for LLM (overrides default prompt if provided).
+        /// </summary>
+        public string CustomExtractionPrompt
+        {
+            get => _customExtractionPrompt;
+            set => SetProperty(ref _customExtractionPrompt, value);
         }
 
         #endregion
@@ -245,6 +255,7 @@ namespace EtnoPapers.UI.ViewModels
                 }
 
                 ApiKey = config?.ApiKey ?? "";
+                CustomExtractionPrompt = config?.CustomExtractionPrompt ?? "";
 
                 // Load legacy OLLAMA settings (for backward compatibility, not displayed)
                 _ollamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
@@ -307,6 +318,8 @@ namespace EtnoPapers.UI.ViewModels
                     config.AIProvider = null;
                     config.ApiKey = null;
                 }
+
+                config.CustomExtractionPrompt = CustomExtractionPrompt?.Trim() ?? "";
 
                 // Save legacy OLLAMA settings (for backward compatibility)
                 config.OllamaUrl = _ollamaUrl;

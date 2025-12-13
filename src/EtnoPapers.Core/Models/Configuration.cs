@@ -19,6 +19,9 @@ namespace EtnoPapers.Core.Models
         [JsonProperty("apiKey")]
         public string ApiKey { get; set; }
 
+        [JsonProperty("customExtractionPrompt")]
+        public string CustomExtractionPrompt { get; set; }
+
         // Legacy OLLAMA Fields (DEPRECATED - kept for backward compatibility)
         [JsonProperty("ollamaUrl")]
         public string OllamaUrl { get; set; } = "http://localhost:11434";

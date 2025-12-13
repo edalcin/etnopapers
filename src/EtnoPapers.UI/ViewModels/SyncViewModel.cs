@@ -71,6 +71,7 @@ namespace EtnoPapers.UI.ViewModels
                 // StartSyncCommand: sem predicate - deixar o IsEnabled binding no XAML controlar
                 StartSyncCommand = new AsyncRelayCommand(_ => StartSync());
                 CancelSyncCommand = new RelayCommand(_ => CancelSync(), _ => IsSyncing);
+                DeleteSelectedRecordsCommand = new RelayCommand(_ => DeleteSelectedRecords(), _ => SelectedRecords.Count > 0);
                 DismissSyncReminderCommand = new RelayCommand(_ => DismissSyncReminder());
                 _loggerService.Info("Commands created");
 
@@ -186,6 +187,7 @@ namespace EtnoPapers.UI.ViewModels
         public ICommand TestConnectionCommand { get; }
         public ICommand StartSyncCommand { get; }
         public ICommand CancelSyncCommand { get; }
+        public ICommand DeleteSelectedRecordsCommand { get; }
         public ICommand DismissSyncReminderCommand { get; }
 
         #endregion
@@ -487,6 +489,89 @@ namespace EtnoPapers.UI.ViewModels
         {
             ShowSyncReminder = false;
             _loggerService.Info("Sync reminder dismissed by user");
+        }
+
+        /// <summary>
+        /// Deletes selected records from local storage after user confirmation.
+        /// </summary>
+        private void DeleteSelectedRecords()
+        {
+            if (SelectedRecords.Count == 0)
+            {
+                _loggerService.Warn("DeleteSelectedRecords called but no records selected");
+                return;
+            }
+
+            var result = System.Windows.MessageBox.Show(
+                $"Tem certeza que deseja deletar {SelectedRecords.Count} registro(s)?\n\nEsta ação não pode ser desfeita.",
+                "Confirmar Exclusão",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (result != System.Windows.MessageBoxResult.Yes)
+            {
+                _loggerService.Info("Delete records cancelled by user");
+                return;
+            }
+
+            try
+            {
+                var recordsToDelete = new List<ArticleRecord>(SelectedRecords);
+                int successCount = 0;
+
+                foreach (var record in recordsToDelete)
+                {
+                    if (record == null)
+                    {
+                        _loggerService.Warn("Skipping null record during deletion");
+                        continue;
+                    }
+
+                    try
+                    {
+                        _loggerService.Info($"Deleting record: {record.Id} - {record.Titulo}");
+                        if (_storageService.Delete(record.Id))
+                        {
+                            successCount++;
+                            SelectedRecords.Remove(record);
+                            AvailableRecords.Remove(record);
+                        }
+                        else
+                        {
+                            _loggerService.Warn($"Failed to delete record: {record.Id}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggerService.Error($"Error deleting record {record.Id}: {ex.Message}", ex);
+                    }
+                }
+
+                _loggerService.Info($"Delete completed: {successCount}/{recordsToDelete.Count} records deleted successfully");
+
+                if (successCount > 0)
+                {
+                    System.Windows.MessageBox.Show(
+                        $"✓ {successCount} registro(s) deletado(s) com sucesso!",
+                        "Sucesso",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
+
+                    UpdateCanStartSync();
+                }
+                else
+                {
+                    HasError = true;
+                    ErrorMessage = "Nenhum registro foi deletado. Verifique os logs para mais detalhes.";
+                    _loggerService.Error("No records were deleted");
+                }
+            }
+            catch (Exception ex)
+            {
+                HasError = true;
+                ErrorMessage = $"Erro ao deletar registros: {ex.Message}";
+                _loggerService.Error($"Error in DeleteSelectedRecords: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
