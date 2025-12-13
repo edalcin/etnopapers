@@ -57,4 +57,16 @@ Research completed for migrating from local OLLAMA to cloud AI (Gemini, OpenAI, 
 - Config: Backward-compatible (preserve old fields)
 - Docs: API key acquisition links in README
 
+## R006: Performance Baseline
+
+**OLLAMA Performance (Historical Reference for T079 Benchmark)**:
+- Extraction time: 30-60 seconds per PDF (reported as "péssimo" - poor performance)
+- High variability based on local CPU/GPU
+- User motivation for migration: unacceptable performance
+
+**Cloud AI Expected Performance**:
+- Target: 2-10 seconds per PDF (50%+ improvement per SC-005)
+- Gemini/OpenAI/Anthropic: Network latency + API processing
+- Baseline reference for T079: Use 30-60s OLLAMA timing for comparison
+
 ## Phase 0 Complete ✅

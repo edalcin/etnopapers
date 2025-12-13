@@ -3,7 +3,7 @@
 **Feature Branch**: `main` (single-branch workflow)
 **Created**: 2025-12-09
 **Status**: Draft
-**Input**: User description: "Quero refatorar este projeto para usar agentes de inteligência artificial baseados na WEB, via API-KEY. O desempenho com OLLAMA local foi péssimo. Faça referência ao OLLAMA apenas como histórico de versão do projeto. Nesta nova versão vamos manter todo fluxo de trabalho, interface etc e vamos mudar apenas a entrega do texto do artigo para o agente de AI externo, não mais o OLLAMA. A interface de configuração agora irá pedir a chave de API para os agentes 'Gemini', 'OpenAI' e 'Anthropic'. O usuário vai escolher o agente, via pulldown, e preencher o valor da chave. Apenas um agente será permitido escolher e salvar a chave correspondente no arquivo de configuração local, que nunca será commitado para o repositório público, pois tem informação sensível. Em resumo, vamos apenas substituir o OLLAMA pelo 'Gemini', 'OpenAI' ou 'Anthropic'. A interface de configuração e todo o processo de entrega do artigo e recebimento dos dados deve ser ajustado para este novo cenário, assim como a interface de configuração, para receber a chave API do agente escolhido. Atualize o planejamento e as tasks com base nesta nova especificação. Atualize também toda documentação, eliminando todos os arquivos desnecessários, testes e relacionados ao OLLAMA."
+**Input**: User description: "Quero refatorar este projeto para usar agentes de inteligï¿½ncia artificial baseados na WEB, via API-KEY. O desempenho com OLLAMA local foi pï¿½ssimo. Faï¿½a referï¿½ncia ao OLLAMA apenas como histï¿½rico de versï¿½o do projeto. Nesta nova versï¿½o vamos manter todo fluxo de trabalho, interface etc e vamos mudar apenas a entrega do texto do artigo para o agente de AI externo, nï¿½o mais o OLLAMA. A interface de configuraï¿½ï¿½o agora irï¿½ pedir a chave de API para os agentes 'Gemini', 'OpenAI' e 'Anthropic'. O usuï¿½rio vai escolher o agente, via pulldown, e preencher o valor da chave. Apenas um agente serï¿½ permitido escolher e salvar a chave correspondente no arquivo de configuraï¿½ï¿½o local, que nunca serï¿½ commitado para o repositï¿½rio pï¿½blico, pois tem informaï¿½ï¿½o sensï¿½vel. Em resumo, vamos apenas substituir o OLLAMA pelo 'Gemini', 'OpenAI' ou 'Anthropic'. A interface de configuraï¿½ï¿½o e todo o processo de entrega do artigo e recebimento dos dados deve ser ajustado para este novo cenï¿½rio, assim como a interface de configuraï¿½ï¿½o, para receber a chave API do agente escolhido. Atualize o planejamento e as tasks com base nesta nova especificaï¿½ï¿½o. Atualize tambï¿½m toda documentaï¿½ï¿½o, eliminando todos os arquivos desnecessï¿½rios, testes e relacionados ao OLLAMA."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -36,7 +36,7 @@ A researcher wants to upload a scientific PDF and have its ethnobotanical metada
 **Acceptance Scenarios**:
 
 1. **Given** a valid AI provider is configured with an active API key, **When** the user uploads a PDF file and initiates extraction, **Then** the PDF text is sent to the cloud AI provider's API for processing
-2. **Given** the cloud AI provider returns extracted metadata, **When** the processing completes, **Then** the data is saved to the local JSON file with all mandatory fields (título, autores, ano, resumo, espécies, geographic data, comunidade, metodologia)
+2. **Given** the cloud AI provider returns extracted metadata, **When** the processing completes, **Then** the data is saved to the local JSON file with all mandatory fields (tï¿½tulo, autores, ano, resumo, espï¿½cies, geographic data, comunidade, metodologia)
 3. **Given** the user is processing a PDF, **When** the extraction is in progress, **Then** a progress indicator shows the current status (e.g., "Extracting metadata from cloud AI...")
 4. **Given** the cloud AI API returns an error (invalid key, rate limit, network issue), **When** the error occurs, **Then** the user sees a clear error message explaining the issue and the extraction stops gracefully
 5. **Given** multiple PDFs are queued for processing, **When** one extraction fails, **Then** the remaining PDFs continue to process independently
@@ -91,7 +91,7 @@ A developer or documentation reader wants to understand that OLLAMA was used in 
 - **FR-009**: System MUST send extracted PDF text to the configured cloud AI provider's API endpoint using the saved API key
 - **FR-010**: System MUST include the ethnobotanical extraction prompt in the API request (same prompt structure previously used with OLLAMA)
 - **FR-011**: System MUST parse the cloud AI provider's response and extract metadata into the same JSON structure defined in `docs/estrutura.json`
-- **FR-012**: System MUST maintain all mandatory extracted fields: título, autores, ano, resumo (in Brazilian Portuguese), espécies, pais, estado, municipio, local, bioma, comunidade, metodologia
+- **FR-012**: System MUST maintain all mandatory extracted fields: tï¿½tulo, autores, ano, resumo (in Brazilian Portuguese), espï¿½cies, pais, estado, municipio, local, bioma, comunidade, metodologia
 - **FR-013**: System MUST display a progress indicator during cloud API processing with appropriate status messages
 - **FR-014**: System MUST handle API errors gracefully and display user-friendly error messages for common issues (invalid key, rate limits, network failures, timeout)
 - **FR-015**: System MUST allow processing to continue for remaining PDFs if one extraction fails in a batch
@@ -111,14 +111,14 @@ A developer or documentation reader wants to understand that OLLAMA was used in 
 - **NFR-001**: API keys MUST be stored securely in a local file that is never committed to the repository
 - **NFR-002**: API communication MUST use HTTPS for all cloud provider endpoints
 - **NFR-003**: System SHOULD implement retry logic with exponential backoff for transient API failures
-- **NFR-004**: Error messages MUST be clear and actionable for non-technical users
+- **NFR-004**: Error messages MUST be clear, actionable for non-technical users, and displayed in Brazilian Portuguese
 - **NFR-005**: The configuration interface MUST use the same UI framework and design patterns as the existing application
 
 ### Key Entities
 
 - **AI Provider Configuration**: Represents the user's cloud AI setup with three attributes: provider name (enum: Gemini, OpenAI, Anthropic), API key (encrypted string), and timestamp of last update. Relationship: One active configuration per application instance.
 
-- **Extracted Metadata Record**: Represents ethnobotanical data extracted from a PDF. Attributes remain unchanged from existing structure (título, autores, ano, resumo, espécies, geographic fields, comunidade, metodologia). Relationship: Created by AI Provider via API call, stored in local JSON, optionally synced to MongoDB.
+- **Extracted Metadata Record**: Represents ethnobotanical data extracted from a PDF. Attributes remain unchanged from existing structure (tï¿½tulo, autores, ano, resumo, espï¿½cies, geographic fields, comunidade, metodologia). Relationship: Created by AI Provider via API call, stored in local JSON, optionally synced to MongoDB.
 
 - **Processing Queue**: Represents PDFs awaiting or undergoing extraction. Attributes: PDF file reference, processing status (pending, in-progress, completed, failed), associated AI provider used, timestamp, error message (if failed). Relationship: Each queue item processes one PDF and creates one Extracted Metadata Record.
 
