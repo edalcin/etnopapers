@@ -42,8 +42,9 @@ namespace EtnoPapers.UI.ViewModels
             _validationService = new ValidationService();
             _loggerService = new LoggerService();
 
-            // Initialize PDF processing service
-            _pdfService = new PDFProcessingService();
+            // Initialize PDF processing service with Markdown converter
+            var markdownConverter = new MarkdownConverter(_loggerService.Logger);
+            _pdfService = new PDFProcessingService(markdownConverter, _loggerService.Logger);
 
             // ExtractionPipelineService now uses cloud AI providers (Gemini, OpenAI, Anthropic)
             // Configuration is loaded from ConfigurationService which manages API keys securely
