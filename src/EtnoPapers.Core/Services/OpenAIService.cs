@@ -35,21 +35,38 @@ public class OpenAIService : AIProviderService
         if (string.IsNullOrWhiteSpace(pdfText))
             throw new ArgumentException("PDF text cannot be empty", nameof(pdfText));
 
+        var startTime = DateTime.UtcNow;
+
         try
         {
+            Logger.Information("Starting metadata extraction with {Provider}", ProviderName);
+
             var response = await RetryHelper.ExecuteWithRetryAsync(
                 async ct => await CallOpenAIApiAsync(pdfText, ct),
                 $"Extract metadata from {ProviderName}",
                 cancellationToken: cancellationToken);
 
+            var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
+            Logger.Information("Metadata extraction from {Provider} completed in {Duration}ms with status {Status}",
+                ProviderName, duration, "Success");
+
             return response;
         }
         catch (HttpRequestException ex)
         {
+            var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
             var statusCode = CloudErrorMapper.TryExtractStatusCode(ex);
             var message = CloudErrorMapper.GetErrorMessage(ex, statusCode);
-            Logger.Error(ex, "[{Provider}] API error: {StatusCode}", ProviderName, statusCode);
+            Logger.Error(ex, "Metadata extraction from {Provider} failed after {Duration}ms with status {StatusCode}",
+                ProviderName, duration, statusCode);
             throw new InvalidOperationException(message, ex);
+        }
+        catch (Exception ex)
+        {
+            var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
+            Logger.Error(ex, "Metadata extraction from {Provider} failed after {Duration}ms with error: {Error}",
+                ProviderName, duration, ex.Message);
+            throw;
         }
     }
 

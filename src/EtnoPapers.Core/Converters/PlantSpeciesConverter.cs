@@ -19,20 +19,31 @@ namespace EtnoPapers.Core.Converters
             var species = new PlantSpecies();
 
             // Parse nome_vernacular - can be string or array
+            // Support both "nome_vernacular" and "vernacular" field names (from AI providers)
             if (jo["nome_vernacular"] != null)
             {
                 species.NomeVernacular = ParseNameArray(jo["nome_vernacular"]);
             }
+            else if (jo["vernacular"] != null)
+            {
+                species.NomeVernacular = ParseNameArray(jo["vernacular"]);
+            }
 
             // Parse nome_cientifico - can be string or array
+            // Support both "nome_cientifico" and "nomeCientifico" field names (from AI providers)
             if (jo["nome_cientifico"] != null)
             {
                 species.NomeCientifico = ParseNameArray(jo["nome_cientifico"]);
             }
+            else if (jo["nomeCientifico"] != null)
+            {
+                species.NomeCientifico = ParseNameArray(jo["nomeCientifico"]);
+            }
 
             // Parse other fields
-            species.TipoUso = jo["tipo_uso"]?.ToString();
-            species.ParteUsada = jo["parte_usada"]?.ToString();
+            // Support both "tipo_uso" and "tipoUso" field names
+            species.TipoUso = jo["tipo_uso"]?.ToString() ?? jo["tipoUso"]?.ToString();
+            species.ParteUsada = jo["parte_usada"]?.ToString() ?? jo["parteUsada"]?.ToString();
             species.Preparacao = jo["preparacao"]?.ToString();
 
             return species;

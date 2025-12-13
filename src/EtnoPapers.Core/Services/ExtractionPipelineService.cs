@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using EtnoPapers.Core.Models;
+using EtnoPapers.Core.Utils;
 
 namespace EtnoPapers.Core.Services
 {
@@ -109,6 +110,15 @@ namespace EtnoPapers.Core.Services
 
                 var providerName = config.AIProvider.Value.ToString();
                 UpdateProgress(50, "Processing with AI", $"Processando com IA em nuvem ({providerName})...");
+
+                // Check internet connectivity before calling cloud API
+                LogToFile(debugLogFile, $"\n>>> CHECKING INTERNET CONNECTIVITY");
+                if (!await NetworkHelper.IsInternetAvailableAsync())
+                {
+                    throw new InvalidOperationException(
+                        "Sem conexão com a internet. Verifique sua conexão de rede e tente novamente.");
+                }
+                LogToFile(debugLogFile, $"Internet connection: OK");
 
                 LogToFile(debugLogFile, $"\n>>> SENDING TO CLOUD AI");
                 LogToFile(debugLogFile, $"Provider: {providerName}");

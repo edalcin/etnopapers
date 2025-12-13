@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 using EtnoPapers.UI.ViewModels;
 
 namespace EtnoPapers.UI.Views
@@ -69,6 +71,27 @@ namespace EtnoPapers.UI.Views
                 {
                     ViewModel.ApiKey = passwordBox.Password;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles hyperlink clicks to open API key acquisition URLs in the default browser.
+        /// </summary>
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            try
+            {
+                // Open the URL in the default browser
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = e.Uri.AbsoluteUri,
+                    UseShellExecute = true
+                });
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error opening URL: {ex.Message}");
             }
         }
     }

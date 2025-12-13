@@ -76,17 +76,41 @@
                 <StackPanel>
                     <TextBlock Text="Configuração do Provedor de IA" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
-                    <TextBlock Text="Provedor de IA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <ComboBox x:Name="ProviderComboBox"
-                              SelectedIndex="{Binding SelectedProviderIndex, UpdateSourceTrigger=PropertyChanged}"
-                              Padding="8,6"
-                              Margin="0,0,0,12"
-                              Background="White"
-                              BorderBrush="#E0E0E0">
-                        <ComboBoxItem Content="Google Gemini" Tag="0"/>
-                        <ComboBoxItem Content="OpenAI" Tag="1"/>
-                        <ComboBoxItem Content="Anthropic Claude" Tag="2"/>
-                    </ComboBox>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Provedor de IA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                            <ComboBox x:Name="ProviderComboBox"
+                                      SelectedIndex="{Binding SelectedProviderIndex, UpdateSourceTrigger=PropertyChanged}"
+                                      Padding="8,6"
+                                      Background="White"
+                                      BorderBrush="#E0E0E0">
+                                <ComboBoxItem Content="Google Gemini" Tag="0"/>
+                                <ComboBoxItem Content="OpenAI" Tag="1"/>
+                                <ComboBoxItem Content="Anthropic Claude" Tag="2"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Bottom">
+                            <TextBlock FontSize="11" Foreground="#0078D4" VerticalAlignment="Center">
+                                <Hyperlink NavigateUri="https://ai.google.dev/" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <Run Text="Obter Chave Gemini"/>
+                                </Hyperlink>
+                                <LineBreak/>
+                                <Hyperlink NavigateUri="https://platform.openai.com/" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <Run Text="Obter Chave OpenAI"/>
+                                </Hyperlink>
+                                <LineBreak/>
+                                <Hyperlink NavigateUri="https://console.anthropic.com/" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <Run Text="Obter Chave Anthropic"/>
+                                </Hyperlink>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
 
                     <TextBlock Text="Chave de API" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
                     <PasswordBox x:Name="ApiKeyPasswordBox"
