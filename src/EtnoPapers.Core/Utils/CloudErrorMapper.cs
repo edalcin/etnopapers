@@ -28,7 +28,7 @@ public static class CloudErrorMapper
         return exception switch
         {
             InvalidOperationException => "A chave de API não foi configurada. Verifique as configurações.",
-            HttpRequestException => MapHttpRequestException(exception),
+            HttpRequestException httpEx => MapHttpRequestException(httpEx),
             TimeoutException => "Tempo limite excedido ao conectar com o provedor de IA",
             OperationCanceledException => "A operação foi cancelada",
             _ => "Erro ao extrair metadados. Tente novamente mais tarde."

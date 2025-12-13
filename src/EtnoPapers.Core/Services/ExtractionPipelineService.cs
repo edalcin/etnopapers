@@ -21,10 +21,9 @@ namespace EtnoPapers.Core.Services
     public class ExtractionPipelineService
     {
         private readonly PDFProcessingService _pdfService;
-        private readonly OLLAMAService _ollamaService;
         private readonly ValidationService _validationService;
         private readonly DataStorageService _storageService;
-        private readonly string _customPrompt;
+        private readonly ConfigurationService _configurationService;
         private CancellationTokenSource _cancellationTokenSource;
 
         public string CurrentStep { get; private set; }
@@ -38,16 +37,14 @@ namespace EtnoPapers.Core.Services
 
         public ExtractionPipelineService(
             PDFProcessingService pdfService,
-            OLLAMAService ollamaService,
             ValidationService validationService,
             DataStorageService storageService,
-            string customPrompt = null)
+            ConfigurationService configurationService)
         {
             _pdfService = pdfService;
-            _ollamaService = ollamaService;
             _validationService = validationService;
             _storageService = storageService;
-            _customPrompt = customPrompt;
+            _configurationService = configurationService;
         }
 
         /// <summary>
@@ -101,42 +98,47 @@ namespace EtnoPapers.Core.Services
                 var markdownPreview = markdown.Length > 800 ? markdown.Substring(0, 800) + "\n[... truncated ...]" : markdown;
                 LogToFile(debugLogFile, $"\nFirst 800 characters of Markdown:\n{markdownPreview}\n");
 
-                UpdateProgress(50, "Processing with AI", $"Processando Markdown com IA (OLLAMA - modelo: {_ollamaService.CurrentModel})...");
+                // Load configuration and create AI provider
+                var config = _configurationService.LoadConfiguration();
 
-                LogToFile(debugLogFile, $"\n>>> SENDING TO OLLAMA");
-                LogToFile(debugLogFile, $"Markdown length: {markdown.Length} characters");
-                LogToFile(debugLogFile, $"Model: {_ollamaService.CurrentModel}");
-                LogToFile(debugLogFile, $"Using custom prompt: {(_customPrompt != null ? "YES" : "NO")}");
-                if (_customPrompt != null)
+                if (!config.IsCloudAIConfigured)
                 {
-                    LogToFile(debugLogFile, $"Custom prompt length: {_customPrompt.Length} characters");
-                    LogToFile(debugLogFile, $"First 500 chars of custom prompt:\n{_customPrompt.Substring(0, Math.Min(500, _customPrompt.Length))}");
+                    throw new InvalidOperationException(
+                        "Provedor de IA não configurado. Configure um provedor de IA (Gemini, OpenAI ou Anthropic) nas Configurações.");
                 }
 
-                var metadata = await _ollamaService.ExtractMetadataAsync(markdown, _customPrompt);
+                var providerName = config.AIProvider.Value.ToString();
+                UpdateProgress(50, "Processing with AI", $"Processando com IA em nuvem ({providerName})...");
 
-                // Log OLLAMA response for debugging
-                LogToFile(debugLogFile, $"\n>>> OLLAMA RESPONSE RECEIVED");
+                LogToFile(debugLogFile, $"\n>>> SENDING TO CLOUD AI");
+                LogToFile(debugLogFile, $"Provider: {providerName}");
+                LogToFile(debugLogFile, $"Markdown length: {markdown.Length} characters");
+
+                // Create provider and extract metadata
+                var provider = AIProviderFactory.CreateProvider(config.AIProvider.Value);
+                provider.SetApiKey(config.ApiKey);
+
+                var metadata = await provider.ExtractMetadataAsync(markdown);
+
+                // Log AI response for debugging
+                LogToFile(debugLogFile, $"\n>>> CLOUD AI RESPONSE RECEIVED");
                 LogToFile(debugLogFile, $"Response length: {metadata.Length} characters");
-                LogToFile(debugLogFile, $"\n--- FULL OLLAMA RESPONSE ---");
+                LogToFile(debugLogFile, $"\n--- FULL AI RESPONSE ---");
                 LogToFile(debugLogFile, metadata);
-                LogToFile(debugLogFile, $"--- END OLLAMA RESPONSE ---\n");
+                LogToFile(debugLogFile, $"--- END AI RESPONSE ---\n");
 
                 UpdateProgress(75, "Validating extracted data", "Validando dados extraídos...");
 
-                // Clean OLLAMA response that may have various formatting issues
-                // OLLAMA sometimes returns: json ( { ... } ) or json\n( { ... } ) etc.
-                var cleanedMetadata = CleanOLLAMAResponse(metadata);
-
+                // Parse JSON response (already cleaned by the AI service)
                 ArticleRecord record = null;
                 try
                 {
-                    record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(cleanedMetadata);
+                    record = Newtonsoft.Json.JsonConvert.DeserializeObject<ArticleRecord>(metadata);
                     System.Diagnostics.Debug.WriteLine($"Parsed record: Titulo={record?.Titulo}, Autores={record?.Autores?.Count ?? 0}, Ano={record?.Ano}");
                 }
                 catch (Exception ex)
                 {
-                    var detailedError = $"Erro ao fazer parsing dos dados JSON extraídos:\n{ex.Message}\n\nJSON recebido (cleaned):\n{cleanedMetadata}\n\nJSON original:\n{metadata}";
+                    var detailedError = $"Erro ao fazer parsing dos dados JSON extraídos:\n{ex.Message}\n\nJSON recebido:\n{metadata}";
                     System.Diagnostics.Debug.WriteLine($"JSON Parsing Error: {detailedError}");
                     UpdateProgress(75, "Error", $"Erro no parsing: {ex.Message}");
                     throw new InvalidOperationException(detailedError, ex);
@@ -199,54 +201,6 @@ namespace EtnoPapers.Core.Services
             return suggestions;
         }
 
-        /// <summary>
-        /// Cleans OLLAMA response to extract valid JSON.
-        /// OLLAMA may return formats like: json ( { ... } ) or json { ... } etc.
-        /// </summary>
-        private string CleanOLLAMAResponse(string response)
-        {
-            if (string.IsNullOrWhiteSpace(response))
-                return response;
-
-            var cleaned = response.Trim();
-
-            // Step 1: Remove "json" keyword that may appear at the start (case-insensitive)
-            // Format: "json\n(\n{\n..."
-            if (cleaned.StartsWith("json", StringComparison.OrdinalIgnoreCase))
-            {
-                cleaned = cleaned.Substring(4).Trim();  // Remove "json"
-                System.Diagnostics.Debug.WriteLine("Removed 'json' keyword from start of response");
-            }
-
-            // Step 2: Remove parentheses around JSON
-            // Format: "(\n{\n...}\n)"
-            while (cleaned.StartsWith("("))
-            {
-                cleaned = cleaned.Substring(1).Trim();
-            }
-            while (cleaned.EndsWith(")"))
-            {
-                cleaned = cleaned.Substring(0, cleaned.Length - 1).Trim();
-            }
-
-            // Step 3: Find the actual JSON object boundaries
-            // Extract from first { to last }
-            int startIndex = cleaned.IndexOf('{');
-            int endIndex = cleaned.LastIndexOf('}');
-
-            if (startIndex >= 0 && endIndex > startIndex)
-            {
-                cleaned = cleaned.Substring(startIndex, endIndex - startIndex + 1).Trim();
-                System.Diagnostics.Debug.WriteLine("Extracted JSON from first { to last }");
-            }
-
-            if (cleaned != response.Trim())
-            {
-                System.Diagnostics.Debug.WriteLine($"OLLAMA response cleaned. Original length: {response.Length}, Cleaned length: {cleaned.Length}");
-            }
-
-            return cleaned;
-        }
 
         /// <summary>
         /// Cancels the extraction process.

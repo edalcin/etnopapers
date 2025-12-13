@@ -7,6 +7,12 @@ namespace EtnoPapers.Core.Services;
 public interface IAIProvider
 {
     /// <summary>
+    /// Sets the API key for authentication.
+    /// </summary>
+    /// <param name="apiKey">API key for the cloud provider</param>
+    void SetApiKey(string apiKey);
+
+    /// <summary>
     /// Extracts ethnobotanical metadata from PDF text content.
     /// </summary>
     /// <param name="pdfText">Extracted text from the PDF file</param>

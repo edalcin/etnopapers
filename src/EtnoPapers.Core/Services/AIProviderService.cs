@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Serilog;
 
 namespace EtnoPapers.Core.Services;
@@ -134,6 +135,3 @@ Estrutura esperada:
         }
     }
 }
-
-// Import for JSON handling
-using Newtonsoft.Json.Linq;
