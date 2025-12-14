@@ -23,7 +23,8 @@
       "Bash(dotnet publish:*)",
       "Bash(find:*)",
       "Bash(dotnet clean:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
