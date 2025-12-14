@@ -20,6 +20,7 @@
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
@@ -36,7 +37,21 @@
                             </ComboBox>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Bottom">
+                        <!-- Gemini Model Selection (visible only when Gemini is selected) -->
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" Visibility="{Binding SelectedProviderIndex, Converter={StaticResource IntToVisibilityConverter}}">
+                            <TextBlock Text="Modelo Gemini" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                            <ComboBox SelectedIndex="{Binding SelectedGeminiModelIndex, UpdateSourceTrigger=PropertyChanged}"
+                                      Padding="8,6"
+                                      Background="White"
+                                      BorderBrush="#E0E0E0">
+                                <ComboBoxItem Content="Gemini 1.5 Flash (Recomendado)" Tag="0"/>
+                                <ComboBoxItem Content="Gemini Pro (Mais Potente)" Tag="1"/>
+                            </ComboBox>
+                            <TextBlock Text="Flash: mais rápido | Pro: melhor precisão"
+                                       FontSize="10" Foreground="#8A8A8A" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Bottom">
                             <TextBlock FontSize="11" Foreground="#0078D4" VerticalAlignment="Center">
                                 <Hyperlink NavigateUri="https://ai.google.dev/" RequestNavigate="Hyperlink_RequestNavigate">
                                     <Run Text="Obter Chave Gemini"/>

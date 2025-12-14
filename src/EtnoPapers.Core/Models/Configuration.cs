@@ -19,6 +19,9 @@ namespace EtnoPapers.Core.Models
         [JsonProperty("apiKey")]
         public string ApiKey { get; set; }
 
+        [JsonProperty("geminiModel")]
+        public GeminiModelType GeminiModel { get; set; } = GeminiModelType.Flash;
+
         [JsonProperty("customExtractionPrompt")]
         public string CustomExtractionPrompt { get; set; }
 

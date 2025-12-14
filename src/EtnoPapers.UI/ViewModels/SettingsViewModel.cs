@@ -25,6 +25,7 @@ namespace EtnoPapers.UI.ViewModels
         private string _maskedApiKey = "";
         private string _providerTestStatus = "";
         private string _customExtractionPrompt = "";
+        private int _selectedGeminiModelIndex = 0;
 
         // Legacy OLLAMA Settings (kept for backward compatibility, not displayed in UI)
         private string _ollamaUrl = "http://localhost:11434";
@@ -127,6 +128,15 @@ namespace EtnoPapers.UI.ViewModels
         {
             get => _customExtractionPrompt;
             set => SetProperty(ref _customExtractionPrompt, value);
+        }
+
+        /// <summary>
+        /// Selected Gemini model (0=Flash, 1=Pro).
+        /// </summary>
+        public int SelectedGeminiModelIndex
+        {
+            get => _selectedGeminiModelIndex;
+            set => SetProperty(ref _selectedGeminiModelIndex, value);
         }
 
         #endregion
@@ -258,6 +268,7 @@ namespace EtnoPapers.UI.ViewModels
 
                 ApiKey = config?.ApiKey ?? "";
                 CustomExtractionPrompt = config?.CustomExtractionPrompt ?? "";
+                SelectedGeminiModelIndex = (int)(config?.GeminiModel ?? EtnoPapers.Core.Models.GeminiModelType.Flash);
 
                 // Load legacy OLLAMA settings (for backward compatibility, not displayed)
                 _ollamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
@@ -314,6 +325,7 @@ namespace EtnoPapers.UI.ViewModels
                 {
                     config.AIProvider = (AIProviderType)SelectedProviderIndex;
                     config.ApiKey = ApiKey.Trim();
+                    config.GeminiModel = (EtnoPapers.Core.Models.GeminiModelType)SelectedGeminiModelIndex;
                 }
                 else
                 {
@@ -502,9 +514,32 @@ namespace EtnoPapers.UI.ViewModels
                 var provider = AIProviderFactory.CreateProvider(providerType);
                 provider.SetApiKey(ApiKey.Trim());
 
-                // Test with a simple extraction request (empty text to test connectivity)
-                var testPrompt = "Responda com 'OK' se conseguiu processar esta mensagem.";
-                var testText = "Teste de conexão";
+                // Set Gemini model if applicable
+                if (provider is EtnoPapers.Core.Services.GeminiService geminiService)
+                {
+                    geminiService.SetModel((EtnoPapers.Core.Models.GeminiModelType)SelectedGeminiModelIndex);
+                }
+
+                // Test with a simple extraction request that returns valid JSON
+                // This is a minimal metadata extraction that should always succeed if the API key is valid
+                var testPrompt = @"Você é um especialista em etnobotânica. Responda em JSON com este formato exato:
+{
+  ""titulo"": ""Test Article"",
+  ""autores"": [""Test Author""],
+  ""ano"": 2024,
+  ""resumo"": ""Test abstract in Portuguese"",
+  ""especies"": [],
+  ""pais"": ""Brasil"",
+  ""estado"": ""SP"",
+  ""municipio"": ""São Paulo"",
+  ""local"": ""Test location"",
+  ""bioma"": ""Cerrado"",
+  ""comunidade"": { ""nome"": ""Test Community"", ""localizacao"": ""Location"" },
+  ""metodologia"": ""Test methodology""
+}
+
+Ignore the text below and return ONLY the JSON above with the exact same values:";
+                var testText = "This is a test text for API connectivity validation.";
 
                 try
                 {

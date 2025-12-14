@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using EtnoPapers.Core.Models;
 using EtnoPapers.Core.Utils;
 using System.Net.Http;
 using System.Text;
@@ -18,12 +19,23 @@ public class GeminiService : AIProviderService
     private const string ApiEndpointFlash = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
     private const string ApiEndpointPro = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
     private string _apiEndpoint = ApiEndpointFlash;
+    private GeminiModelType _selectedModel = GeminiModelType.Flash;
 
     protected override string ProviderName => "Gemini";
 
     public GeminiService(HttpClient? httpClient = null) : base(httpClient)
     {
         HttpClient.Timeout = TimeSpan.FromSeconds(30);
+    }
+
+    /// <summary>
+    /// Sets the Gemini model to use for API calls.
+    /// </summary>
+    public void SetModel(GeminiModelType model)
+    {
+        _selectedModel = model;
+        _apiEndpoint = model == GeminiModelType.Flash ? ApiEndpointFlash : ApiEndpointPro;
+        Logger.Information("Gemini model set to: {Model}", model);
     }
 
     /// <summary>
