@@ -44,7 +44,7 @@
                                       Padding="8,6"
                                       Background="White"
                                       BorderBrush="#E0E0E0">
-                                <ComboBoxItem Content="Gemini 2.0 Flash (Recomendado)" Tag="0"/>
+                                <ComboBoxItem Content="Gemini 2.5 Flash (Recomendado)" Tag="0"/>
                                 <ComboBoxItem Content="Gemini 2.5 Pro (Mais Potente)" Tag="1"/>
                             </ComboBox>
                             <TextBlock Text="Flash: mais rápido | Pro: melhor precisão"

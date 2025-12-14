@@ -24,7 +24,14 @@
       "Bash(find:*)",
       "Bash(dotnet clean:*)",
       "Bash(grep:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(where dotnet:*)",
+      "Bash(\"C:\\Program Files\\dotnet\\dotnet.exe\" build src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)",
+      "Bash(dir:*)",
+      "Bash(where:*)",
+      "Bash(cmd /c publish-release.bat)",
+      "Bash(cmd /c \"C:\\Program Files\\dotnet\\dotnet.exe\" build -c Release)",
+      "Bash(C:UsersEDalcin.dotnetdotnet.exe build src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)"
     ],
     "deny": [],
     "ask": []

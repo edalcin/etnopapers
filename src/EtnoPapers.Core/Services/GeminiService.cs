@@ -11,12 +11,12 @@ namespace EtnoPapers.Core.Services;
 
 /// <summary>
 /// Google Gemini AI provider implementation for ethnobotanical metadata extraction.
-/// Uses Gemini 2.0 Flash and 2.5 Pro models via REST API.
+/// Uses Gemini 2.5 Flash and 2.5 Pro models via REST API.
 /// </summary>
 public class GeminiService : AIProviderService
 {
-    // Endpoint supports both gemini-2.0-flash and gemini-2.5-pro models (2025 stable versions)
-    private const string ApiEndpointFlash = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    // Endpoint supports both gemini-2.5-flash and gemini-2.5-pro models (2025 stable versions)
+    private const string ApiEndpointFlash = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
     private const string ApiEndpointPro = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent";
     private string _apiEndpoint = ApiEndpointFlash;
     private GeminiModelType _selectedModel = GeminiModelType.Flash;
@@ -85,10 +85,10 @@ public class GeminiService : AIProviderService
                 Logger.Error("[{Provider}] Test request failed with status {StatusCode}: {Error}",
                     ProviderName, response.StatusCode, errorContent);
 
-                // Try fallback to gemini-2.5-pro if gemini-2.0-flash fails with 404
+                // Try fallback to gemini-2.5-pro if gemini-2.5-flash fails with 404
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound && _apiEndpoint == ApiEndpointFlash)
                 {
-                    Logger.Information("[{Provider}] Model gemini-2.0-flash not available, trying gemini-2.5-pro fallback",
+                    Logger.Information("[{Provider}] Model gemini-2.5-flash not available, trying gemini-2.5-pro fallback",
                         ProviderName);
                     _apiEndpoint = ApiEndpointPro;
                     return await TestApiConnectionAsync(cancellationToken);
@@ -226,10 +226,10 @@ public class GeminiService : AIProviderService
             Logger.Error("[{Provider}] API returned {StatusCode}: {Error}",
                 ProviderName, response.StatusCode, errorContent);
 
-            // Try fallback to gemini-2.5-pro if gemini-2.0-flash fails with 404
+            // Try fallback to gemini-2.5-pro if gemini-2.5-flash fails with 404
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound && _apiEndpoint == ApiEndpointFlash)
             {
-                Logger.Information("[{Provider}] Model gemini-2.0-flash not available, trying gemini-2.5-pro fallback",
+                Logger.Information("[{Provider}] Model gemini-2.5-flash not available, trying gemini-2.5-pro fallback",
                     ProviderName);
                 _apiEndpoint = ApiEndpointPro;
                 return await CallGeminiApiAsync(prompt, cancellationToken);

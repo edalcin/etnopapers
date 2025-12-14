@@ -6,7 +6,7 @@ namespace EtnoPapers.Core.Models;
 public enum GeminiModelType
 {
     /// <summary>
-    /// Gemini 2.0 Flash - Fast and efficient model (recommended for most cases)
+    /// Gemini 2.5 Flash - Fast and efficient model (recommended for most cases)
     /// </summary>
     Flash = 0,
 
