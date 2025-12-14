@@ -39,6 +39,69 @@ public class GeminiService : AIProviderService
     }
 
     /// <summary>
+    /// Tests connectivity to Gemini API without validating metadata structure.
+    /// Simple test that just validates the API key and connection.
+    /// </summary>
+    public async Task<bool> TestApiConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        ValidateApiKey();
+
+        try
+        {
+            // Ultra-simple test: just ask for a confirmation
+            var testPrompt = "Responda com JSON: {\"ok\": true}";
+            var requestBody = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new[] { new { text = testPrompt } }
+                    }
+                },
+                generationConfig = new
+                {
+                    temperature = 0.1f,
+                    topP = 0.3f,
+                    maxOutputTokens = 100
+                }
+            };
+
+            var json = JsonConvert.SerializeObject(requestBody);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var urlWithKey = $"{_apiEndpoint}?key={ApiKey}";
+
+            var response = await HttpClient.PostAsync(urlWithKey, content, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Try fallback to gemini-pro if gemini-1.5-flash fails with 404
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound && _apiEndpoint == ApiEndpointFlash)
+                {
+                    Logger.Information("Gemini 1.5 Flash not available, testing with Gemini Pro");
+                    _apiEndpoint = ApiEndpointPro;
+                    return await TestApiConnectionAsync(cancellationToken);
+                }
+
+                return false;
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            // Just check if we got a valid response with candidates
+            var jResponse = JObject.Parse(responseContent);
+            var candidates = jResponse["candidates"] as JArray;
+
+            return candidates != null && candidates.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Test connection failed for Gemini");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Extracts ethnobotanical metadata from PDF text using Gemini API.
     /// </summary>
     public override async Task<string> ExtractMetadataAsync(string pdfText, CancellationToken cancellationToken = default)

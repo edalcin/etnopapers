@@ -520,32 +520,23 @@ namespace EtnoPapers.UI.ViewModels
                     geminiService.SetModel((EtnoPapers.Core.Models.GeminiModelType)SelectedGeminiModelIndex);
                 }
 
-                // Test with a simple extraction request that returns valid JSON
-                // This is a minimal metadata extraction that should always succeed if the API key is valid
-                var testPrompt = @"Você é um especialista em etnobotânica. Responda em JSON com este formato exato:
-{
-  ""titulo"": ""Test Article"",
-  ""autores"": [""Test Author""],
-  ""ano"": 2024,
-  ""resumo"": ""Test abstract in Portuguese"",
-  ""especies"": [],
-  ""pais"": ""Brasil"",
-  ""estado"": ""SP"",
-  ""municipio"": ""São Paulo"",
-  ""local"": ""Test location"",
-  ""bioma"": ""Cerrado"",
-  ""comunidade"": { ""nome"": ""Test Community"", ""localizacao"": ""Location"" },
-  ""metodologia"": ""Test methodology""
-}
-
-Ignore the text below and return ONLY the JSON above with the exact same values:";
-                var testText = "This is a test text for API connectivity validation.";
-
                 try
                 {
-                    var result = await provider.ExtractMetadataAsync(testPrompt + "\n\n" + testText);
+                    // For Gemini, use the simplified connection test
+                    bool connectionSuccess = false;
+                    if (provider is EtnoPapers.Core.Services.GeminiService geminiForTest)
+                    {
+                        connectionSuccess = await geminiForTest.TestApiConnectionAsync();
+                    }
+                    else
+                    {
+                        // For other providers, try a simple extraction request
+                        var testPrompt = "Responda com um JSON válido: {\"status\": \"ok\"}";
+                        var result = await provider.ExtractMetadataAsync(testPrompt);
+                        connectionSuccess = !string.IsNullOrEmpty(result);
+                    }
 
-                    if (!string.IsNullOrEmpty(result))
+                    if (connectionSuccess)
                     {
                         ProviderTestStatus = $"✓ Conexão com {providerName} bem-sucedida! API key válida.";
                         HasError = false;
@@ -554,8 +545,8 @@ Ignore the text below and return ONLY the JSON above with the exact same values:
                     }
                     else
                     {
-                        ProviderTestStatus = $"✗ Resposta vazia de {providerName}. Verifique sua chave de API.";
-                        _loggerService.Warn($"Provider {providerName} returned empty response");
+                        ProviderTestStatus = $"✗ Resposta inválida de {providerName}. Verifique sua chave de API.";
+                        _loggerService.Warn($"Provider {providerName} returned invalid response during test");
                     }
                 }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("API key"))

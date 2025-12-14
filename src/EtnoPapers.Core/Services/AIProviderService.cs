@@ -52,6 +52,28 @@ public abstract class AIProviderService : IAIProvider
     }
 
     /// <summary>
+    /// Tests connectivity to the AI provider without requiring valid metadata structure.
+    /// Used for validating API keys and connectivity.
+    /// </summary>
+    public virtual async Task<bool> TestConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        ValidateApiKey();
+
+        // Simple test that doesn't require full metadata extraction
+        var simplePrompt = "Responda com um simples 'ok' em JSON: {\"status\": \"ok\"}";
+
+        try
+        {
+            var result = await ExtractMetadataAsync(simplePrompt, cancellationToken);
+            return !string.IsNullOrEmpty(result);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Extracts ethnobotanical metadata from PDF text.
     /// </summary>
     public abstract Task<string> ExtractMetadataAsync(string pdfText, CancellationToken cancellationToken = default);
