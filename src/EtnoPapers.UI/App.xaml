@@ -14,6 +14,7 @@
             <converters:EmptyStateConverter x:Key="EmptyStateConverter"/>
             <converters:CountToBoolConverter x:Key="CountToBoolConverter"/>
             <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+            <converters:SelectedIndexToVisibilityConverter x:Key="SelectedIndexToVisibilityConverter"/>
 
             <!-- Default Fonts -->
             <FontFamily x:Key="DefaultFontFamily">Segoe UI</FontFamily>

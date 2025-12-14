@@ -48,8 +48,10 @@ public class GeminiService : AIProviderService
 
         try
         {
+            Logger.Debug("[{Provider}] Starting API connection test with endpoint: {Endpoint}", ProviderName, _apiEndpoint);
+
             // Ultra-simple test: just ask for a confirmation
-            var testPrompt = "Responda com JSON: {\"ok\": true}";
+            var testPrompt = "Responda com 'OK'";
             var requestBody = new
             {
                 contents = new[]
@@ -63,7 +65,7 @@ public class GeminiService : AIProviderService
                 {
                     temperature = 0.1f,
                     topP = 0.3f,
-                    maxOutputTokens = 100
+                    maxOutputTokens = 50
                 }
             };
 
@@ -71,32 +73,69 @@ public class GeminiService : AIProviderService
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var urlWithKey = $"{_apiEndpoint}?key={ApiKey}";
 
+            Logger.Debug("[{Provider}] Sending test request to: {Endpoint}", ProviderName, _apiEndpoint);
+
             var response = await HttpClient.PostAsync(urlWithKey, content, cancellationToken);
+
+            Logger.Debug("[{Provider}] Test response status: {StatusCode}", ProviderName, response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                Logger.Error("[{Provider}] Test request failed with status {StatusCode}: {Error}",
+                    ProviderName, response.StatusCode, errorContent);
+
                 // Try fallback to gemini-pro if gemini-1.5-flash fails with 404
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound && _apiEndpoint == ApiEndpointFlash)
                 {
-                    Logger.Information("Gemini 1.5 Flash not available, testing with Gemini Pro");
+                    Logger.Information("[{Provider}] Model gemini-1.5-flash not available, trying gemini-pro fallback",
+                        ProviderName);
                     _apiEndpoint = ApiEndpointPro;
                     return await TestApiConnectionAsync(cancellationToken);
+                }
+
+                // Check if it's an authentication error (invalid API key)
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.BadRequest ||
+                    errorContent.Contains("API key") || errorContent.Contains("authentication"))
+                {
+                    Logger.Error("[{Provider}] Authentication failed - invalid or expired API key", ProviderName);
                 }
 
                 return false;
             }
 
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            Logger.Debug("[{Provider}] Received response (length: {Length})", ProviderName, responseContent.Length);
 
             // Just check if we got a valid response with candidates
-            var jResponse = JObject.Parse(responseContent);
-            var candidates = jResponse["candidates"] as JArray;
+            try
+            {
+                var jResponse = JObject.Parse(responseContent);
+                var candidates = jResponse["candidates"] as JArray;
+                var hasContent = candidates != null && candidates.Count > 0;
 
-            return candidates != null && candidates.Count > 0;
+                Logger.Information("[{Provider}] Connection test successful. Response contains candidates: {HasContent}",
+                    ProviderName, hasContent);
+
+                return hasContent;
+            }
+            catch (JsonException jsonEx)
+            {
+                Logger.Error(jsonEx, "[{Provider}] Failed to parse response JSON", ProviderName);
+                // If we got a 200 OK but the JSON is malformed, the connection works but response format is wrong
+                // This might still indicate a working API key
+                return responseContent.Length > 0;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error(ex, "[{Provider}] HTTP request error during connection test", ProviderName);
+            return false;
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Test connection failed for Gemini");
+            Logger.Error(ex, "[{Provider}] Unexpected error during connection test", ProviderName);
             return false;
         }
     }

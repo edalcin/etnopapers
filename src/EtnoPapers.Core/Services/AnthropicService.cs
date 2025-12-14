@@ -26,6 +26,92 @@ public class AnthropicService : AIProviderService
     }
 
     /// <summary>
+    /// Tests connectivity to Anthropic API without validating metadata structure.
+    /// Simple test that just validates the API key and connection.
+    /// </summary>
+    public async Task<bool> TestApiConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        ValidateApiKey();
+
+        try
+        {
+            Logger.Debug("[{Provider}] Starting API connection test", ProviderName);
+
+            // Ultra-simple test request
+            var requestBody = new
+            {
+                model = DefaultModel,
+                max_tokens = 50,
+                messages = new[]
+                {
+                    new { role = "user", content = "Responda com 'OK'" }
+                }
+            };
+
+            var json = JsonConvert.SerializeObject(requestBody);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, ApiEndpoint);
+            request.Content = content;
+            request.Headers.Add("x-api-key", ApiKey);
+            request.Headers.Add("anthropic-version", ApiVersion);
+
+            Logger.Debug("[{Provider}] Sending test request", ProviderName);
+
+            var response = await HttpClient.SendAsync(request, cancellationToken);
+
+            Logger.Debug("[{Provider}] Test response status: {StatusCode}", ProviderName, response.StatusCode);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                Logger.Error("[{Provider}] Test request failed with status {StatusCode}: {Error}",
+                    ProviderName, response.StatusCode, errorContent);
+
+                // Check if it's an authentication error (invalid API key)
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    errorContent.Contains("authentication") || errorContent.Contains("invalid"))
+                {
+                    Logger.Error("[{Provider}] Authentication failed - invalid or expired API key", ProviderName);
+                }
+
+                return false;
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            Logger.Debug("[{Provider}] Received response (length: {Length})", ProviderName, responseContent.Length);
+
+            // Just check if we got a valid response
+            try
+            {
+                var jResponse = JObject.Parse(responseContent);
+                var hasContent = jResponse["content"] != null;
+
+                Logger.Information("[{Provider}] Connection test successful. Response has content: {HasContent}",
+                    ProviderName, hasContent);
+
+                return hasContent;
+            }
+            catch (JsonException jsonEx)
+            {
+                Logger.Error(jsonEx, "[{Provider}] Failed to parse response JSON", ProviderName);
+                // If we got a 200 OK but the JSON is malformed, the connection works but response format is wrong
+                return responseContent.Length > 0;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error(ex, "[{Provider}] HTTP request error during connection test", ProviderName);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[{Provider}] Unexpected error during connection test", ProviderName);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Extracts ethnobotanical metadata from PDF text using Anthropic API.
     /// </summary>
     public override async Task<string> ExtractMetadataAsync(string pdfText, CancellationToken cancellationToken = default)

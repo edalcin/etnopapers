@@ -37,8 +37,8 @@
                             </ComboBox>
                         </StackPanel>
 
-                        <!-- Gemini Model Selection (visible only when Gemini is selected) -->
-                        <StackPanel Grid.Column="1" Margin="12,0,0,0" Visibility="{Binding SelectedProviderIndex, Converter={StaticResource IntToVisibilityConverter}}">
+                        <!-- Gemini Model Selection (visible only when Gemini is selected - index 0) -->
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" Visibility="{Binding SelectedProviderIndex, Converter={StaticResource SelectedIndexToVisibilityConverter}, ConverterParameter=0}">
                             <TextBlock Text="Modelo Gemini" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
                             <ComboBox SelectedIndex="{Binding SelectedGeminiModelIndex, UpdateSourceTrigger=PropertyChanged}"
                                       Padding="8,6"

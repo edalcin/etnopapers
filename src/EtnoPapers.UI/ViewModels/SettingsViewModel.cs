@@ -522,15 +522,19 @@ namespace EtnoPapers.UI.ViewModels
 
                 try
                 {
-                    // For Gemini, use the simplified connection test
+                    // Use provider-specific connection test methods
                     bool connectionSuccess = false;
                     if (provider is EtnoPapers.Core.Services.GeminiService geminiForTest)
                     {
                         connectionSuccess = await geminiForTest.TestApiConnectionAsync();
                     }
+                    else if (provider is EtnoPapers.Core.Services.AnthropicService anthropicForTest)
+                    {
+                        connectionSuccess = await anthropicForTest.TestApiConnectionAsync();
+                    }
                     else
                     {
-                        // For other providers, try a simple extraction request
+                        // For other providers (OpenAI, etc.), try a simple extraction request
                         var testPrompt = "Responda com um JSON válido: {\"status\": \"ok\"}";
                         var result = await provider.ExtractMetadataAsync(testPrompt);
                         connectionSuccess = !string.IsNullOrEmpty(result);
