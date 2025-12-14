@@ -51,7 +51,7 @@
         </Grid>
 
         <!-- Form Content (Two Column Layout for Landscape) -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -64,6 +64,7 @@
                     <TextBlock Text="Título" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="TituloTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
@@ -81,15 +82,15 @@
                     <TextBlock Text="Ano" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="AnoTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
-                             Padding="8,6"
-                             Width="100"
-                             HorizontalAlignment="Left"/>
+                             Padding="8,6"/>
 
                     <!-- Country -->
                     <TextBlock Text="País" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="PaisTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
@@ -97,6 +98,7 @@
                     <TextBlock Text="Estado" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="EstadoTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
@@ -104,6 +106,7 @@
                     <TextBlock Text="Município" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="MunicipioTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
@@ -111,6 +114,7 @@
                     <TextBlock Text="Local" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="LocalTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
@@ -118,6 +122,7 @@
                     <TextBlock Text="Bioma" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="BiomaTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
                 </StackPanel>
@@ -148,18 +153,21 @@
                     <TextBlock Text="Comunidade (Nome)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="ComunidadeNomeTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
                     <TextBlock Text="Comunidade (Povo)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="ComunidadePovoTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
                     <TextBlock Text="Comunidade (Localização)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBox x:Name="ComunidadeLocalizacaoTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
