@@ -30,6 +30,22 @@ namespace EtnoPapers.UI.Views
             MunicipioTextBox.Text = record.Municipio ?? "";
             BiomaTextBox.Text = record.Bioma ?? "";
             ResumoTextBox.Text = record.Resumo ?? "";
+            LocalTextBox.Text = record.Local ?? "";
+            MetodologiaTextBox.Text = record.Metodologia ?? "";
+
+            // Load Community data
+            if (record.Comunidade != null)
+            {
+                ComunidadeNomeTextBox.Text = record.Comunidade.Nome ?? "";
+                ComunidadePovoTextBox.Text = record.Comunidade.Povo ?? "";
+                ComunidadeLocalizacaoTextBox.Text = record.Comunidade.Localizacao ?? "";
+            }
+
+            // Load Plant Species as JSON
+            if (record.Especies != null && record.Especies.Count > 0)
+            {
+                EspeciesTextBox.Text = Newtonsoft.Json.JsonConvert.SerializeObject(record.Especies, Newtonsoft.Json.Formatting.Indented);
+            }
         }
 
         private void DisplayExtractionTime(ArticleRecord record)
@@ -83,6 +99,37 @@ namespace EtnoPapers.UI.Views
             EditedRecord.Municipio = MunicipioTextBox.Text;
             EditedRecord.Bioma = BiomaTextBox.Text;
             EditedRecord.Resumo = ResumoTextBox.Text;
+            EditedRecord.Local = LocalTextBox.Text;
+            EditedRecord.Metodologia = MetodologiaTextBox.Text;
+
+            // Save Community data
+            if (!string.IsNullOrWhiteSpace(ComunidadeNomeTextBox.Text) ||
+                !string.IsNullOrWhiteSpace(ComunidadePovoTextBox.Text) ||
+                !string.IsNullOrWhiteSpace(ComunidadeLocalizacaoTextBox.Text))
+            {
+                if (EditedRecord.Comunidade == null)
+                    EditedRecord.Comunidade = new EtnoPapers.Core.Models.Community();
+
+                EditedRecord.Comunidade.Nome = ComunidadeNomeTextBox.Text;
+                EditedRecord.Comunidade.Povo = ComunidadePovoTextBox.Text;
+                EditedRecord.Comunidade.Localizacao = ComunidadeLocalizacaoTextBox.Text;
+            }
+
+            // Save Plant Species from JSON
+            if (!string.IsNullOrWhiteSpace(EspeciesTextBox.Text))
+            {
+                try
+                {
+                    var especies = Newtonsoft.Json.JsonConvert.DeserializeObject<List<EtnoPapers.Core.Models.PlantSpecies>>(EspeciesTextBox.Text);
+                    if (especies != null)
+                        EditedRecord.Especies = especies;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erro ao processar JSON das espécies: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
 
             DialogResult = true;
             Close();

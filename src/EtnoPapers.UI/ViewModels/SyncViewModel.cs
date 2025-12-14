@@ -57,12 +57,6 @@ namespace EtnoPapers.UI.ViewModels
                 _availableRecords = new ObservableCollection<ArticleRecord>();
                 _selectedRecords = new ObservableCollection<ArticleRecord>();
 
-                // Monitor SelectedRecords changes to update CanStartSync
-                _selectedRecords.CollectionChanged += (s, e) =>
-                {
-                    UpdateCanStartSync();
-                };
-
                 _loggerService.Info("ObservableCollections created");
 
                 _loggerService.Info("Creating commands...");
@@ -74,6 +68,19 @@ namespace EtnoPapers.UI.ViewModels
                 DeleteSelectedRecordsCommand = new RelayCommand(_ => DeleteSelectedRecords(), _ => SelectedRecords.Count > 0);
                 DismissSyncReminderCommand = new RelayCommand(_ => DismissSyncReminder());
                 _loggerService.Info("Commands created");
+
+                // Monitor SelectedRecords changes to update command states
+                _selectedRecords.CollectionChanged += (s, e) =>
+                {
+                    UpdateCanStartSync();
+                    // Raise CanExecuteChanged for DeleteSelectedRecordsCommand so the button updates its enabled state
+                    if (DeleteSelectedRecordsCommand is RelayCommand deleteCmd)
+                    {
+                        deleteCmd.RaiseCanExecuteChanged();
+                    }
+                };
+
+                _loggerService.Info("Collection change handlers registered");
 
                 _loggerService.Info("SyncViewModel initialized successfully");
             }
