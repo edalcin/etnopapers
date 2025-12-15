@@ -81,39 +81,102 @@ public abstract class AIProviderService : IAIProvider
     /// <summary>
     /// Default system prompt for ethnobotanical extraction.
     /// </summary>
-    public static readonly string DefaultExtractionPrompt = @"Você é um especialista em etnobotânica. Analise o seguinte texto científico e extraia os metadados etnobotânicos em formato JSON estritamente válido.
+    public static readonly string DefaultExtractionPrompt = @"SISTEMA DE EXTRAÇÃO DE METADADOS ETNOBOTÂNICOS
 
-IMPORTANTE:
-1. Responda SOMENTE com JSON válido, sem explicações adicionais
-2. O resumo DEVE estar em português brasileiro
-3. Todos os campos obrigatórios devem ser preenchidos
-4. Use nomes científicos com capitalização correta (Genus species)
-5. Datas devem estar no formato YYYY
+Você é um especialista em etnobotânica que analisa textos científicos e extrai metadados em formato JSON estruturado.
 
-Estrutura esperada:
+REGRAS FUNDAMENTAIS:
+
+COPIE EXATAMENTE do documento. NUNCA invente, infira ou complete dados ausentes.
+
+- Se uma informação NÃO está no documento -> retorne null
+- Se está no documento -> copie EXATAMENTE como aparece
+- Retorne APENAS JSON válido, sem markdown ou explicações
+- O resumo DEVE estar em português brasileiro (traduza se necessário)
+
+ESTRUTURA JSON ESPERADA:
+
 {
-  ""titulo"": ""string normalizando em Proper Case"",
-  ""autores"": [""Sobrenome, I.""],
-  ""ano"": número,
+  ""titulo"": ""string em Proper Case (copiado exatamente do documento)"",
+  ""autores"": [""array com autores no padrão ABNT""],
+  ""ano"": 2010,
   ""resumo"": ""sempre em português brasileiro"",
   ""especies"": [
     {
-      ""vernacular"": ""nome comum"",
-      ""nomeCientifico"": ""Genus species"",
+      ""vernacular"": ""nome comum ou array se houver vários"",
+      ""nomeCientifico"": ""Genus species ou array se houver vários"",
       ""tipoUso"": ""medicinal|alimentação|construção|ritual|artesanato|combustível|forrageiro|outro""
     }
   ],
-  ""pais"": ""string"",
-  ""estado"": ""string"",
-  ""municipio"": ""string"",
-  ""local"": ""string"",
-  ""bioma"": ""string"",
+  ""pais"": ""string ou null"",
+  ""estado"": ""string ou null"",
+  ""municipio"": ""string ou null"",
+  ""local"": ""string ou null"",
+  ""bioma"": ""string ou null"",
   ""comunidade"": {
     ""nome"": ""string"",
     ""localizacao"": ""string""
   },
-  ""metodologia"": ""string""
-}";
+  ""metodologia"": ""string ou null""
+}
+
+INSTRUÇÕES ESPECÍFICAS POR CAMPO:
+
+CAMPOS OBRIGATÓRIOS:
+
+- titulo: Copie palavra por palavra, normalize para Proper Case
+- autores: Todos os autores no formato ABNT (Sobrenome, I.)
+- ano: Apenas o número (ex: se disser ""Recebido em abril de 2010"", extraia 2010)
+- resumo: Se houver abstract/resumo, copie. Se em outra língua, traduza para português brasileiro. Se não houver, use null
+
+CAMPOS DE ESPÉCIES:
+
+- vernacular: Nome(s) comum(ns). Se múltiplos, use array
+- nomeCientifico: Formato correto: ""Genus species"". Se múltiplos, use array
+- tipoUso: Apenas valores da lista permitida
+
+CAMPOS GEOGRÁFICOS:
+
+- Copie EXATAMENTE como aparecem no texto
+- Use null se não encontrado
+- NÃO adivinhe localização baseado em contexto
+
+COMUNIDADE:
+
+- Se mencionada, extraia nome e localização
+- Use null para o objeto inteiro se não mencionada
+
+VALIDAÇÕES AUTOMÁTICAS:
+
+- Nomes científicos: devem seguir padrão ""Genus species"" (primeira letra maiúscula)
+- Ano: deve estar entre 1500 e ano atual + 1
+- Datas: extraia apenas o ano (YYYY)
+- Tipos de uso: devem estar na lista permitida
+
+VALORES PERMITIDOS PARA tipoUso:
+
+- medicinal: Uso medicinal/terapêutico
+- alimentação: Uso alimentar
+- construção: Uso em construções
+- ritual: Uso ritual/religioso/espiritual
+- artesanato: Uso em artesanato
+- combustível: Uso como combustível/energia
+- forrageiro: Uso como forragem para animais
+- outro: Outros usos não categorizados
+
+CHECKLIST FINAL:
+
+Antes de retornar o JSON, verifique:
+- Todos os campos obrigatórios preenchidos ou null
+- Nomes científicos com capitalização correta (Genus species)
+- Resumo em português brasileiro
+- Nenhum valor inventado ou inferido
+- JSON válido (sem comentários, vírgulas extras)
+- Sem markdown ou texto adicional na resposta
+- Título em Proper Case
+- Autores no formato ABNT
+- Ano extraído corretamente (apenas número)
+- Tipos de uso dentro da lista permitida";
 
     /// <summary>
     /// Gets the extraction prompt, using custom prompt if provided, otherwise default.
