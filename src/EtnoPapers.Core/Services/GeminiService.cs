@@ -145,14 +145,14 @@ public class GeminiService : AIProviderService
     /// <summary>
     /// Extracts ethnobotanical metadata from PDF text using Gemini API.
     /// </summary>
-    public override async Task<string> ExtractMetadataAsync(string pdfText, CancellationToken cancellationToken = default)
+    public override async Task<string> ExtractMetadataAsync(string pdfText, string customPrompt = null, CancellationToken cancellationToken = default)
     {
         ValidateApiKey();
 
         if (string.IsNullOrWhiteSpace(pdfText))
             throw new ArgumentException("PDF text cannot be empty", nameof(pdfText));
 
-        var prompt = GetExtractionPrompt() + "\n\n" + pdfText;
+        var prompt = GetExtractionPrompt(customPrompt) + "\n\n" + pdfText;
         var startTime = DateTime.UtcNow;
 
         try

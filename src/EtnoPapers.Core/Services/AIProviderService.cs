@@ -64,7 +64,7 @@ public abstract class AIProviderService : IAIProvider
 
         try
         {
-            var result = await ExtractMetadataAsync(simplePrompt, cancellationToken);
+            var result = await ExtractMetadataAsync(simplePrompt, null, cancellationToken);
             return !string.IsNullOrEmpty(result);
         }
         catch
@@ -76,13 +76,12 @@ public abstract class AIProviderService : IAIProvider
     /// <summary>
     /// Extracts ethnobotanical metadata from PDF text.
     /// </summary>
-    public abstract Task<string> ExtractMetadataAsync(string pdfText, CancellationToken cancellationToken = default);
+    public abstract Task<string> ExtractMetadataAsync(string pdfText, string customPrompt = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets the system prompt for ethnobotanical extraction.
-    /// This is reused across all providers for consistency.
+    /// Default system prompt for ethnobotanical extraction.
     /// </summary>
-    protected string GetExtractionPrompt() => @"Você é um especialista em etnobotânica. Analise o seguinte texto científico e extraia os metadados etnobotânicos em formato JSON estritamente válido.
+    public static readonly string DefaultExtractionPrompt = @"Você é um especialista em etnobotânica. Analise o seguinte texto científico e extraia os metadados etnobotânicos em formato JSON estritamente válido.
 
 IMPORTANTE:
 1. Responda SOMENTE com JSON válido, sem explicações adicionais
@@ -115,6 +114,17 @@ Estrutura esperada:
   },
   ""metodologia"": ""string""
 }";
+
+    /// <summary>
+    /// Gets the extraction prompt, using custom prompt if provided, otherwise default.
+    /// </summary>
+    protected string GetExtractionPrompt(string customPrompt = null)
+    {
+        if (!string.IsNullOrWhiteSpace(customPrompt))
+            return customPrompt;
+
+        return DefaultExtractionPrompt;
+    }
 
     /// <summary>
     /// Validates that API key is configured before making API calls.

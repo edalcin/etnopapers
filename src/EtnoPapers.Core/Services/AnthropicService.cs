@@ -115,7 +115,7 @@ public class AnthropicService : AIProviderService
     /// <summary>
     /// Extracts ethnobotanical metadata from PDF text using Anthropic API.
     /// </summary>
-    public override async Task<string> ExtractMetadataAsync(string pdfText, CancellationToken cancellationToken = default)
+    public override async Task<string> ExtractMetadataAsync(string pdfText, string customPrompt = null, CancellationToken cancellationToken = default)
     {
         ValidateApiKey();
 
@@ -129,7 +129,7 @@ public class AnthropicService : AIProviderService
             Logger.Information("Starting metadata extraction with {Provider}", ProviderName);
 
             var response = await RetryHelper.ExecuteWithRetryAsync(
-                async ct => await CallAnthropicApiAsync(pdfText, ct),
+                async ct => await CallAnthropicApiAsync(pdfText, customPrompt, ct),
                 $"Extract metadata from {ProviderName}",
                 cancellationToken: cancellationToken);
 
@@ -160,9 +160,9 @@ public class AnthropicService : AIProviderService
     /// <summary>
     /// Calls Anthropic API and returns extracted JSON metadata.
     /// </summary>
-    private async Task<string> CallAnthropicApiAsync(string pdfText, CancellationToken cancellationToken)
+    private async Task<string> CallAnthropicApiAsync(string pdfText, string customPrompt, CancellationToken cancellationToken)
     {
-        var systemPrompt = GetExtractionPrompt();
+        var systemPrompt = GetExtractionPrompt(customPrompt);
 
         // Build request payload according to Anthropic Messages API format
         var requestBody = new

@@ -128,7 +128,7 @@ namespace EtnoPapers.Core.Services
                 var provider = AIProviderFactory.CreateProvider(config.AIProvider.Value);
                 provider.SetApiKey(config.ApiKey);
 
-                var metadata = await provider.ExtractMetadataAsync(markdown);
+                var metadata = await provider.ExtractMetadataAsync(markdown, config.CustomExtractionPrompt);
 
                 // Log AI response for debugging
                 LogToFile(debugLogFile, $"\n>>> CLOUD AI RESPONSE RECEIVED");

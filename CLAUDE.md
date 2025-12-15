@@ -314,3 +314,4 @@ This updates `.claude/claude.md` (or equivalent for Cursor/Copilot) with:
 - Slash commands detect current context (branch, feature dir) automatically
 - Due to single-branch workflow, the SpecKit branch naming conventions do not apply to this project
 - este projeto deve ter apenas o main branch. Nunca criar um novo branch. Comitar sempre no main branch
+- a localização dos builds (executáveis) deve ser sempre em D:\git\etnopapers\src\EtnoPapers.UI\bin\Release\net8.0-windows

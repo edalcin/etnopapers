@@ -31,7 +31,10 @@
       "Bash(where:*)",
       "Bash(cmd /c publish-release.bat)",
       "Bash(cmd /c \"C:\\Program Files\\dotnet\\dotnet.exe\" build -c Release)",
-      "Bash(C:UsersEDalcin.dotnetdotnet.exe build src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)"
+      "Bash(C:UsersEDalcin.dotnetdotnet.exe build src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)",
+      "Bash(git reset:*)",
+      "Bash(\"C:\\Program Files\\dotnet\\dotnet.exe\" build -c Release --no-restore)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

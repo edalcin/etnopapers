@@ -65,6 +65,7 @@ namespace EtnoPapers.UI.ViewModels
             TestProviderConnectionCommand = new AsyncRelayCommand(_ => TestProviderConnectionAsync());
             ClearErrorCommand = new RelayCommand(_ => ClearError());
             DismissMigrationBannerCommand = new RelayCommand(_ => DismissMigrationBanner());
+            LoadDefaultPromptCommand = new RelayCommand(_ => LoadDefaultPrompt());
 
             _loggerService.Info("SettingsViewModel initialized");
             LoadSettings();
@@ -242,6 +243,7 @@ namespace EtnoPapers.UI.ViewModels
         public ICommand TestProviderConnectionCommand { get; }
         public ICommand ClearErrorCommand { get; }
         public ICommand DismissMigrationBannerCommand { get; }
+        public ICommand LoadDefaultPromptCommand { get; }
 
         #endregion
 
@@ -534,10 +536,8 @@ namespace EtnoPapers.UI.ViewModels
                     }
                     else
                     {
-                        // For other providers (OpenAI, etc.), try a simple extraction request
-                        var testPrompt = "Responda com um JSON válido: {\"status\": \"ok\"}";
-                        var result = await provider.ExtractMetadataAsync(testPrompt);
-                        connectionSuccess = !string.IsNullOrEmpty(result);
+                        // For other providers (OpenAI, etc.), use the TestConnectionAsync fallback
+                        connectionSuccess = await provider.TestConnectionAsync();
                     }
 
                     if (connectionSuccess)
@@ -622,6 +622,15 @@ namespace EtnoPapers.UI.ViewModels
         {
             ShowMigrationBanner = false;
             _loggerService.Info("Migration banner dismissed");
+        }
+
+        /// <summary>
+        /// Loads the default extraction prompt into the custom prompt field.
+        /// </summary>
+        private void LoadDefaultPrompt()
+        {
+            CustomExtractionPrompt = EtnoPapers.Core.Services.AIProviderService.DefaultExtractionPrompt;
+            _loggerService.Info("Default prompt loaded into custom prompt field");
         }
 
         #endregion

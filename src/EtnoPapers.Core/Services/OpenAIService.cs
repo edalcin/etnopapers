@@ -29,7 +29,7 @@ public class OpenAIService : AIProviderService
     /// <summary>
     /// Extracts ethnobotanical metadata from PDF text using OpenAI API.
     /// </summary>
-    public override async Task<string> ExtractMetadataAsync(string pdfText, CancellationToken cancellationToken = default)
+    public override async Task<string> ExtractMetadataAsync(string pdfText, string customPrompt = null, CancellationToken cancellationToken = default)
     {
         ValidateApiKey();
 
@@ -43,7 +43,7 @@ public class OpenAIService : AIProviderService
             Logger.Information("Starting metadata extraction with {Provider}", ProviderName);
 
             var response = await RetryHelper.ExecuteWithRetryAsync(
-                async ct => await CallOpenAIApiAsync(pdfText, ct),
+                async ct => await CallOpenAIApiAsync(pdfText, customPrompt, ct),
                 $"Extract metadata from {ProviderName}",
                 cancellationToken: cancellationToken);
 
@@ -74,9 +74,9 @@ public class OpenAIService : AIProviderService
     /// <summary>
     /// Calls OpenAI API and returns extracted JSON metadata.
     /// </summary>
-    private async Task<string> CallOpenAIApiAsync(string pdfText, CancellationToken cancellationToken)
+    private async Task<string> CallOpenAIApiAsync(string pdfText, string customPrompt, CancellationToken cancellationToken)
     {
-        var systemPrompt = GetExtractionPrompt();
+        var systemPrompt = GetExtractionPrompt(customPrompt);
 
         // Build request payload according to OpenAI Chat Completions API format
         var requestBody = new

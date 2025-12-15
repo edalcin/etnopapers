@@ -102,11 +102,17 @@
                                Visibility="{Binding ProviderTestStatus, Converter={StaticResource StringToVisibilityConverter}}"/>
 
                     <!-- Custom Extraction Prompt -->
-                    <TextBlock Text="Prompt Customizado para Extração" FontSize="12" Foreground="#505050" Margin="0,16,0,4"/>
-                    <TextBlock Text="Deixe em branco para usar o prompt padrão do sistema" FontSize="11" Foreground="#8A8A8A" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding CustomExtractionPrompt, UpdateSourceTrigger=PropertyChanged}"
+                    <StackPanel Margin="0,16,0,12">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="Prompt Customizado para Extração" FontSize="12" Foreground="#505050" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Deixe em branco para usar o prompt padrão do sistema" FontSize="11" Foreground="#8A8A8A" Margin="0,0,0,4"/>
+                    </StackPanel>
+
+                    <TextBox x:Name="CustomPromptTextBox"
+                             Text="{Binding CustomExtractionPrompt, UpdateSourceTrigger=PropertyChanged}"
                              Padding="8,6"
-                             Margin="0,0,0,12"
+                             Margin="0,0,0,8"
                              Background="White"
                              BorderBrush="#E0E0E0"
                              TextWrapping="Wrap"
@@ -114,7 +120,16 @@
                              VerticalScrollBarVisibility="Auto"
                              Height="150"/>
 
-                    <TextBlock Text="ℹ Customize o prompt enviado para a IA. Use {{texto}} como placeholder para o conteúdo do PDF."
+                    <Button Content="📋 Carregar Prompt Padrão"
+                            Command="{Binding LoadDefaultPromptCommand}"
+                            Padding="12,6"
+                            Margin="0,0,0,12"
+                            Background="#4CAF50"
+                            Foreground="White"
+                            FontSize="11"
+                            ToolTip="Carrega o prompt padrão de extração no campo acima"/>
+
+                    <TextBlock Text="ℹ Customize o prompt enviado para a IA. Deixe em branco para usar o padrão do sistema."
                                FontSize="11"
                                Foreground="#8A8A8A"
                                TextWrapping="Wrap"
