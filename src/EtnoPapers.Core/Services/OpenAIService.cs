@@ -22,7 +22,8 @@ public class OpenAIService : AIProviderService
 
     public OpenAIService(HttpClient? httpClient = null) : base(httpClient)
     {
-        HttpClient.Timeout = TimeSpan.FromSeconds(30);
+        // Set timeout to 5 minutes for AI processing of large PDFs
+        HttpClient.Timeout = TimeSpan.FromSeconds(300);
     }
 
     /// <summary>

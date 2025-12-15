@@ -25,7 +25,9 @@ public class GeminiService : AIProviderService
 
     public GeminiService(HttpClient? httpClient = null) : base(httpClient)
     {
-        HttpClient.Timeout = TimeSpan.FromSeconds(30);
+        // Set timeout to 5 minutes to allow Gemini API sufficient time to process large PDFs
+        // Gemini can take longer than other providers due to more thorough analysis
+        HttpClient.Timeout = TimeSpan.FromSeconds(300);
     }
 
     /// <summary>
