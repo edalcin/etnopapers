@@ -132,3 +132,7 @@ x86/
 # WiX Build
 *.wixobj
 *.wixpdb
+
+# Portable builds (self-contained, too large for git)
+EtnoPapers-Portable/
+artifacts/
