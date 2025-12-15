@@ -422,29 +422,29 @@ namespace EtnoPapers.UI.ViewModels
             {
                 return "A extração excedeu o tempo limite de 10 minutos.\n\n" +
                        "Possíveis causas:\n" +
-                       "• OLLAMA está processando muito lentamente\n" +
-                       "• O modelo de IA é muito grande para o arquivo PDF\n" +
-                       "• Problema temporário de conexão\n\n" +
+                       "• O serviço de IA está processando muito lentamente\n" +
+                       "• O arquivo PDF é muito grande ou complexo\n" +
+                       "• Problema temporário de conexão com o serviço de IA\n\n" +
                        "Soluções:\n" +
                        "1. Tentar novamente com um PDF menor\n" +
-                       "2. Verificar se OLLAMA está respondendo (http://localhost:11434)\n" +
+                       "2. Verificar sua conexão com a internet\n" +
                        "3. Considerar usar um modelo mais rápido nas configurações";
             }
 
             if (ex is HttpRequestException && ex.Message.Contains("timeout", System.StringComparison.OrdinalIgnoreCase))
             {
-                return "Timeout de conexão com OLLAMA.\n\n" +
-                       "O serviço OLLAMA não respondeu dentro do tempo esperado.\n\n" +
+                return "Timeout de conexão com o serviço de IA.\n\n" +
+                       "O serviço não respondeu dentro do tempo esperado.\n\n" +
                        "Verifique:\n" +
-                       "• Se OLLAMA está rodando\n" +
-                       "• A URL de conexão está correta\n" +
-                       "• Sua conexão de rede está estável";
+                       "• Sua conexão com a internet\n" +
+                       "• Se o serviço de IA está disponível\n" +
+                       "• As credenciais de API nas configurações";
             }
 
             if (ex is InvalidOperationException && ex.Message.Contains("OLLAMA", System.StringComparison.OrdinalIgnoreCase))
             {
-                return "Erro de conexão com OLLAMA:\n\n" + ex.Message + "\n\n" +
-                       "Verifique se OLLAMA está instalado e rodando em http://localhost:11434";
+                return "Erro de configuração:\n\n" + ex.Message + "\n\n" +
+                       "Verifique nas configurações qual provedor de IA está sendo usado e se as credenciais estão corretas.";
             }
 
             if (ex is InvalidOperationException && ex.Message.Contains("modelo", System.StringComparison.OrdinalIgnoreCase))
