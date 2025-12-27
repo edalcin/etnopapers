@@ -89,9 +89,16 @@ REGRAS FUNDAMENTAIS:
 
 COPIE EXATAMENTE do documento. NUNCA invente, infira ou complete dados ausentes.
 
-- **IMPORTANTE**: Extraia TODAS as comunidades mencionadas no artigo - não apenas uma!
-- Cada comunidade tem seu próprio conjunto de plantas - mantenha essa associação
-- Se uma informação NÃO está no documento -> retorne null
+**RELAÇÃO N:N OBRIGATÓRIA:**
+- **UM ARTIGO** pode mencionar **N COMUNIDADES** → Liste TODAS as comunidades mencionadas!
+- **UMA COMUNIDADE** pode usar **N PLANTAS** → Liste TODAS as plantas usadas por cada comunidade!
+- Se o artigo menciona 5 comunidades e cada uma usa 20 plantas diferentes, você DEVE listar todas as 5 comunidades com suas 20 plantas cada!
+
+**REGRAS DE EXTRAÇÃO:**
+- **IMPORTANTE**: NUNCA omita comunidades ou plantas. Se estão no documento, DEVEM estar no JSON!
+- Mantenha a associação correta entre cada comunidade e suas plantas específicas
+- Se uma planta é usada por múltiplas comunidades, ela deve aparecer na lista de plantas de CADA comunidade
+- Se uma informação NÃO está no documento → retorne null
 - Retorne APENAS JSON válido, sem markdown ou explicações
 - O resumo DEVE estar em português brasileiro (traduza se necessário)
 - Os autores devem estar no padrão ABNT
@@ -180,12 +187,12 @@ INSTRUÇÕES ESPECÍFICAS POR CAMPO:
 
 CAMPOS OBRIGATÓRIOS:
 
-- titulo: Copie palavra por palavra, normalize para Proper Case
+- titulo: Copie palavra por palavra. Se o título estiver todo em caixa alta, troque para caixa normal.
 - autores: Todos os autores no formato ABNT (Sobrenome, I.)
 - ano: Apenas o número (ex: se disser ""Recebido em abril de 2010"", extraia 2010)
-- comunidades: Array com TODAS as comunidades mencionadas no artigo (mínimo 1)
+- comunidades: Array com TODAS as comunidades mencionadas no artigo. NUNCA omita comunidades! (mínimo 1, pode ter N)
 - comunidades.nome: Nome específico de cada comunidade
-- comunidades.plantas: Array com TODAS as plantas associadas àquela comunidade (mínimo 1 por comunidade)
+- comunidades.plantas: Array com TODAS as plantas usadas por aquela comunidade. NUNCA omita plantas! Uma comunidade pode ter 1, 10, 50 ou 100+ plantas - liste TODAS!
 
 
 CAMPOS DE ESPÉCIES:
@@ -236,15 +243,17 @@ COMUNIDADE:
 CHECKLIST FINAL:
 
 Antes de retornar o JSON, verifique:
-- **TODAS as comunidades do artigo foram extraídas (não apenas uma!)**
-- **Cada comunidade tem suas próprias plantas associadas**
+- **✓ TODAS as comunidades mencionadas no artigo foram extraídas (N comunidades)**
+- **✓ CADA comunidade tem TODAS as suas plantas listadas (N plantas por comunidade)**
+- **✓ Relação N:N completa: Se o artigo tem 3 comunidades, o JSON deve ter 3 objetos em 'comunidades'**
+- **✓ Se uma comunidade usa 50 plantas, TODAS as 50 devem estar na lista de 'plantas' dessa comunidade**
 - Todos os campos obrigatórios preenchidos ou null
 - Nomes científicos com capitalização correta (Genus species)
 - Resumo em português brasileiro
 - Nenhum valor inventado ou inferido
 - JSON válido (sem comentários, vírgulas extras)
 - Sem markdown ou texto adicional na resposta
-- Título em Proper Case
+- Título copiado corretamente (se estava em caixa alta, converter para caixa normal)
 - Autores no formato ABNT
 - Ano extraído corretamente (apenas número)";
 

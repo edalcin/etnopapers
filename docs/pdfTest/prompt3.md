@@ -15,7 +15,7 @@ Você é um especialista em etnobotânica que analisa textos científicos e extr
 
 ```json
 {
-  "titulo": "string em Proper Case (copiado exatamente do documento)",
+  "titulo": "string (caso esteja todo em caixa alta, converter para caixa normal)",
   "autores": ["array com autores no padrão ABNT"],
   "ano": 2010,
   "resumo": "sempre em português brasileiro",
@@ -43,7 +43,7 @@ Você é um especialista em etnobotânica que analisa textos científicos e extr
 
 ### Campos Obrigatórios
 
-- **titulo**: Copie palavra por palavra, normalize para Proper Case
+- **titulo**: Copie palavra por palavra, caso esteja todo em caixa alta, converter para caixa normal
 - **autores**: Todos os autores no formato ABNT (Sobrenome, I.)
 - **ano**: Apenas o número (ex: se disser "Recebido em abril de 2010", extraia `2010`)
 - **resumo**: Se houver abstract/resumo, copie. Se estiver em outra língua, traduza para português brasileiro. Se não houver, use `null`
@@ -128,7 +128,7 @@ Você é um especialista em etnobotânica que analisa textos científicos e extr
 ```
 
 **Problemas no exemplo incorreto:**
-- Título não está em Proper Case
+- Título está todo em caixa baixa (deveria manter a caixa original ou converter de caixa alta para normal)
 - Autores não estão no formato ABNT
 - Resumo com "N/A" ao invés de `null`
 - Vernacular muito genérico (não estava no texto)
@@ -151,7 +151,7 @@ Antes de retornar o JSON, verifique:
 - [ ] Nenhum valor inventado ou inferido
 - [ ] JSON válido (sem comentários, vírgulas extras)
 - [ ] Sem markdown (```json) ou texto adicional na resposta
-- [ ] Título em Proper Case
+- [ ] Título copiado corretamente (se estava em caixa alta, converter para caixa normal)
 - [ ] Autores no formato ABNT
 - [ ] Ano extraído corretamente (apenas número)
 - [ ] Tipos de uso dentro da lista permitida

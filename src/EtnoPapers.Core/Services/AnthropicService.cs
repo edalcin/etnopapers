@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using EtnoPapers.Core.Utils;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -36,7 +37,8 @@ public class AnthropicService : AIProviderService
 
         try
         {
-            Logger.Debug("[{Provider}] Starting API connection test", ProviderName);
+            Logger.Information("[{Provider}] Starting API connection test with model {Model} and API version {Version}",
+                ProviderName, DefaultModel, ApiVersion);
 
             // Ultra-simple test request
             var requestBody = new
@@ -54,10 +56,10 @@ public class AnthropicService : AIProviderService
 
             using var request = new HttpRequestMessage(HttpMethod.Post, ApiEndpoint);
             request.Content = content;
-            request.Headers.Add("x-api-key", ApiKey);
+            request.Headers.Add("x-api-key", ApiKey?.Trim());
             request.Headers.Add("anthropic-version", ApiVersion);
 
-            Logger.Debug("[{Provider}] Sending test request", ProviderName);
+            Logger.Information("[{Provider}] Sending test request to {Endpoint}", ProviderName, ApiEndpoint);
 
             var response = await HttpClient.SendAsync(request, cancellationToken);
 
@@ -65,13 +67,14 @@ public class AnthropicService : AIProviderService
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                var errorContent = await response.Content.ReadAsStringAsync();
                 Logger.Error("[{Provider}] Test request failed with status {StatusCode}: {Error}",
                     ProviderName, response.StatusCode, errorContent);
 
                 // Check if it's an authentication error (invalid API key)
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
-                    errorContent.Contains("authentication") || errorContent.Contains("invalid"))
+                    errorContent.Contains("authentication") || errorContent.Contains("invalid") ||
+                    errorContent.Contains("api_key"))
                 {
                     Logger.Error("[{Provider}] Authentication failed - invalid or expired API key", ProviderName);
                 }
@@ -79,16 +82,20 @@ public class AnthropicService : AIProviderService
                 return false;
             }
 
-            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            Logger.Debug("[{Provider}] Received response (length: {Length})", ProviderName, responseContent.Length);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Logger.Information("[{Provider}] Received response (length: {Length}). Content: {Content}",
+                ProviderName, responseContent.Length, responseContent);
 
             // Just check if we got a valid response
             try
             {
                 var jResponse = JObject.Parse(responseContent);
+                Logger.Information("[{Provider}] Parsed JSON successfully. Keys: {Keys}",
+                    ProviderName, string.Join(", ", jResponse.Properties().Select(p => p.Name)));
+
                 var hasContent = jResponse["content"] != null;
 
-                Logger.Information("[{Provider}] Connection test successful. Response has content: {HasContent}",
+                Logger.Information("[{Provider}] Connection test result. Response has content: {HasContent}",
                     ProviderName, hasContent);
 
                 return hasContent;
@@ -183,7 +190,7 @@ public class AnthropicService : AIProviderService
         // Set required Anthropic headers
         using var request = new HttpRequestMessage(HttpMethod.Post, ApiEndpoint);
         request.Content = content;
-        request.Headers.Add("x-api-key", ApiKey);
+        request.Headers.Add("x-api-key", ApiKey?.Trim());
         request.Headers.Add("anthropic-version", ApiVersion);
 
         Logger.Debug("[{Provider}] Sending extraction request (PDF text length: {Length})",

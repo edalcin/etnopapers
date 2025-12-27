@@ -534,9 +534,13 @@ namespace EtnoPapers.UI.ViewModels
                     {
                         connectionSuccess = await anthropicForTest.TestApiConnectionAsync();
                     }
+                    else if (provider is EtnoPapers.Core.Services.OpenAIService openAIForTest)
+                    {
+                        connectionSuccess = await openAIForTest.TestApiConnectionAsync();
+                    }
                     else
                     {
-                        // For other providers (OpenAI, etc.), use the TestConnectionAsync fallback
+                        // Fallback for any future providers
                         connectionSuccess = await provider.TestConnectionAsync();
                     }
 

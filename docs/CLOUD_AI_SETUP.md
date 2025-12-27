@@ -99,7 +99,7 @@ O EtnoPapers agora suporta três provedores de IA em nuvem:
 ### Campos Extraídos
 
 O sistema extrai automaticamente:
-- ✓ Título (normalizado em Proper Case)
+- ✓ Título (caso esteja todo em caixa alta, converter para caixa normal)
 - ✓ Autores (formato APA: Sobrenome, I.)
 - ✓ Ano de publicação
 - ✓ Resumo (sempre em português brasileiro)
