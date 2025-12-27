@@ -324,13 +324,7 @@ namespace EtnoPapers.UI.ViewModels
                 );
             }
 
-            // Biome filter
-            if (!string.IsNullOrWhiteSpace(BiomeFilter))
-            {
-                filtered = filtered.Where(r =>
-                    !string.IsNullOrEmpty(r.Bioma) && r.Bioma.Equals(BiomeFilter, StringComparison.OrdinalIgnoreCase)
-                );
-            }
+            // Biome filter removed - field no longer exists in ArticleRecord
 
             foreach (var record in filtered)
             {
