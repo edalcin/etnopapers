@@ -86,20 +86,36 @@ namespace EtnoPapers.Core.Validation
                 }
             }
 
-            // Verify species have required fields if present
-            if (record.Especies != null)
+            // Verify communities have required fields if present
+            if (record.Comunidades != null)
             {
-                foreach (var specie in record.Especies)
+                foreach (var comunidade in record.Comunidades)
                 {
-                    if (specie == null)
+                    if (comunidade == null)
                     {
-                        ValidationErrors.Add("Species entry cannot be null");
+                        ValidationErrors.Add("Community entry cannot be null");
                         continue;
                     }
 
-                    if (specie.NomeVernacular == null || specie.NomeVernacular.Count == 0 ||
-                        specie.NomeVernacular.TrueForAll(n => string.IsNullOrWhiteSpace(n)))
-                        ValidationErrors.Add("Each species must have at least one vernacular name (nome_vernacular)");
+                    if (string.IsNullOrWhiteSpace(comunidade.Nome))
+                        ValidationErrors.Add("Each community must have a name (nome)");
+
+                    // Verify plants have required fields if present
+                    if (comunidade.Plantas != null)
+                    {
+                        foreach (var planta in comunidade.Plantas)
+                        {
+                            if (planta == null)
+                            {
+                                ValidationErrors.Add("Plant entry cannot be null");
+                                continue;
+                            }
+
+                            if (planta.NomeVernacular == null || planta.NomeVernacular.Count == 0 ||
+                                planta.NomeVernacular.TrueForAll(n => string.IsNullOrWhiteSpace(n)))
+                                ValidationErrors.Add("Each plant must have at least one vernacular name (nomeVernacular)");
+                        }
+                    }
                 }
             }
         }

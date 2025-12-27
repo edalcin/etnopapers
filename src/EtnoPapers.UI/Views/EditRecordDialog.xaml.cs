@@ -25,26 +25,17 @@ namespace EtnoPapers.UI.Views
             TituloTextBox.Text = record.Titulo ?? "";
             AutoresTextBox.Text = string.Join(Environment.NewLine, record.Autores ?? new List<string>());
             AnoTextBox.Text = record.Ano?.ToString() ?? "";
-            PaisTextBox.Text = record.Pais ?? "";
-            EstadoTextBox.Text = record.Estado ?? "";
-            MunicipioTextBox.Text = record.Municipio ?? "";
-            BiomaTextBox.Text = record.Bioma ?? "";
+            DOITextBox.Text = record.DOI ?? "";
             ResumoTextBox.Text = record.Resumo ?? "";
-            LocalTextBox.Text = record.Local ?? "";
-            MetodologiaTextBox.Text = record.Metodologia ?? "";
 
-            // Load Community data
-            if (record.Comunidade != null)
+            // Load Communities as JSON
+            if (record.Comunidades != null && record.Comunidades.Count > 0)
             {
-                ComunidadeNomeTextBox.Text = record.Comunidade.Nome ?? "";
-                ComunidadePovoTextBox.Text = record.Comunidade.Povo ?? "";
-                ComunidadeLocalizacaoTextBox.Text = record.Comunidade.Localizacao ?? "";
+                ComunidadesTextBox.Text = Newtonsoft.Json.JsonConvert.SerializeObject(record.Comunidades, Newtonsoft.Json.Formatting.Indented);
             }
-
-            // Load Plant Species as JSON
-            if (record.Especies != null && record.Especies.Count > 0)
+            else
             {
-                EspeciesTextBox.Text = Newtonsoft.Json.JsonConvert.SerializeObject(record.Especies, Newtonsoft.Json.Formatting.Indented);
+                ComunidadesTextBox.Text = "[]";
             }
         }
 
@@ -94,42 +85,32 @@ namespace EtnoPapers.UI.Views
             if (int.TryParse(AnoTextBox.Text, out var ano))
                 EditedRecord.Ano = ano;
 
-            EditedRecord.Pais = PaisTextBox.Text;
-            EditedRecord.Estado = EstadoTextBox.Text;
-            EditedRecord.Municipio = MunicipioTextBox.Text;
-            EditedRecord.Bioma = BiomaTextBox.Text;
+            EditedRecord.DOI = DOITextBox.Text;
             EditedRecord.Resumo = ResumoTextBox.Text;
-            EditedRecord.Local = LocalTextBox.Text;
-            EditedRecord.Metodologia = MetodologiaTextBox.Text;
 
-            // Save Community data
-            if (!string.IsNullOrWhiteSpace(ComunidadeNomeTextBox.Text) ||
-                !string.IsNullOrWhiteSpace(ComunidadePovoTextBox.Text) ||
-                !string.IsNullOrWhiteSpace(ComunidadeLocalizacaoTextBox.Text))
-            {
-                if (EditedRecord.Comunidade == null)
-                    EditedRecord.Comunidade = new EtnoPapers.Core.Models.Community();
-
-                EditedRecord.Comunidade.Nome = ComunidadeNomeTextBox.Text;
-                EditedRecord.Comunidade.Povo = ComunidadePovoTextBox.Text;
-                EditedRecord.Comunidade.Localizacao = ComunidadeLocalizacaoTextBox.Text;
-            }
-
-            // Save Plant Species from JSON
-            if (!string.IsNullOrWhiteSpace(EspeciesTextBox.Text))
+            // Save Communities from JSON
+            if (!string.IsNullOrWhiteSpace(ComunidadesTextBox.Text))
             {
                 try
                 {
-                    var especies = Newtonsoft.Json.JsonConvert.DeserializeObject<List<EtnoPapers.Core.Models.PlantSpecies>>(EspeciesTextBox.Text);
-                    if (especies != null)
-                        EditedRecord.Especies = especies;
+                    var comunidades = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Community>>(ComunidadesTextBox.Text);
+                    if (comunidades != null)
+                        EditedRecord.Comunidades = comunidades;
+                    else
+                        EditedRecord.Comunidades = new List<Community>();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erro ao processar JSON das espécies: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"Erro ao processar JSON das comunidades: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
+            else
+            {
+                EditedRecord.Comunidades = new List<Community>();
+            }
+
+            EditedRecord.DataUltimaAtualizacao = DateTime.UtcNow;
 
             DialogResult = true;
             Close();

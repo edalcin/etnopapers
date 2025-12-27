@@ -11,19 +11,13 @@ namespace EtnoPapers.Core.Models
     [JsonConverter(typeof(PlantSpeciesConverter))]
     public class PlantSpecies
     {
-        [JsonProperty("nome_vernacular")]
+        [JsonProperty("nomeVernacular")]
         public List<string> NomeVernacular { get; set; } = new List<string>();
 
-        [JsonProperty("nome_cientifico")]
+        [JsonProperty("nomeCientifico")]
         public List<string> NomeCientifico { get; set; } = new List<string>();
 
-        [JsonProperty("tipo_uso")]
-        public string TipoUso { get; set; }
-
-        [JsonProperty("parte_usada")]
-        public string ParteUsada { get; set; }
-
-        [JsonProperty("preparacao")]
-        public string Preparacao { get; set; }
+        [JsonProperty("tipoUso")]
+        public List<string> TipoUso { get; set; } = new List<string>();
     }
 }

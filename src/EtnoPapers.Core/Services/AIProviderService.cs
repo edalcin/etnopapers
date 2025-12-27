@@ -83,41 +83,60 @@ public abstract class AIProviderService : IAIProvider
     /// </summary>
     public static readonly string DefaultExtractionPrompt = @"SISTEMA DE EXTRAÇÃO DE METADADOS ETNOBOTÂNICOS
 
-Você é um especialista em etnobotânica que analisa textos científicos e extrai metadados em formato JSON estruturado.
+Você é um especialista em etnobotânica que analisa textos científicos e extrai dados em formato JSON estruturado.
 
 REGRAS FUNDAMENTAIS:
 
 COPIE EXATAMENTE do documento. NUNCA invente, infira ou complete dados ausentes.
 
+- Um artigo pode ter mais de uma comunidade, cada qual com seu conjunto de plantas
 - Se uma informação NÃO está no documento -> retorne null
-- Se está no documento -> copie EXATAMENTE como aparece
 - Retorne APENAS JSON válido, sem markdown ou explicações
 - O resumo DEVE estar em português brasileiro (traduza se necessário)
+- Os autores devem estar no padrão ABNT
+- Os nomes vernaculares devem ser em caixa baixa e espaços substituidos por hífens
 
-ESTRUTURA JSON ESPERADA:
+ESTRUTURA JSON ESPERADA (exemplo):
 
 {
-  ""titulo"": ""string em Proper Case (copiado exatamente do documento)"",
-  ""autores"": [""array com autores no padrão ABNT""],
-  ""ano"": 2010,
-  ""resumo"": ""sempre em português brasileiro"",
-  ""especies"": [
-    {
-      ""vernacular"": ""nome comum ou array se houver vários"",
-      ""nomeCientifico"": ""Genus species ou array se houver vários"",
-      ""tipoUso"": ""medicinal|alimentação|construção|ritual|artesanato|combustível|forrageiro|outro""
-    }
+  ""titulo"": ""Diversity Of Plant Uses In Two Caiçara Communities From The Atlantic Forest Coast, Brazil"",
+  ""autores"": [
+    ""HANAZAKI, N."",
+    ""TAMASHIRO, J. Y."",
+    ""LEITÃO-FILHO, H. F."",
+    ""BEGOSSI, A.""
   ],
-  ""pais"": ""string ou null"",
-  ""estado"": ""string ou null"",
-  ""municipio"": ""string ou null"",
-  ""local"": ""string ou null"",
-  ""bioma"": ""string ou null"",
-  ""comunidade"": {
-    ""nome"": ""string"",
-    ""localizacao"": ""string""
-  },
-  ""metodologia"": ""string ou null""
+  ""ano"": 2000,
+  ""resumo"": ""Caiçaras são habitantes nativos da costa atlântica no sudeste do Brasil, cuja subsistência se baseia especialmente na agricultura e pesca artesanal. Devido ao seu conhecimento sobre o meio ambiente adquirido ao longo de gerações, o povo Caiçara pode desempenhar um papel importante na conservação da Mata Atlântica."",
+  ""DOI"": """",
+  ""comunidades"": [
+    {
+      ""nome"": ""Ponta do Almada"",
+      ""tipo"": ""Caiçaras"",
+      ""municipio"": ""Ubatuba"",
+      ""estado"": ""São Paulo"",
+      ""local"": ""limite sul do Núcleo Picinguaba do Parque Estadual da Serra do Mar"",
+      ""atividadesEconomicas"": [
+        ""pesca"",
+        ""agricultura"",
+        ""turismo""
+      ],
+      ""observacoes"": ""É a menor das duas comunidades, com 31 casas e cerca de 125 residentes"",
+      ""plantas"": [
+        {
+          ""nomeCientifico"": [
+            ""Foeniculum vulgare""
+          ],
+          ""nomeVernacular"": [
+            ""erva-doce""
+          ],
+          ""tipoUso"": [
+            ""medicinal""
+          ]
+        }
+      ]
+    }
+  ]
 }
 
 INSTRUÇÕES ESPECÍFICAS POR CAMPO:
@@ -127,42 +146,54 @@ CAMPOS OBRIGATÓRIOS:
 - titulo: Copie palavra por palavra, normalize para Proper Case
 - autores: Todos os autores no formato ABNT (Sobrenome, I.)
 - ano: Apenas o número (ex: se disser ""Recebido em abril de 2010"", extraia 2010)
-- resumo: Se houver abstract/resumo, copie. Se em outra língua, traduza para português brasileiro. Se não houver, use null
+- comunidades.nome: pelo menos uma comunidade deve existir
+- comunidades.plantas: pelo menos uma planta associada
+
 
 CAMPOS DE ESPÉCIES:
 
-- vernacular: Nome(s) comum(ns). Se múltiplos, use array
-- nomeCientifico: Formato correto: ""Genus species"". Se múltiplos, use array
-- tipoUso: Apenas valores da lista permitida
+- nomeVernacular: Nome(s) comum(ns). Se múltiplos, use array. Conforme exemplo
+- nomeCientifico: Formato correto: ""Genus species"". Se múltiplos, use array. Conforme exemplo
+
 
 CAMPOS GEOGRÁFICOS:
 
-- Copie EXATAMENTE como aparecem no texto
-- Use null se não encontrado
+- estado: se encontrar siglas, passe para o nome completo: SP -> São Paulo. Use null se não encontrado
 - NÃO adivinhe localização baseado em contexto
 
 COMUNIDADE:
 
-- Se mencionada, extraia nome e localização
-- Use null para o objeto inteiro se não mencionada
+- ""tipo"" das comunidades válidos:
+* Andirobeiros
+* Apanhadores de flores sempre-vivas
+* Benzedeiros
+* Caatingueiros
+* Caboclos
+* Caiçaras
+* Catadores de mangaba
+* Cipozeiros
+* Comunidades de fundos e fechos de pasto
+* Comunidades quilombolas
+* Extrativistas
+* Extrativistas costeiros e marinhos
+* Faxinalenses
+* Geraizeiros
+* Ilhéus
+* Juventude de povos e comunidades tradicionais
+* Morroquianos
+* Pantaneiros
+* Pescadores artesanais
+* Povo pomerano
+* Povos ciganos
+* Povos e comunidades de terreiro / matriz africana
+* Povos indígenas
+* Quebradeiras de coco babaçu
+* Raizeiros
+* Retireiros do Araguaia
+* Ribeirinhos
+* Vazanteiros
+* Veredeiros
 
-VALIDAÇÕES AUTOMÁTICAS:
-
-- Nomes científicos: devem seguir padrão ""Genus species"" (primeira letra maiúscula)
-- Ano: deve estar entre 1500 e ano atual + 1
-- Datas: extraia apenas o ano (YYYY)
-- Tipos de uso: devem estar na lista permitida
-
-VALORES PERMITIDOS PARA tipoUso:
-
-- medicinal: Uso medicinal/terapêutico
-- alimentação: Uso alimentar
-- construção: Uso em construções
-- ritual: Uso ritual/religioso/espiritual
-- artesanato: Uso em artesanato
-- combustível: Uso como combustível/energia
-- forrageiro: Uso como forragem para animais
-- outro: Outros usos não categorizados
 
 CHECKLIST FINAL:
 
@@ -175,8 +206,7 @@ Antes de retornar o JSON, verifique:
 - Sem markdown ou texto adicional na resposta
 - Título em Proper Case
 - Autores no formato ABNT
-- Ano extraído corretamente (apenas número)
-- Tipos de uso dentro da lista permitida";
+- Ano extraído corretamente (apenas número)";
 
     /// <summary>
     /// Gets the extraction prompt, using custom prompt if provided, otherwise default.

@@ -73,8 +73,8 @@
                     <DataGridTextColumn Header="Título" Binding="{Binding Titulo}" Width="2*" />
                     <DataGridTextColumn Header="Ano" Binding="{Binding Ano}" Width="80" />
                     <DataGridTextColumn Header="Autores" Binding="{Binding Autores[0]}" Width="*" />
-                    <DataGridTextColumn Header="País" Binding="{Binding Pais}" Width="120" />
-                    <DataGridTextColumn Header="Bioma" Binding="{Binding Bioma}" Width="120" />
+                    <DataGridTextColumn Header="Comunidades" Binding="{Binding Comunidades.Count}" Width="120" />
+                    <DataGridTextColumn Header="DOI" Binding="{Binding DOI}" Width="180" />
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

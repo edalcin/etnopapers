@@ -25,29 +25,11 @@ namespace EtnoPapers.Core.Models
         [JsonProperty("resumo")]
         public string Resumo { get; set; }
 
-        [JsonProperty("especies")]
-        public List<PlantSpecies> Especies { get; set; } = new();
+        [JsonProperty("DOI")]
+        public string DOI { get; set; }
 
-        [JsonProperty("comunidade")]
-        public Community Comunidade { get; set; }
-
-        [JsonProperty("pais")]
-        public string Pais { get; set; }
-
-        [JsonProperty("estado")]
-        public string Estado { get; set; }
-
-        [JsonProperty("municipio")]
-        public string Municipio { get; set; }
-
-        [JsonProperty("local")]
-        public string Local { get; set; }
-
-        [JsonProperty("bioma")]
-        public string Bioma { get; set; }
-
-        [JsonProperty("metodologia")]
-        public string Metodologia { get; set; }
+        [JsonProperty("comunidades")]
+        public List<Community> Comunidades { get; set; } = new();
 
         [JsonProperty("ano_coleta")]
         public int? AnoColeta { get; set; }

@@ -19,8 +19,12 @@ namespace EtnoPapers.Core.Converters
             var species = new PlantSpecies();
 
             // Parse nome_vernacular - can be string or array
-            // Support both "nome_vernacular" and "vernacular" field names (from AI providers)
-            if (jo["nome_vernacular"] != null)
+            // Support both "nome_vernacular", "nomeVernacular" and "vernacular" field names (from AI providers)
+            if (jo["nomeVernacular"] != null)
+            {
+                species.NomeVernacular = ParseNameArray(jo["nomeVernacular"]);
+            }
+            else if (jo["nome_vernacular"] != null)
             {
                 species.NomeVernacular = ParseNameArray(jo["nome_vernacular"]);
             }
@@ -30,21 +34,26 @@ namespace EtnoPapers.Core.Converters
             }
 
             // Parse nome_cientifico - can be string or array
-            // Support both "nome_cientifico" and "nomeCientifico" field names (from AI providers)
-            if (jo["nome_cientifico"] != null)
-            {
-                species.NomeCientifico = ParseNameArray(jo["nome_cientifico"]);
-            }
-            else if (jo["nomeCientifico"] != null)
+            // Support both "nomeCientifico", "nome_cientifico" field names (from AI providers)
+            if (jo["nomeCientifico"] != null)
             {
                 species.NomeCientifico = ParseNameArray(jo["nomeCientifico"]);
             }
+            else if (jo["nome_cientifico"] != null)
+            {
+                species.NomeCientifico = ParseNameArray(jo["nome_cientifico"]);
+            }
 
-            // Parse other fields
+            // Parse tipoUso - can be string or array
             // Support both "tipo_uso" and "tipoUso" field names
-            species.TipoUso = jo["tipo_uso"]?.ToString() ?? jo["tipoUso"]?.ToString();
-            species.ParteUsada = jo["parte_usada"]?.ToString() ?? jo["parteUsada"]?.ToString();
-            species.Preparacao = jo["preparacao"]?.ToString();
+            if (jo["tipoUso"] != null)
+            {
+                species.TipoUso = ParseNameArray(jo["tipoUso"]);
+            }
+            else if (jo["tipo_uso"] != null)
+            {
+                species.TipoUso = ParseNameArray(jo["tipo_uso"]);
+            }
 
             return species;
         }
@@ -53,29 +62,35 @@ namespace EtnoPapers.Core.Converters
         {
             var jo = new JObject();
 
-            // Write nome_vernacular as array
+            // Write nomeVernacular as array
             if (value.NomeVernacular != null && value.NomeVernacular.Count > 0)
             {
-                jo["nome_vernacular"] = JArray.FromObject(value.NomeVernacular);
+                jo["nomeVernacular"] = JArray.FromObject(value.NomeVernacular);
             }
             else
             {
-                jo["nome_vernacular"] = null;
+                jo["nomeVernacular"] = null;
             }
 
-            // Write nome_cientifico as array
+            // Write nomeCientifico as array
             if (value.NomeCientifico != null && value.NomeCientifico.Count > 0)
             {
-                jo["nome_cientifico"] = JArray.FromObject(value.NomeCientifico);
+                jo["nomeCientifico"] = JArray.FromObject(value.NomeCientifico);
             }
             else
             {
-                jo["nome_cientifico"] = null;
+                jo["nomeCientifico"] = null;
             }
 
-            jo["tipo_uso"] = value.TipoUso;
-            jo["parte_usada"] = value.ParteUsada;
-            jo["preparacao"] = value.Preparacao;
+            // Write tipoUso as array
+            if (value.TipoUso != null && value.TipoUso.Count > 0)
+            {
+                jo["tipoUso"] = JArray.FromObject(value.TipoUso);
+            }
+            else
+            {
+                jo["tipoUso"] = null;
+            }
 
             jo.WriteTo(writer);
         }

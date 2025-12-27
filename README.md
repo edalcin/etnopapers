@@ -10,6 +10,21 @@
 
 ---
 
+> ## 🔗 Projeto etnoDB
+>
+> **Este projeto faz parte do [etnoDB](https://github.com/edalcin/etnoDB)**, um sistema completo de banco de dados etnobotânicos.
+>
+> O **EtnoPapers** serve como **ferramenta alternativa de entrada de dados** ao etnoDB, permitindo a **extração automatizada de metadados de artigos científicos** usando inteligência artificial, complementando a **entrada manual de dados pela interface do etnoDB**.
+>
+> **🎯 Fluxo de trabalho integrado:**
+> 1. **EtnoPapers** → Extração automatizada de PDFs com IA
+> 2. **MongoDB** → Armazenamento centralizado de dados
+> 3. **etnoDB** → Visualização, análise e entrada manual complementar
+>
+> Para mais informações sobre o projeto etnoDB, visite: **https://github.com/edalcin/etnoDB**
+
+---
+
 ## Sobre o EtnoPapers
 
 O EtnoPapers é uma aplicação desktop nativa para Windows desenvolvida para pesquisadores em etnobotânica que precisam catalogar e organizar dados sobre o uso tradicional de plantas por comunidades indígenas e tradicionais.

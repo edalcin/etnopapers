@@ -86,106 +86,47 @@
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
-                    <!-- Country -->
-                    <TextBlock Text="País" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="PaisTextBox"
+                    <!-- DOI -->
+                    <TextBlock Text="DOI" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="DOITextBox"
                              Style="{StaticResource {x:Type TextBox}}"
                              TextWrapping="Wrap"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
 
-                    <!-- State -->
-                    <TextBlock Text="Estado" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="EstadoTextBox"
+                    <!-- Abstract -->
+                    <TextBlock Text="Resumo" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="ResumoTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
+                             Height="150"
                              TextWrapping="Wrap"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <!-- City -->
-                    <TextBlock Text="Município" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="MunicipioTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             TextWrapping="Wrap"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <!-- Local -->
-                    <TextBlock Text="Local" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="LocalTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             TextWrapping="Wrap"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <!-- Biome -->
-                    <TextBlock Text="Bioma" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="BiomaTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
                              Margin="0,0,0,12"
                              Padding="8,6"/>
                 </StackPanel>
 
                 <!-- Right Column -->
                 <StackPanel Grid.Column="1">
-                    <!-- Abstract -->
-                    <TextBlock Text="Resumo" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="ResumoTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             Height="100"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <!-- Methodology -->
-                    <TextBlock Text="Metodologia" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="MetodologiaTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             Height="70"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <!-- Community -->
-                    <TextBlock Text="Comunidade (Nome)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="ComunidadeNomeTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             TextWrapping="Wrap"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <TextBlock Text="Comunidade (Povo)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="ComunidadePovoTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             TextWrapping="Wrap"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <TextBlock Text="Comunidade (Localização)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="ComunidadeLocalizacaoTextBox"
-                             Style="{StaticResource {x:Type TextBox}}"
-                             TextWrapping="Wrap"
-                             Margin="0,0,0,12"
-                             Padding="8,6"/>
-
-                    <!-- Plant Species -->
-                    <TextBlock Text="Espécies (JSON)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Formato: [{&quot;nome_vernacular&quot;:[...], &quot;nome_cientifico&quot;:[...], &quot;tipo_uso&quot;:&quot;...&quot;}]"
-                               Style="{StaticResource Caption}"
+                    <!-- Communities (JSON) -->
+                    <TextBlock Text="Comunidades (JSON)" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                    <TextBlock Style="{StaticResource Caption}"
                                FontSize="10"
                                Foreground="#8A8A8A"
-                               Margin="0,0,0,4"/>
-                    <TextBox x:Name="EspeciesTextBox"
+                               Margin="0,0,0,4"
+                               TextWrapping="Wrap">
+                        <Run Text="Formato: [&#10;  {&#10;    &quot;nome&quot;: &quot;...&quot;,&#10;    &quot;tipo&quot;: &quot;...&quot;,&#10;    &quot;municipio&quot;: &quot;...&quot;,&#10;    &quot;estado&quot;: &quot;...&quot;,&#10;    &quot;local&quot;: &quot;...&quot;,&#10;    &quot;atividadesEconomicas&quot;: [...],&#10;    &quot;observacoes&quot;: &quot;...&quot;,&#10;    &quot;plantas&quot;: [&#10;      {&#10;        &quot;nomeCientifico&quot;: [...],&#10;        &quot;nomeVernacular&quot;: [...],&#10;        &quot;tipoUso&quot;: [...]&#10;      }&#10;    ]&#10;  }&#10;]"/>
+                    </TextBlock>
+                    <TextBox x:Name="ComunidadesTextBox"
                              Style="{StaticResource {x:Type TextBox}}"
-                             Height="90"
+                             Height="450"
                              TextWrapping="Wrap"
+                             AcceptsReturn="True"
                              VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
                              Margin="0,0,0,12"
                              Padding="8,6"
-                             FontFamily="Consolas"/>
+                             FontFamily="Consolas"
+                             FontSize="11"/>
                 </StackPanel>
             </Grid>
         </ScrollViewer>

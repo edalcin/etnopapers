@@ -71,30 +71,9 @@
                              HorizontalAlignment="Left"/>
                 </StackPanel>
 
-                <!-- Country -->
-                <TextBlock Text="País" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                <TextBox x:Name="PaisTextBox"
-                         Style="{StaticResource {x:Type TextBox}}"
-                         Margin="0,0,0,16"
-                         Padding="8,6"/>
-
-                <!-- State -->
-                <TextBlock Text="Estado" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                <TextBox x:Name="EstadoTextBox"
-                         Style="{StaticResource {x:Type TextBox}}"
-                         Margin="0,0,0,16"
-                         Padding="8,6"/>
-
-                <!-- City -->
-                <TextBlock Text="Município" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                <TextBox x:Name="MunicipioTextBox"
-                         Style="{StaticResource {x:Type TextBox}}"
-                         Margin="0,0,0,16"
-                         Padding="8,6"/>
-
-                <!-- Biome -->
-                <TextBlock Text="Bioma" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                <TextBox x:Name="BiomaTextBox"
+                <!-- DOI -->
+                <TextBlock Text="DOI" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
+                <TextBox x:Name="DOITextBox"
                          Style="{StaticResource {x:Type TextBox}}"
                          Margin="0,0,0,16"
                          Padding="8,6"/>
@@ -106,6 +85,7 @@
                          Height="120"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Auto"
+                         Margin="0,0,0,16"
                          Padding="8,6"/>
             </StackPanel>
         </ScrollViewer>

@@ -34,7 +34,14 @@
       "Bash(C:UsersEDalcin.dotnetdotnet.exe build src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)",
       "Bash(git reset:*)",
       "Bash(\"C:\\Program Files\\dotnet\\dotnet.exe\" build -c Release --no-restore)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(__NEW_LINE__ Write-Host '')",
+      "Bash(Write-Host 'Build concluída!' -ForegroundColor Green)",
+      "Bash(Write-Host \"\"Diretório portátil: $portableDir\"\" -ForegroundColor Yellow)",
+      "Bash(xargs:*)",
+      "Bash(cat:*)",
+      "Bash(\"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" clean src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)",
+      "Bash(cmd /c \"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" --version)"
     ],
     "deny": [],
     "ask": []
