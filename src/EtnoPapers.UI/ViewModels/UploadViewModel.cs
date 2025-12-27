@@ -205,23 +205,21 @@ namespace EtnoPapers.UI.ViewModels
                     _loggerService.Info("Calling ExtractFromPdfAsync...");
                     ExtractedData = await _extractionService.ExtractFromPdfAsync(SelectedFilePath);
 
-                    // Stop extraction timer and save elapsed time and agent
+                    // Stop extraction timer and save source/agent info
                     if (_extractionStopwatch != null)
                     {
                         _extractionStopwatch.Stop();
                         double elapsedSeconds = _extractionStopwatch.Elapsed.TotalSeconds;
                         if (ExtractedData != null)
                         {
-                            ExtractedData.TempoExtracao = elapsedSeconds;
-
-                            // Record the AI agent/provider used
+                            // Record the AI agent/provider used with etnodb prefix
                             var config = _configService.LoadConfiguration();
                             if (config?.AIProvider.HasValue == true)
                             {
-                                ExtractedData.AgenteIA = config.AIProvider.Value.ToString();
+                                ExtractedData.Fonte = $"etnodb - {config.AIProvider.Value}";
                             }
 
-                            _loggerService.Info($"Extraction completed in {elapsedSeconds:F2} seconds using {ExtractedData.AgenteIA}");
+                            _loggerService.Info($"Extraction completed in {elapsedSeconds:F2} seconds using {ExtractedData.Fonte}");
                         }
                     }
 

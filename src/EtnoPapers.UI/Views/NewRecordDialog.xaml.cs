@@ -48,10 +48,9 @@ namespace EtnoPapers.UI.Views
                 DOI = string.IsNullOrWhiteSpace(DOITextBox.Text) ? "" : DOITextBox.Text,
                 Resumo = string.IsNullOrWhiteSpace(ResumoTextBox.Text) ? "" : ResumoTextBox.Text,
                 Comunidades = new List<Community>(),
-                AtributosCustomizados = new Dictionary<string, object>(),
-                DataCriacao = DateTime.UtcNow,
-                DataUltimaAtualizacao = DateTime.UtcNow,
-                StatusSincronizacao = "local"
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                Status = "pending"
             };
 
             DialogResult = true;

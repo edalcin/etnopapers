@@ -168,9 +168,8 @@ namespace EtnoPapers.Core.Services
                     if (string.IsNullOrEmpty(record.Id))
                         record.Id = Guid.NewGuid().ToString();
 
-                    record.DataCriacao = DateTime.UtcNow;
-                    record.DataUltimaAtualizacao = DateTime.UtcNow;
-                    record.StatusSincronizacao = "local";
+                    record.CreatedAt = DateTime.UtcNow;
+                    record.UpdatedAt = DateTime.UtcNow;
 
                     System.Diagnostics.Debug.WriteLine($"Returning partial record for manual edit: {record.Id}");
                     UpdateProgress(100, "Complete - Manual Edit Needed",

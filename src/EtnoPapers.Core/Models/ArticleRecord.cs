@@ -34,22 +34,16 @@ namespace EtnoPapers.Core.Models
         [JsonProperty("ano_coleta")]
         public int? AnoColeta { get; set; }
 
-        [JsonProperty("data_criacao")]
-        public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+        [JsonProperty("createdAt")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [JsonProperty("data_ultima_atualizacao")]
-        public DateTime DataUltimaAtualizacao { get; set; } = DateTime.UtcNow;
+        [JsonProperty("updatedAt")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [JsonProperty("status_sincronizacao")]
-        public string StatusSincronizacao { get; set; } = "local";
+        [JsonProperty("status")]
+        public string Status { get; set; } = "pending";
 
-        [JsonProperty("atributos_customizados")]
-        public Dictionary<string, object> AtributosCustomizados { get; set; } = new();
-
-        [JsonProperty("tempo_extracao_segundos")]
-        public double? TempoExtracao { get; set; }
-
-        [JsonProperty("agente_ia")]
-        public string AgenteIA { get; set; }
+        [JsonProperty("fonte")]
+        public string Fonte { get; set; }
     }
 }

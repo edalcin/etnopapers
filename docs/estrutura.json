@@ -28,5 +28,8 @@
   "estado": "SC",
   "municipio": "Florianópolis",
   "local": "Sertão do Ribeirão",
-  "bioma": "Mata Atlântica"
+  "createdAt": "2025-12-26T11:02:00.533+00:00",
+  "updatedAt": "2025-12-26T11:02:00.533+00:00",
+  "status": "pending",
+  "fonte": "etnodb - Gemini"
 }

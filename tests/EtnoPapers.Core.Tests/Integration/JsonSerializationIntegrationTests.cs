@@ -49,9 +49,9 @@ namespace EtnoPapers.Core.Tests.Integration
                         Preparacao = "decoction"
                     }
                 },
-                DataCriacao = new DateTime(2023, 1, 1, 12, 0, 0, DateTimeKind.Utc),
-                DataUltimaAtualizacao = new DateTime(2023, 6, 15, 14, 30, 0, DateTimeKind.Utc),
-                StatusSincronizacao = "pendente"
+                CreatedAt = new DateTime(2023, 1, 1, 12, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2023, 6, 15, 14, 30, 0, DateTimeKind.Utc),
+                Status = "pending"
             };
 
             var settings = GetSerializerSettings();
@@ -72,7 +72,7 @@ namespace EtnoPapers.Core.Tests.Integration
             Assert.Equal(originalRecord.Bioma, deserializedRecord.Bioma);
             Assert.Equal(2, deserializedRecord.Autores?.Count);
             Assert.Equal(1, deserializedRecord.Especies?.Count);
-            Assert.Equal(originalRecord.StatusSincronizacao, deserializedRecord.StatusSincronizacao);
+            Assert.Equal(originalRecord.Status, deserializedRecord.Status);
         }
 
         [Fact]

@@ -89,14 +89,15 @@ REGRAS FUNDAMENTAIS:
 
 COPIE EXATAMENTE do documento. NUNCA invente, infira ou complete dados ausentes.
 
-- Um artigo pode ter mais de uma comunidade, cada qual com seu conjunto de plantas
+- **IMPORTANTE**: Extraia TODAS as comunidades mencionadas no artigo - não apenas uma!
+- Cada comunidade tem seu próprio conjunto de plantas - mantenha essa associação
 - Se uma informação NÃO está no documento -> retorne null
 - Retorne APENAS JSON válido, sem markdown ou explicações
 - O resumo DEVE estar em português brasileiro (traduza se necessário)
 - Os autores devem estar no padrão ABNT
 - Os nomes vernaculares devem ser em caixa baixa e espaços substituidos por hífens
 
-ESTRUTURA JSON ESPERADA (exemplo):
+ESTRUTURA JSON ESPERADA (exemplo com DUAS comunidades):
 
 {
   ""titulo"": ""Diversity Of Plant Uses In Two Caiçara Communities From The Atlantic Forest Coast, Brazil"",
@@ -133,6 +134,42 @@ ESTRUTURA JSON ESPERADA (exemplo):
           ""tipoUso"": [
             ""medicinal""
           ]
+        },
+        {
+          ""nomeCientifico"": [
+            ""Mikania glomerata""
+          ],
+          ""nomeVernacular"": [
+            ""guaco""
+          ],
+          ""tipoUso"": [
+            ""medicinal""
+          ]
+        }
+      ]
+    },
+    {
+      ""nome"": ""Praia do Puruba"",
+      ""tipo"": ""Caiçaras"",
+      ""municipio"": ""Ubatuba"",
+      ""estado"": ""São Paulo"",
+      ""local"": ""litoral norte de São Paulo"",
+      ""atividadesEconomicas"": [
+        ""pesca"",
+        ""agricultura""
+      ],
+      ""observacoes"": ""É a maior comunidade, com cerca de 250 residentes"",
+      ""plantas"": [
+        {
+          ""nomeCientifico"": [
+            ""Mentha piperita""
+          ],
+          ""nomeVernacular"": [
+            ""hortelã""
+          ],
+          ""tipoUso"": [
+            ""medicinal""
+          ]
         }
       ]
     }
@@ -146,8 +183,9 @@ CAMPOS OBRIGATÓRIOS:
 - titulo: Copie palavra por palavra, normalize para Proper Case
 - autores: Todos os autores no formato ABNT (Sobrenome, I.)
 - ano: Apenas o número (ex: se disser ""Recebido em abril de 2010"", extraia 2010)
-- comunidades.nome: pelo menos uma comunidade deve existir
-- comunidades.plantas: pelo menos uma planta associada
+- comunidades: Array com TODAS as comunidades mencionadas no artigo (mínimo 1)
+- comunidades.nome: Nome específico de cada comunidade
+- comunidades.plantas: Array com TODAS as plantas associadas àquela comunidade (mínimo 1 por comunidade)
 
 
 CAMPOS DE ESPÉCIES:
@@ -198,6 +236,8 @@ COMUNIDADE:
 CHECKLIST FINAL:
 
 Antes de retornar o JSON, verifique:
+- **TODAS as comunidades do artigo foram extraídas (não apenas uma!)**
+- **Cada comunidade tem suas próprias plantas associadas**
 - Todos os campos obrigatórios preenchidos ou null
 - Nomes científicos com capitalização correta (Genus species)
 - Resumo em português brasileiro

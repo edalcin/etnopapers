@@ -4,22 +4,22 @@
 
 **Aplicação Desktop para Extração Automatizada de Metadados Etnobotânicos**
 
-**Versão Atual**: 2.0.0 | [Ver Histórico de Versões](VERSION_HISTORY.md)
+**Versão Atual**: 2.1.0 | [Ver Histórico de Versões](VERSION_HISTORY.md)
 
-> **✨ Novidade na v2.0.0**: Suporte a provedores de IA em nuvem (Google Gemini, OpenAI, Anthropic Claude) com 50%+ de melhoria de desempenho em relação à versão local com OLLAMA. [Saiba mais](VERSION_HISTORY.md#versão-200---dezembro-2025)
+> **✨ Novidade na v2.1.0**: Integração completa com o projeto etnoDB! Nova estrutura de dados padronizada conforme [etnoDB Data Structure](https://github.com/edalcin/etnoDB?tab=readme-ov-file#estrutura-de-dados) para sincronização perfeita com o banco de dados central. [Saiba mais](VERSION_HISTORY.md#versão-210---dezembro-2025)
 
 ---
 
 > ## 🔗 Projeto etnoDB
 >
-> **Este projeto faz parte do [etnoDB](https://github.com/edalcin/etnoDB)**, um sistema completo de banco de dados etnobotânicos.
+> **Este projeto faz parte do [etnoDB](https://github.com/edalcin/etnoDB)**, um sistema completo de banco de dados etnobotânicos provenientes de dados secundários (artigos científicos publicados).
 >
 > O **EtnoPapers** serve como **ferramenta alternativa de entrada de dados** ao etnoDB, permitindo a **extração automatizada de metadados de artigos científicos** usando inteligência artificial, complementando a **entrada manual de dados pela interface do etnoDB**.
 >
 > **🎯 Fluxo de trabalho integrado:**
 > 1. **EtnoPapers** → Extração automatizada de PDFs com IA
 > 2. **MongoDB** → Armazenamento centralizado de dados
-> 3. **etnoDB** → Visualização, análise e entrada manual complementar
+> 3. **etnoDB** → Visualização, curadoria e entrada manual complementar
 >
 > Para mais informações sobre o projeto etnoDB, visite: **https://github.com/edalcin/etnoDB**
 
@@ -48,7 +48,7 @@ Carregue seus artigos em PDF e deixe a inteligência artificial extrair automati
 
 - **Metadados obrigatórios**: título (normalizado), autores (formato APA), ano de publicação, resumo (em português brasileiro)
 - **Dados etnobotânicos**: espécies de plantas (nomes vernaculares e científicos), tipos de uso, comunidades estudadas
-- **Dados geográficos**: país, estado, município, localização específica, bioma
+- **Dados geográficos**: país, estado, município, localização específica
 - **Informações do estudo**: fonte de publicação, metodologia aplicada
 - **Provedores suportados**: Google Gemini (gratuito), OpenAI, Anthropic Claude
 
@@ -170,7 +170,7 @@ Mantenha seus dados seguros e acessíveis:
 1. Acesse a aba **Registros**
 2. Visualize todas as fichas processadas em formato de tabela
 3. A lista é atualizada automaticamente sempre que você visita a página
-4. Veja as principais informações: Título, Ano, Autores, País e Bioma
+4. Veja as principais informações: Título, Ano, Autores e País
 5. Selecione registros para editar ou sincronizar com MongoDB
 
 ### Sincronizar com MongoDB
@@ -203,29 +203,20 @@ Extraídos quando disponíveis no documento:
 - **Espécies de plantas** (nome vernacular, nome científico, tipo de uso)
 - **Comunidades estudadas** (nome, localização)
 - **Dados geográficos** (país, estado, município, local específico)
-- **Bioma**
 - **Metodologia** do estudo
-
-### Exemplo Real - Dados Extraídos com Google Gemini
-
-Abaixo um exemplo real de artigo processado pelo EtnoPapers usando **Google Gemini API**:
-
-![Exemplo de dados extraídos](docs/dataSampleJSON.png)
-
-**Neste exemplo:**
-- ✅ Título normalizado em inglês
-- ✅ 2 autores em formato APA
-- ✅ Ano de publicação extraído
-- ✅ Resumo completo em português brasileiro
-- ✅ 2 espécies de plantas identificadas com nomes vernaculares e científicos
-- ✅ Comunidade indígena (Xavante) e localização
-- ✅ Dados geográficos completos (país, estado, município, bioma)
-- ✅ Metodologia documentada
-- ✅ **Tempo de extração: 5-8 segundos** (com Google Gemini - 6x mais rápido que v1.x)
 
 ### Estrutura de Dados
 
-A estrutura completa dos dados extraídos está documentada em `docs/estrutura.json`.
+**Versão 2.1**: A estrutura de dados foi atualizada para integração completa com o [etnoDB](https://github.com/edalcin/etnoDB?tab=readme-ov-file#estrutura-de-dados).
+
+**Principais campos:**
+- `createdAt` / `updatedAt`: Timestamps no formato ISO 8601 (ex: "2025-12-26T11:02:00.533+00:00")
+- `status`: Status do registro ("pending", "approved", "rejected")
+- `fonte`: Origem dos dados no formato "etnodb - [Provedor IA]" (ex: "etnodb - Gemini")
+
+Para detalhes completos da estrutura de dados, consulte:
+- Arquivo de exemplo: [`docs/estrutura.json`](docs/estrutura.json)
+- Documentação oficial: [etnoDB Data Structure](https://github.com/edalcin/etnoDB?tab=readme-ov-file#estrutura-de-dados)
 
 ---
 
@@ -262,20 +253,7 @@ O EtnoPapers suporta três provedores de IA em nuvem para extração de metadado
 - Aproximadamente $0.25 por 1000 páginas processadas
 - Excelente para termos técnicos e nomenclatura científica
 
-### Versões Anteriores (v1.x - OLLAMA Local)
 
-Nas versões anteriores do EtnoPapers (v1.0-v1.1), a extração era feita usando OLLAMA localmente instalado. Essa abordagem foi descontinuada em favor dos provedores em nuvem pelos seguintes motivos:
-
-- **Desempenho**: IA em nuvem é **50% mais rápida** que modelos locais (5-8s vs 30-60s)
-- **Qualidade**: Menos alucinações e melhor compreensão de contexto científico
-- **Facilidade**: Não requer instalação de software adicional, GPU ou configuração complexa
-- **Manutenção**: Modelos sempre atualizados pelos provedores de IA
-- **Confiabilidade**: APIs gerenciadas com alta disponibilidade
-
-**Se você usava OLLAMA em versões anteriores:**
-- Seus dados existentes em JSON continuam 100% compatíveis
-- Basta configurar um provedor de IA em nuvem nas Configurações (Google Gemini recomendado - gratuito)
-- O banner de migração guiará você durante a primeira execução
 
 ---
 
@@ -314,6 +292,24 @@ Para questões, problemas ou sugestões sobre o EtnoPapers, use o [Issues](https
 
 ---
 
-**Versão**: 2.0.0
+**Versão**: 2.1.0
 **Licença**: [A definir]
 **Última atualização**: Dezembro 2025
+
+---
+
+## 🔄 Novidades da Versão 2.1
+
+### Integração com etnoDB
+
+A versão 2.1 traz integração completa com o projeto [etnoDB](https://github.com/edalcin/etnoDB), incluindo:
+
+- ✅ **Estrutura de dados padronizada**: Compatibilidade total com o schema do etnoDB
+- ✅ **Timestamps ISO 8601**: Formato internacional para `createdAt` e `updatedAt`
+- ✅ **Sistema de status**: Campo `status` para workflow de aprovação ("pending", "approved", "rejected")
+- ✅ **Rastreamento de origem**: Campo `fonte` identifica a origem dos dados ("etnodb - [Provedor IA]")
+- ✅ **Sincronização otimizada**: Upload direto para MongoDB do etnoDB sem conversões
+
+### Migração de Dados
+
+Se você já utiliza o EtnoPapers, seus dados antigos serão automaticamente convertidos para a nova estrutura ao abrir a aplicação pela primeira vez.

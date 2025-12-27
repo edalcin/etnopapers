@@ -103,8 +103,8 @@ namespace EtnoPapers.Core.Services
                 if (string.IsNullOrEmpty(record.Id))
                     record.Id = Guid.NewGuid().ToString();
 
-                record.DataCriacao = DateTime.UtcNow;
-                record.DataUltimaAtualizacao = DateTime.UtcNow;
+                record.CreatedAt = DateTime.UtcNow;
+                record.UpdatedAt = DateTime.UtcNow;
 
                 _records.Add(record);
                 SaveToFile();
@@ -130,8 +130,8 @@ namespace EtnoPapers.Core.Services
                     return false;
 
                 var index = _records.IndexOf(existing);
-                record.DataCriacao = existing.DataCriacao;
-                record.DataUltimaAtualizacao = DateTime.UtcNow;
+                record.CreatedAt = existing.CreatedAt;
+                record.UpdatedAt = DateTime.UtcNow;
                 _records[index] = record;
                 SaveToFile();
                 return true;
