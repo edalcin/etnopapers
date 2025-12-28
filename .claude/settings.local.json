@@ -41,7 +41,11 @@
       "Bash(xargs:*)",
       "Bash(cat:*)",
       "Bash(\"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" clean src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)",
-      "Bash(cmd /c \"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" --version)"
+      "Bash(cmd /c \"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" --version)",
+      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)",
+      "Bash(\"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" build D:gitetnopaperssrcEtnoPapers.UIEtnoPapers.UI.csproj -c Release)",
+      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build D:gitetnopaperssrcEtnoPapers.UIEtnoPapers.UI.csproj -c Release)",
+      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build srcEtnoPapers.UIEtnoPapers.UI.csproj -c Release)"
     ],
     "deny": [],
     "ask": []

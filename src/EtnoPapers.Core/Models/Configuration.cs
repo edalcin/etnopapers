@@ -22,6 +22,12 @@ namespace EtnoPapers.Core.Models
         [JsonProperty("geminiModel")]
         public GeminiModelType GeminiModel { get; set; } = GeminiModelType.Flash;
 
+        [JsonProperty("openaiModel")]
+        public OpenAIModelType OpenAIModel { get; set; } = OpenAIModelType.Gpt4oMini;
+
+        [JsonProperty("anthropicModel")]
+        public AnthropicModelType AnthropicModel { get; set; } = AnthropicModelType.Claude35Sonnet;
+
         [JsonProperty("customExtractionPrompt")]
         public string CustomExtractionPrompt { get; set; }
 

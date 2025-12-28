@@ -128,6 +128,23 @@ namespace EtnoPapers.Core.Services
                 var provider = AIProviderFactory.CreateProvider(config.AIProvider.Value);
                 provider.SetApiKey(config.ApiKey);
 
+                // Set model based on provider type
+                if (provider is GeminiService geminiService)
+                {
+                    geminiService.SetModel(config.GeminiModel);
+                    LogToFile(debugLogFile, $"Gemini model set to: {config.GeminiModel}");
+                }
+                else if (provider is OpenAIService openAIService)
+                {
+                    openAIService.SetModel(config.OpenAIModel);
+                    LogToFile(debugLogFile, $"OpenAI model set to: {config.OpenAIModel}");
+                }
+                else if (provider is AnthropicService anthropicService)
+                {
+                    anthropicService.SetModel(config.AnthropicModel);
+                    LogToFile(debugLogFile, $"Anthropic model set to: {config.AnthropicModel}");
+                }
+
                 var metadata = await provider.ExtractMetadataAsync(markdown, config.CustomExtractionPrompt);
 
                 // Log AI response for debugging

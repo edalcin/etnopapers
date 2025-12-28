@@ -26,6 +26,9 @@ namespace EtnoPapers.UI.ViewModels
         private string _providerTestStatus = "";
         private string _customExtractionPrompt = "";
         private int _selectedGeminiModelIndex = 0;
+        private int _selectedOpenAIModelIndex = 0;
+        private int _selectedAnthropicModelIndex = 0;
+        private bool _isProviderValidated = false;
 
         // Legacy OLLAMA Settings (kept for backward compatibility, not displayed in UI)
         private string _ollamaUrl = "http://localhost:11434";
@@ -66,6 +69,7 @@ namespace EtnoPapers.UI.ViewModels
             ClearErrorCommand = new RelayCommand(_ => ClearError());
             DismissMigrationBannerCommand = new RelayCommand(_ => DismissMigrationBanner());
             LoadDefaultPromptCommand = new RelayCommand(_ => LoadDefaultPrompt());
+            ClearPromptCommand = new RelayCommand(_ => ClearPrompt());
 
             _loggerService.Info("SettingsViewModel initialized");
             LoadSettings();
@@ -138,6 +142,34 @@ namespace EtnoPapers.UI.ViewModels
         {
             get => _selectedGeminiModelIndex;
             set => SetProperty(ref _selectedGeminiModelIndex, value);
+        }
+
+        /// <summary>
+        /// Selected OpenAI model (0=GPT-4o-mini, 1=GPT-4o, 2=GPT-4-turbo).
+        /// </summary>
+        public int SelectedOpenAIModelIndex
+        {
+            get => _selectedOpenAIModelIndex;
+            set => SetProperty(ref _selectedOpenAIModelIndex, value);
+        }
+
+        /// <summary>
+        /// Selected Anthropic model (0=Claude 3.5 Sonnet, 1=Claude 3.5 Haiku, 2=Claude 3 Opus).
+        /// </summary>
+        public int SelectedAnthropicModelIndex
+        {
+            get => _selectedAnthropicModelIndex;
+            set => SetProperty(ref _selectedAnthropicModelIndex, value);
+        }
+
+        /// <summary>
+        /// Indicates if the current provider has been validated (API key tested successfully).
+        /// Used to show model selection after validation.
+        /// </summary>
+        public bool IsProviderValidated
+        {
+            get => _isProviderValidated;
+            set => SetProperty(ref _isProviderValidated, value);
         }
 
         #endregion
@@ -244,6 +276,7 @@ namespace EtnoPapers.UI.ViewModels
         public ICommand ClearErrorCommand { get; }
         public ICommand DismissMigrationBannerCommand { get; }
         public ICommand LoadDefaultPromptCommand { get; }
+        public ICommand ClearPromptCommand { get; }
 
         #endregion
 
@@ -271,6 +304,11 @@ namespace EtnoPapers.UI.ViewModels
                 ApiKey = config?.ApiKey ?? "";
                 CustomExtractionPrompt = config?.CustomExtractionPrompt ?? "";
                 SelectedGeminiModelIndex = (int)(config?.GeminiModel ?? EtnoPapers.Core.Models.GeminiModelType.Flash);
+                SelectedOpenAIModelIndex = (int)(config?.OpenAIModel ?? EtnoPapers.Core.Models.OpenAIModelType.Gpt4oMini);
+                SelectedAnthropicModelIndex = (int)(config?.AnthropicModel ?? EtnoPapers.Core.Models.AnthropicModelType.Claude35Sonnet);
+
+                // Mark provider as validated if there's an existing API key
+                IsProviderValidated = !string.IsNullOrEmpty(config?.ApiKey);
 
                 // Load legacy OLLAMA settings (for backward compatibility, not displayed)
                 _ollamaUrl = config?.OllamaUrl ?? "http://localhost:11434";
@@ -328,6 +366,8 @@ namespace EtnoPapers.UI.ViewModels
                     config.AIProvider = (AIProviderType)SelectedProviderIndex;
                     config.ApiKey = ApiKey.Trim();
                     config.GeminiModel = (EtnoPapers.Core.Models.GeminiModelType)SelectedGeminiModelIndex;
+                    config.OpenAIModel = (EtnoPapers.Core.Models.OpenAIModelType)SelectedOpenAIModelIndex;
+                    config.AnthropicModel = (EtnoPapers.Core.Models.AnthropicModelType)SelectedAnthropicModelIndex;
                 }
                 else
                 {
@@ -388,13 +428,14 @@ namespace EtnoPapers.UI.ViewModels
         }
 
         /// <summary>
-        /// Called when provider selection changes. Clears API key field.
+        /// Called when provider selection changes. Clears API key field and resets validation state.
         /// </summary>
         private void OnProviderChanged()
         {
             // Clear API key when provider changes to avoid confusion
             ApiKey = "";
             ProviderTestStatus = "";
+            IsProviderValidated = false;
             ClearError();
 
             var providerName = SelectedProviderIndex switch
@@ -516,10 +557,18 @@ namespace EtnoPapers.UI.ViewModels
                 var provider = AIProviderFactory.CreateProvider(providerType);
                 provider.SetApiKey(ApiKey.Trim());
 
-                // Set Gemini model if applicable
+                // Set model based on provider type
                 if (provider is EtnoPapers.Core.Services.GeminiService geminiService)
                 {
                     geminiService.SetModel((EtnoPapers.Core.Models.GeminiModelType)SelectedGeminiModelIndex);
+                }
+                else if (provider is EtnoPapers.Core.Services.OpenAIService openAIService)
+                {
+                    openAIService.SetModel((EtnoPapers.Core.Models.OpenAIModelType)SelectedOpenAIModelIndex);
+                }
+                else if (provider is EtnoPapers.Core.Services.AnthropicService anthropicService)
+                {
+                    anthropicService.SetModel((EtnoPapers.Core.Models.AnthropicModelType)SelectedAnthropicModelIndex);
                 }
 
                 try
@@ -549,43 +598,51 @@ namespace EtnoPapers.UI.ViewModels
                         ProviderTestStatus = $"✓ Conexão com {providerName} bem-sucedida! API key válida.";
                         HasError = false;
                         ErrorMessage = "";
+                        IsProviderValidated = true;
                         _loggerService.Info($"Provider {providerName} connection test successful");
                     }
                     else
                     {
                         ProviderTestStatus = $"✗ Resposta inválida de {providerName}. Verifique sua chave de API.";
+                        IsProviderValidated = false;
                         _loggerService.Warn($"Provider {providerName} returned invalid response during test");
                     }
                 }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("API key"))
                 {
                     ProviderTestStatus = $"✗ Chave de API inválida para {providerName}";
+                    IsProviderValidated = false;
                     _loggerService.Error($"Invalid API key for {providerName}: {ex.Message}");
                 }
                 catch (HttpRequestException ex) when (ex.StatusCode.HasValue && ex.StatusCode.Value == System.Net.HttpStatusCode.Unauthorized)
                 {
                     ProviderTestStatus = $"✗ Chave de API não autorizada no {providerName}";
+                    IsProviderValidated = false;
                     _loggerService.Error($"Unauthorized API key for {providerName}: {ex.Message}");
                 }
                 catch (HttpRequestException ex) when (ex.StatusCode.HasValue && ex.StatusCode.Value == System.Net.HttpStatusCode.TooManyRequests)
                 {
                     ProviderTestStatus = $"✗ Limite de requisições excedido no {providerName}. Aguarde um momento.";
+                    IsProviderValidated = false;
                     _loggerService.Error($"Rate limit exceeded for {providerName}: {ex.Message}");
                 }
                 catch (HttpRequestException ex)
                 {
                     ProviderTestStatus = $"✗ Erro de conexão com {providerName}: {ex.Message}";
+                    IsProviderValidated = false;
                     _loggerService.Error($"Connection error with {providerName}: {ex.Message}", ex);
                 }
                 catch (Exception ex)
                 {
                     ProviderTestStatus = $"✗ Erro ao testar {providerName}: {ex.Message}";
+                    IsProviderValidated = false;
                     _loggerService.Error($"Test error for {providerName}: {ex.Message}", ex);
                 }
             }
             catch (Exception ex)
             {
                 ProviderTestStatus = $"✗ Erro inesperado: {ex.Message}";
+                IsProviderValidated = false;
                 _loggerService.Error($"Unexpected error in TestProviderConnectionAsync: {ex.Message}", ex);
             }
         }
@@ -635,6 +692,15 @@ namespace EtnoPapers.UI.ViewModels
         {
             CustomExtractionPrompt = EtnoPapers.Core.Services.AIProviderService.DefaultExtractionPrompt;
             _loggerService.Info("Default prompt loaded into custom prompt field");
+        }
+
+        /// <summary>
+        /// Clears the custom extraction prompt (reverts to system default).
+        /// </summary>
+        private void ClearPrompt()
+        {
+            CustomExtractionPrompt = "";
+            _loggerService.Info("Custom prompt cleared - will use system default");
         }
 
         #endregion

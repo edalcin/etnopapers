@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using EtnoPapers.Core.Models;
 using EtnoPapers.Core.Utils;
 using System.Linq;
 using System.Net.Http;
@@ -11,15 +12,39 @@ namespace EtnoPapers.Core.Services;
 
 /// <summary>
 /// Anthropic Claude AI provider implementation for ethnobotanical metadata extraction.
-/// Uses Claude 3.5 Sonnet model via REST API.
+/// Supports Claude 3.5 Sonnet, Claude 3.5 Haiku, and Claude 3 Opus models via REST API.
 /// </summary>
 public class AnthropicService : AIProviderService
 {
     private const string ApiEndpoint = "https://api.anthropic.com/v1/messages";
-    private const string DefaultModel = "claude-3-5-sonnet-20241022";
     private const string ApiVersion = "2023-06-01";
 
+    private static readonly Dictionary<AnthropicModelType, string> ModelNames = new()
+    {
+        { AnthropicModelType.Claude35Sonnet, "claude-sonnet-4-20250514" },
+        { AnthropicModelType.Claude35Haiku, "claude-3-5-haiku-20241022" },
+        { AnthropicModelType.Claude3Opus, "claude-3-opus-20240229" }
+    };
+
+    private AnthropicModelType _selectedModel = AnthropicModelType.Claude35Sonnet;
+    private string _currentModelName = "claude-sonnet-4-20250514";
+
     protected override string ProviderName => "Anthropic";
+
+    /// <summary>
+    /// Sets the Anthropic model to use for API calls.
+    /// </summary>
+    public void SetModel(AnthropicModelType model)
+    {
+        _selectedModel = model;
+        _currentModelName = ModelNames.GetValueOrDefault(model, "claude-sonnet-4-20250514");
+        Logger.Information("Anthropic model set to: {Model}", _currentModelName);
+    }
+
+    /// <summary>
+    /// Gets the current model type.
+    /// </summary>
+    public AnthropicModelType CurrentModel => _selectedModel;
 
     public AnthropicService(HttpClient? httpClient = null) : base(httpClient)
     {
@@ -38,12 +63,12 @@ public class AnthropicService : AIProviderService
         try
         {
             Logger.Information("[{Provider}] Starting API connection test with model {Model} and API version {Version}",
-                ProviderName, DefaultModel, ApiVersion);
+                ProviderName, _currentModelName, ApiVersion);
 
             // Ultra-simple test request
             var requestBody = new
             {
-                model = DefaultModel,
+                model = _currentModelName,
                 max_tokens = 50,
                 messages = new[]
                 {
@@ -174,7 +199,7 @@ public class AnthropicService : AIProviderService
         // Build request payload according to Anthropic Messages API format
         var requestBody = new
         {
-            model = DefaultModel,
+            model = _currentModelName,
             max_tokens = MaxTokens,
             temperature = Temperature,
             system = systemPrompt,

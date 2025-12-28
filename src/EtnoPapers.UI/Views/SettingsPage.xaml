@@ -4,183 +4,359 @@
       Background="White"
       Foreground="Black">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="40">
-            <!-- Header -->
-            <StackPanel Margin="0,0,0,24">
-                <TextBlock Text="Configurações" FontSize="28" FontWeight="Bold" Foreground="#0078D4" Margin="0,0,0,8"/>
-                <TextBlock Text="Configure a integração com IA em nuvem, MongoDB e preferências da aplicação" FontSize="14" Foreground="#505050" TextWrapping="Wrap"/>
-            </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-<!-- Cloud AI Provider Settings -->
-            <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="Configuração do Provedor de IA" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="40,40,40,20">
+            <TextBlock Text="Configuracoes" FontSize="28" FontWeight="Bold" Foreground="#0078D4" Margin="0,0,0,8"/>
+            <TextBlock Text="Configure a integracao com IA em nuvem, MongoDB e preferencias da aplicacao" FontSize="14" Foreground="#505050" TextWrapping="Wrap"/>
+        </StackPanel>
 
-                    <Grid Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+        <!-- TabControl with settings sections -->
+        <TabControl Grid.Row="1" Margin="40,0,40,20">
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Provedor de IA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                            <ComboBox x:Name="ProviderComboBox"
-                                      SelectedIndex="{Binding SelectedProviderIndex, UpdateSourceTrigger=PropertyChanged}"
-                                      Padding="8,6"
-                                      Background="White"
-                                      BorderBrush="#E0E0E0">
-                                <ComboBoxItem Content="Google Gemini" Tag="0"/>
-                                <ComboBoxItem Content="OpenAI" Tag="1"/>
-                                <ComboBoxItem Content="Anthropic Claude" Tag="2"/>
-                            </ComboBox>
-                        </StackPanel>
+            <!-- Tab 1: AI Provider Configuration -->
+            <TabItem Header="Provedor de IA">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <TextBlock Text="Configuracao do Provedor de IA" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
-                        <!-- Gemini Model Selection (visible only when Gemini is selected - index 0) -->
-                        <StackPanel Grid.Column="1" Margin="12,0,0,0" Visibility="{Binding SelectedProviderIndex, Converter={StaticResource SelectedIndexToVisibilityConverter}, ConverterParameter=0}">
-                            <TextBlock Text="Modelo Gemini" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                            <ComboBox SelectedIndex="{Binding SelectedGeminiModelIndex, UpdateSourceTrigger=PropertyChanged}"
-                                      Padding="8,6"
-                                      Background="White"
-                                      BorderBrush="#E0E0E0">
-                                <ComboBoxItem Content="Gemini 2.5 Flash (Recomendado)" Tag="0"/>
-                                <ComboBoxItem Content="Gemini 2.5 Pro (Mais Potente)" Tag="1"/>
-                            </ComboBox>
-                            <TextBlock Text="Flash: mais rápido | Pro: melhor precisão"
-                                       FontSize="10" Foreground="#8A8A8A" Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <!-- Provider Selection -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Bottom">
-                            <TextBlock FontSize="11" Foreground="#0078D4" VerticalAlignment="Center">
-                                <Hyperlink NavigateUri="https://ai.google.dev/" RequestNavigate="Hyperlink_RequestNavigate">
-                                    <Run Text="Obter Chave Gemini"/>
-                                </Hyperlink>
-                                <LineBreak/>
-                                <Hyperlink NavigateUri="https://platform.openai.com/" RequestNavigate="Hyperlink_RequestNavigate">
-                                    <Run Text="Obter Chave OpenAI"/>
-                                </Hyperlink>
-                                <LineBreak/>
-                                <Hyperlink NavigateUri="https://console.anthropic.com/" RequestNavigate="Hyperlink_RequestNavigate">
-                                    <Run Text="Obter Chave Anthropic"/>
-                                </Hyperlink>
-                            </TextBlock>
-                        </StackPanel>
-                    </Grid>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Provedor de IA" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="ProviderComboBox"
+                                          SelectedIndex="{Binding SelectedProviderIndex, UpdateSourceTrigger=PropertyChanged}"
+                                          Padding="8,6"
+                                          Background="White"
+                                          BorderBrush="#E0E0E0">
+                                    <ComboBoxItem Content="Google Gemini" Tag="0"/>
+                                    <ComboBoxItem Content="OpenAI" Tag="1"/>
+                                    <ComboBoxItem Content="Anthropic Claude" Tag="2"/>
+                                </ComboBox>
+                            </StackPanel>
 
-                    <TextBlock Text="Chave de API" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <PasswordBox x:Name="ApiKeyPasswordBox"
-                                 PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Bottom">
+                                <TextBlock FontSize="11" Foreground="#0078D4" VerticalAlignment="Center">
+                                    <Hyperlink NavigateUri="https://ai.google.dev/" RequestNavigate="Hyperlink_RequestNavigate">
+                                        <Run Text="Obter Chave Gemini"/>
+                                    </Hyperlink>
+                                    <LineBreak/>
+                                    <Hyperlink NavigateUri="https://platform.openai.com/" RequestNavigate="Hyperlink_RequestNavigate">
+                                        <Run Text="Obter Chave OpenAI"/>
+                                    </Hyperlink>
+                                    <LineBreak/>
+                                    <Hyperlink NavigateUri="https://console.anthropic.com/" RequestNavigate="Hyperlink_RequestNavigate">
+                                        <Run Text="Obter Chave Anthropic"/>
+                                    </Hyperlink>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- API Key Input -->
+                        <TextBlock Text="Chave de API" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                        <PasswordBox x:Name="ApiKeyPasswordBox"
+                                     PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
+                                     Padding="8,6"
+                                     Margin="0,0,0,4"
+                                     Background="White"
+                                     BorderBrush="#E0E0E0"/>
+
+                        <TextBlock Text="{Binding MaskedApiKey}"
+                                   FontSize="11"
+                                   Foreground="#8A8A8A"
+                                   Margin="0,0,0,8"
+                                   Visibility="{Binding MaskedApiKey, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                        <TextBlock Text="A chave de API sera armazenada de forma criptografada usando Windows DPAPI"
+                                   FontSize="11"
+                                   Foreground="#8A8A8A"
+                                   Margin="0,0,0,12"/>
+
+                        <!-- Test Connection Button -->
+                        <Button Content="Testar Conexao e Validar API Key"
+                                Command="{Binding TestProviderConnectionCommand}"
+                                Padding="16,8"
+                                Background="#4CAF50"
+                                Foreground="White"
+                                Margin="0,0,0,12"
+                                ToolTip="Testa a conexao com o provedor de IA e valida sua chave de API"/>
+
+                        <TextBlock Text="{Binding ProviderTestStatus}"
+                                   FontSize="12"
+                                   Foreground="#505050"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,16"
+                                   Visibility="{Binding ProviderTestStatus, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                        <!-- Model Selection Section (visible after validation) -->
+                        <Border Background="#E8F5E9" Padding="16" CornerRadius="8" Margin="0,0,0,16"
+                                Visibility="{Binding IsProviderValidated, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Selecao de Modelo" FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,12"/>
+
+                                <!-- Gemini Model Selection (visible when Gemini is selected - index 0) -->
+                                <StackPanel Visibility="{Binding SelectedProviderIndex, Converter={StaticResource SelectedIndexToVisibilityConverter}, ConverterParameter=0}">
+                                    <TextBlock Text="Modelo Gemini" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                                    <ComboBox SelectedIndex="{Binding SelectedGeminiModelIndex, UpdateSourceTrigger=PropertyChanged}"
+                                              Padding="8,6"
+                                              Background="White"
+                                              BorderBrush="#E0E0E0"
+                                              Margin="0,0,0,8">
+                                        <ComboBoxItem Content="Gemini 2.5 Flash (Recomendado)" Tag="0"/>
+                                        <ComboBoxItem Content="Gemini 2.5 Pro (Mais Potente)" Tag="1"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Flash: mais rapido e economico | Pro: melhor precisao"
+                                               FontSize="10" Foreground="#8A8A8A"/>
+                                </StackPanel>
+
+                                <!-- OpenAI Model Selection (visible when OpenAI is selected - index 1) -->
+                                <StackPanel Visibility="{Binding SelectedProviderIndex, Converter={StaticResource SelectedIndexToVisibilityConverter}, ConverterParameter=1}">
+                                    <TextBlock Text="Modelo OpenAI" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                                    <ComboBox SelectedIndex="{Binding SelectedOpenAIModelIndex, UpdateSourceTrigger=PropertyChanged}"
+                                              Padding="8,6"
+                                              Background="White"
+                                              BorderBrush="#E0E0E0"
+                                              Margin="0,0,0,8">
+                                        <ComboBoxItem Content="GPT-4o Mini (Recomendado)" Tag="0"/>
+                                        <ComboBoxItem Content="GPT-4o (Mais Potente)" Tag="1"/>
+                                        <ComboBoxItem Content="GPT-4 Turbo" Tag="2"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Mini: rapido e economico | 4o/Turbo: maior capacidade"
+                                               FontSize="10" Foreground="#8A8A8A"/>
+                                </StackPanel>
+
+                                <!-- Anthropic Model Selection (visible when Anthropic is selected - index 2) -->
+                                <StackPanel Visibility="{Binding SelectedProviderIndex, Converter={StaticResource SelectedIndexToVisibilityConverter}, ConverterParameter=2}">
+                                    <TextBlock Text="Modelo Anthropic Claude" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                                    <ComboBox SelectedIndex="{Binding SelectedAnthropicModelIndex, UpdateSourceTrigger=PropertyChanged}"
+                                              Padding="8,6"
+                                              Background="White"
+                                              BorderBrush="#E0E0E0"
+                                              Margin="0,0,0,8">
+                                        <ComboBoxItem Content="Claude Sonnet 4 (Recomendado)" Tag="0"/>
+                                        <ComboBoxItem Content="Claude 3.5 Haiku (Mais Rapido)" Tag="1"/>
+                                        <ComboBoxItem Content="Claude 3 Opus (Mais Potente)" Tag="2"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Sonnet: equilibrado | Haiku: rapido | Opus: maior capacidade"
+                                               FontSize="10" Foreground="#8A8A8A"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 2: Custom Extraction Prompt -->
+            <TabItem Header="Prompt de Extracao">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <TextBlock Text="Prompt Customizado para Extracao" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="O prompt e a instrucao enviada para a IA que define como extrair os metadados do artigo. Voce pode personaliza-lo para melhorar os resultados de extracao."
+                                   FontSize="12"
+                                   Foreground="#505050"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,16"/>
+
+                        <Border Background="#FFF3E0" Padding="12" CornerRadius="4" Margin="0,0,0,16">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="!" FontSize="14" Foreground="#E65100" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Deixe em branco para usar o prompt padrao do sistema (recomendado para a maioria dos casos)."
+                                           FontSize="11"
+                                           Foreground="#E65100"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Prompt Atual" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                        <TextBox x:Name="CustomPromptTextBox"
+                                 Text="{Binding CustomExtractionPrompt, UpdateSourceTrigger=PropertyChanged}"
                                  Padding="8,6"
-                                 Margin="0,0,0,4"
+                                 Margin="0,0,0,12"
+                                 Background="White"
+                                 BorderBrush="#E0E0E0"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Height="300"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                            <Button Content="Carregar Prompt Padrao"
+                                    Command="{Binding LoadDefaultPromptCommand}"
+                                    Padding="12,6"
+                                    Background="#0078D4"
+                                    Foreground="White"
+                                    FontSize="11"
+                                    ToolTip="Carrega o prompt padrao de extracao no campo acima"/>
+
+                            <Button Content="Limpar"
+                                    Padding="12,6"
+                                    Margin="8,0,0,0"
+                                    Background="#757575"
+                                    Foreground="White"
+                                    FontSize="11"
+                                    ToolTip="Limpa o prompt para usar o padrao do sistema"
+                                    Command="{Binding ClearPromptCommand}"/>
+                        </StackPanel>
+
+                        <!-- Info Section -->
+                        <Border Background="#F3F3F3" Padding="16" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock Text="Dicas para um bom prompt" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBlock FontSize="11" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
+                                    <Run Text="1."/>
+                                    <Run Text=" Seja especifico sobre os campos que deseja extrair"/>
+                                </TextBlock>
+                                <TextBlock FontSize="11" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
+                                    <Run Text="2."/>
+                                    <Run Text=" Inclua exemplos do formato esperado (JSON)"/>
+                                </TextBlock>
+                                <TextBlock FontSize="11" Foreground="#505050" TextWrapping="Wrap" Margin="0,0,0,4">
+                                    <Run Text="3."/>
+                                    <Run Text=" Defina regras claras para campos opcionais"/>
+                                </TextBlock>
+                                <TextBlock FontSize="11" Foreground="#505050" TextWrapping="Wrap">
+                                    <Run Text="4."/>
+                                    <Run Text=" Use o prompt padrao como base para modificacoes"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab 3: MongoDB Configuration -->
+            <TabItem Header="MongoDB">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <TextBlock Text="Configuracao MongoDB" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="URI de Conexao" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding MongodbUri, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="8,6"
+                                 Margin="0,0,0,8"
                                  Background="White"
                                  BorderBrush="#E0E0E0"/>
 
-                    <TextBlock Text="{Binding MaskedApiKey}"
-                               FontSize="11"
-                               Foreground="#8A8A8A"
-                               Margin="0,0,0,12"
-                               Visibility="{Binding MaskedApiKey, Converter={StaticResource StringToVisibilityConverter}}"/>
+                        <TextBlock Text="(Deixe em branco para desabilitar sincronizacao remota)"
+                                   FontSize="11"
+                                   Foreground="#8A8A8A"
+                                   Margin="0,0,0,16"/>
 
-                    <TextBlock Text="ℹ A chave de API será armazenada de forma criptografada usando Windows DPAPI"
-                               FontSize="11"
-                               Foreground="#8A8A8A"
-                               Margin="0,0,0,12"/>
+                        <Button Content="Testar Conexao"
+                                Command="{Binding TestMongodbCommand}"
+                                Padding="16,8"
+                                Background="#0078D4"
+                                Foreground="White"
+                                Margin="0,0,0,12"/>
 
-                    <Button Content="🔗 Testar Conexão e Validar API Key"
-                            Command="{Binding TestProviderConnectionCommand}"
-                            Padding="16,8"
-                            Background="#4CAF50"
-                            Foreground="White"
-                            Margin="0,0,0,12"
-                            ToolTip="Testa a conexão com o provedor de IA e valida sua chave de API"/>
+                        <TextBlock Text="{Binding MongodbTestStatus}"
+                                   FontSize="12"
+                                   Foreground="#505050"
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding MongodbTestStatus, Converter={StaticResource StringToVisibilityConverter}}"/>
 
-                    <TextBlock Text="{Binding ProviderTestStatus}"
-                               FontSize="12"
-                               Foreground="#505050"
-                               TextWrapping="Wrap"
-                               Visibility="{Binding ProviderTestStatus, Converter={StaticResource StringToVisibilityConverter}}"/>
-
-                    <!-- Custom Extraction Prompt -->
-                    <StackPanel Margin="0,16,0,12">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <TextBlock Text="Prompt Customizado para Extração" FontSize="12" Foreground="#505050" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock Text="Deixe em branco para usar o prompt padrão do sistema" FontSize="11" Foreground="#8A8A8A" Margin="0,0,0,4"/>
+                        <!-- MongoDB Help Section -->
+                        <Border Background="#F3F3F3" Padding="16" CornerRadius="8" Margin="0,20,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Formato da URI" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBlock Text="mongodb+srv://usuario:senha@cluster.mongodb.net/database"
+                                           FontSize="11"
+                                           Foreground="#505050"
+                                           FontFamily="Consolas"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock Text="A sincronizacao remota permite fazer backup dos registros extraidos e acessar os dados de outros dispositivos."
+                                           FontSize="11"
+                                           Foreground="#8A8A8A"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                    <TextBox x:Name="CustomPromptTextBox"
-                             Text="{Binding CustomExtractionPrompt, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="8,6"
-                             Margin="0,0,0,8"
-                             Background="White"
-                             BorderBrush="#E0E0E0"
-                             TextWrapping="Wrap"
-                             AcceptsReturn="True"
-                             VerticalScrollBarVisibility="Auto"
-                             Height="150"/>
+            <!-- Tab 4: Application Preferences -->
+            <TabItem Header="Preferencias">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <TextBlock Text="Preferencias da Aplicacao" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
-                    <Button Content="📋 Carregar Prompt Padrão"
-                            Command="{Binding LoadDefaultPromptCommand}"
-                            Padding="12,6"
-                            Margin="0,0,0,12"
-                            Background="#4CAF50"
-                            Foreground="White"
-                            FontSize="11"
-                            ToolTip="Carrega o prompt padrão de extração no campo acima"/>
+                        <CheckBox Content="Verificar atualizacoes automaticamente" Margin="0,0,0,12" IsChecked="True"/>
+                        <CheckBox Content="Mostrar notificacoes de sincronizacao" Margin="0,0,0,12" IsChecked="True"/>
+                        <CheckBox Content="Lembrar tamanho da janela" Margin="0,0,0,20" IsChecked="{Binding WindowMaximized}"/>
 
-                    <TextBlock Text="ℹ Customize o prompt enviado para a IA. Deixe em branco para usar o padrão do sistema."
-                               FontSize="11"
-                               Foreground="#8A8A8A"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,12"/>
-                </StackPanel>
-            </Border>
+                        <!-- Language Section -->
+                        <Border Background="#F3F3F3" Padding="16" CornerRadius="8" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="Idioma" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <ComboBox SelectedItem="{Binding Language}"
+                                          ItemsSource="{Binding AvailableLanguages}"
+                                          Padding="8,6"
+                                          Background="White"
+                                          BorderBrush="#E0E0E0"/>
+                            </StackPanel>
+                        </Border>
 
-            <!-- MongoDB Settings -->
-            <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="Configuração MongoDB" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+                        <!-- About Section -->
+                        <Border Background="#F3F3F3" Padding="16" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock Text="Sobre o EtnoPapers" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Aplicacao para extracao e catalogacao de metadados etnobotanicos de artigos cientificos."
+                                           FontSize="11"
+                                           Foreground="#505050"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock FontSize="11" Foreground="#8A8A8A">
+                                    <Run Text="Versao: 1.1.0"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
 
-                    <TextBlock Text="URI de Conexão" FontSize="12" Foreground="#505050" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding MongodbUri, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Margin="0,0,0,12" Background="White" BorderBrush="#E0E0E0"/>
+        <!-- Bottom Section: Save Button and Messages -->
+        <StackPanel Grid.Row="2" Margin="40,0,40,40">
+            <Button Content="Salvar Configuracoes"
+                    Command="{Binding SaveSettingsCommand}"
+                    Padding="16,8"
+                    Background="#0078D4"
+                    Foreground="White"
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,16"/>
 
-                    <TextBlock Text="(Deixe em branco para desabilitar sincronização remota)" FontSize="11" Foreground="#8A8A8A" Margin="0,0,0,12"/>
-
-                    <Button Content="Testar Conexão" Command="{Binding TestMongodbCommand}" Padding="16,8" Background="#0078D4" Foreground="White" Margin="0,0,0,12"/>
-
-                    <TextBlock Text="{Binding MongodbTestStatus}" FontSize="12" Foreground="#505050" TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Application Preferences -->
-            <Border Background="#F3F3F3" Padding="20" CornerRadius="8" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="Preferências da Aplicação" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
-
-                    <CheckBox Content="Verificar atualizações automaticamente" Margin="0,0,0,12" IsChecked="True"/>
-                    <CheckBox Content="Mostrar notificações de sincronização" Margin="0,0,0,12" IsChecked="True"/>
-                    <CheckBox Content="Lembrar senha do MongoDB" Margin="0,0,0,20" IsChecked="False"/>
-
-                    <Button Content="Salvar Configurações" Command="{Binding SaveSettingsCommand}" Padding="16,8" Background="#0078D4" Foreground="White"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Success/Error Messages -->
-            <Border Background="#E8F5E9" Padding="16" CornerRadius="4" Margin="0,0,0,0" Visibility="{Binding SuccessMessage, Converter={StaticResource StringToVisibilityConverter}}">
+            <!-- Success Message -->
+            <Border Background="#E8F5E9" Padding="16" CornerRadius="4" Margin="0,0,0,8"
+                    Visibility="{Binding SuccessMessage, Converter={StaticResource StringToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="✓" FontSize="16" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,12,0"/>
+                    <TextBlock Text="OK" FontSize="16" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,12,0"/>
                     <TextBlock Text="{Binding SuccessMessage}" FontSize="13" Foreground="#2E7D32" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
-            <Border Background="#FFEBEE" Padding="16" CornerRadius="4" Margin="0,8,0,0" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}">
+            <!-- Error Message -->
+            <Border Background="#FFEBEE" Padding="16" CornerRadius="4"
+                    Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="✗" FontSize="16" Foreground="#F44336" FontWeight="Bold" Margin="0,0,12,0"/>
+                    <TextBlock Text="X" FontSize="16" Foreground="#F44336" FontWeight="Bold" Margin="0,0,12,0"/>
                     <TextBlock Text="{Binding ErrorMessage}" FontSize="13" Foreground="#C62828" VerticalAlignment="Center" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
         </StackPanel>
-    </ScrollViewer>
+    </Grid>
 
 </Page>

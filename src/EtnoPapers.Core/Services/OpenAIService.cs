@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using EtnoPapers.Core.Models;
 using EtnoPapers.Core.Utils;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -11,14 +12,38 @@ namespace EtnoPapers.Core.Services;
 
 /// <summary>
 /// OpenAI GPT provider implementation for ethnobotanical metadata extraction.
-/// Uses GPT-4o-mini model via REST API.
+/// Supports GPT-4o-mini, GPT-4o, and GPT-4-turbo models via REST API.
 /// </summary>
 public class OpenAIService : AIProviderService
 {
     private const string ApiEndpoint = "https://api.openai.com/v1/chat/completions";
-    private const string DefaultModel = "gpt-4o-mini";
+
+    private static readonly Dictionary<OpenAIModelType, string> ModelNames = new()
+    {
+        { OpenAIModelType.Gpt4oMini, "gpt-4o-mini" },
+        { OpenAIModelType.Gpt4o, "gpt-4o" },
+        { OpenAIModelType.Gpt4Turbo, "gpt-4-turbo" }
+    };
+
+    private OpenAIModelType _selectedModel = OpenAIModelType.Gpt4oMini;
+    private string _currentModelName = "gpt-4o-mini";
 
     protected override string ProviderName => "OpenAI";
+
+    /// <summary>
+    /// Sets the OpenAI model to use for API calls.
+    /// </summary>
+    public void SetModel(OpenAIModelType model)
+    {
+        _selectedModel = model;
+        _currentModelName = ModelNames.GetValueOrDefault(model, "gpt-4o-mini");
+        Logger.Information("OpenAI model set to: {Model}", _currentModelName);
+    }
+
+    /// <summary>
+    /// Gets the current model type.
+    /// </summary>
+    public OpenAIModelType CurrentModel => _selectedModel;
 
     public OpenAIService(HttpClient? httpClient = null) : base(httpClient)
     {
@@ -41,7 +66,7 @@ public class OpenAIService : AIProviderService
             // Ultra-simple test request
             var requestBody = new
             {
-                model = DefaultModel,
+                model = _currentModelName,
                 messages = new[]
                 {
                     new { role = "user", content = "Responda com 'OK'" }
@@ -167,7 +192,7 @@ public class OpenAIService : AIProviderService
         // Build request payload according to OpenAI Chat Completions API format
         var requestBody = new
         {
-            model = DefaultModel,
+            model = _currentModelName,
             messages = new[]
             {
                 new { role = "system", content = systemPrompt },
