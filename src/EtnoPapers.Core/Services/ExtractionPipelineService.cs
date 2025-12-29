@@ -214,7 +214,7 @@ namespace EtnoPapers.Core.Services
             foreach (var error in errors)
             {
                 if (error.Contains("Titulo"))
-                    suggestions += "• Título vazio: O PDF pode estar em idioma estrangeiro ou corrompido\n";
+                    suggestions += "• Título vazio: O PDF pode estar corrompido ou não ter título identificável\n";
                 else if (error.Contains("Autores"))
                     suggestions += "• Autores ausentes: Verifique se o PDF tem metadata ou página de capa\n";
                 else if (error.Contains("Ano"))

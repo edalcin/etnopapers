@@ -212,11 +212,13 @@ namespace EtnoPapers.UI.ViewModels
                         double elapsedSeconds = _extractionStopwatch.Elapsed.TotalSeconds;
                         if (ExtractedData != null)
                         {
-                            // Record the AI agent/provider used with etnodb prefix
+                            // Record the AI agent/provider used with etnopaper prefix
                             var config = _configService.LoadConfiguration();
                             if (config?.AIProvider.HasValue == true)
                             {
-                                ExtractedData.Fonte = $"etnodb - {config.AIProvider.Value}";
+                                var providerName = config.AIProvider.Value.ToString();
+                                var modelName = GetModelName(config);
+                                ExtractedData.Fonte = $"etnopaper - {providerName} - {modelName}";
                             }
 
                             _loggerService.Info($"Extraction completed in {elapsedSeconds:F2} seconds using {ExtractedData.Fonte}");
@@ -482,6 +484,40 @@ namespace EtnoPapers.UI.ViewModels
                     // Silent fallback - no sound
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the model name based on the provider and selected model in configuration.
+        /// </summary>
+        private string GetModelName(Configuration config)
+        {
+            if (config?.AIProvider == null)
+                return "Unknown";
+
+            return config.AIProvider.Value switch
+            {
+                AIProviderType.Gemini => config.GeminiModel switch
+                {
+                    GeminiModelType.Flash => "Gemini Flash",
+                    GeminiModelType.Pro => "Gemini Pro",
+                    _ => "Gemini Unknown"
+                },
+                AIProviderType.OpenAI => config.OpenAIModel switch
+                {
+                    OpenAIModelType.Gpt4oMini => "GPT-4o mini",
+                    OpenAIModelType.Gpt4o => "GPT-4o",
+                    OpenAIModelType.Gpt4Turbo => "GPT-4 Turbo",
+                    _ => "GPT Unknown"
+                },
+                AIProviderType.Anthropic => config.AnthropicModel switch
+                {
+                    AnthropicModelType.Claude35Sonnet => "Claude Sonnet 3.5",
+                    AnthropicModelType.Claude35Haiku => "Claude Haiku 3.5",
+                    AnthropicModelType.Claude3Opus => "Claude Opus 3",
+                    _ => "Claude Unknown"
+                },
+                _ => "Unknown"
+            };
         }
 
         #endregion

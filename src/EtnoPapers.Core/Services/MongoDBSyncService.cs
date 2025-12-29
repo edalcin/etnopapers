@@ -107,10 +107,17 @@ namespace EtnoPapers.Core.Services
                 _logger.Info($"UploadRecordAsync: Converting record to BsonDocument - {record.Id}");
                 var doc = BsonDocument.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(record));
 
-                _logger.Info($"UploadRecordAsync: Inserting document to collection 'records' - {record.Id}");
+                // Remove the 'id' field - MongoDB will generate its own '_id'
+                if (doc.Contains("id"))
+                {
+                    doc.Remove("id");
+                    _logger.Info($"UploadRecordAsync: Removed 'id' field - MongoDB will generate '_id' automatically");
+                }
+
+                _logger.Info($"UploadRecordAsync: Inserting document to collection 'records'");
                 await _collection.InsertOneAsync(doc);
 
-                _logger.Info($"UploadRecordAsync: Successfully inserted document - {record.Id}");
+                _logger.Info($"UploadRecordAsync: Successfully inserted document");
                 return true;
             }
             catch (Exception ex)
@@ -132,16 +139,26 @@ namespace EtnoPapers.Core.Services
             var docs = new List<BsonDocument>();
             foreach (var record in records)
             {
-                docs.Add(BsonDocument.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(record)));
+                var doc = BsonDocument.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(record));
+
+                // Remove the 'id' field - MongoDB will generate its own '_id'
+                if (doc.Contains("id"))
+                {
+                    doc.Remove("id");
+                }
+
+                docs.Add(doc);
             }
 
             try
             {
                 await _collection.InsertManyAsync(docs);
+                _logger.Info($"UploadBatchAsync: Successfully inserted {docs.Count} documents (without 'id' field)");
                 return docs.Count;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.Error($"UploadBatchAsync: Failed to upload batch: {ex.Message}", ex);
                 return 0;
             }
         }

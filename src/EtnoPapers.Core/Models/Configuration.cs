@@ -46,9 +46,6 @@ namespace EtnoPapers.Core.Models
         public string MongodbUri { get; set; }
 
         // UI Settings
-        [JsonProperty("language")]
-        public string Language { get; set; } = "pt-BR";
-
         [JsonProperty("windowWidth")]
         public int WindowWidth { get; set; } = 1200;
 

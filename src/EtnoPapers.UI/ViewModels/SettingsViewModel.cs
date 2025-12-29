@@ -41,7 +41,6 @@ namespace EtnoPapers.UI.ViewModels
         private string _mongodbTestStatus = "";
 
         // Application Settings
-        private string _language = "pt-BR";
         private int _windowWidth = 1200;
         private int _windowHeight = 800;
         private bool _windowMaximized = false;
@@ -198,17 +197,6 @@ namespace EtnoPapers.UI.ViewModels
 
         #region Application Properties
 
-        public ObservableCollection<string> AvailableLanguages { get; } = new()
-        {
-            "pt-BR"
-        };
-
-        public string Language
-        {
-            get => _language;
-            set => SetProperty(ref _language, value);
-        }
-
         public int WindowWidth
         {
             get => _windowWidth;
@@ -317,7 +305,6 @@ namespace EtnoPapers.UI.ViewModels
 
                 // Load other settings
                 MongodbUri = config?.MongodbUri ?? "";
-                Language = config?.Language ?? "pt-BR";
                 WindowWidth = config?.WindowWidth ?? 1200;
                 WindowHeight = config?.WindowHeight ?? 800;
                 WindowMaximized = config?.WindowMaximized ?? false;
@@ -384,7 +371,6 @@ namespace EtnoPapers.UI.ViewModels
 
                 // Save other settings
                 config.MongodbUri = MongodbUri?.Trim() ?? "";
-                config.Language = Language;
                 config.WindowWidth = WindowWidth;
                 config.WindowHeight = WindowHeight;
                 config.WindowMaximized = WindowMaximized;
@@ -414,7 +400,6 @@ namespace EtnoPapers.UI.ViewModels
             SelectedProviderIndex = -1;
             ApiKey = "";
             MongodbUri = "";
-            Language = "pt-BR";
             WindowWidth = 1200;
             WindowHeight = 800;
             WindowMaximized = false;

@@ -298,18 +298,6 @@
                         <CheckBox Content="Mostrar notificacoes de sincronizacao" Margin="0,0,0,12" IsChecked="True"/>
                         <CheckBox Content="Lembrar tamanho da janela" Margin="0,0,0,20" IsChecked="{Binding WindowMaximized}"/>
 
-                        <!-- Language Section -->
-                        <Border Background="#F3F3F3" Padding="16" CornerRadius="8" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="Idioma" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                <ComboBox SelectedItem="{Binding Language}"
-                                          ItemsSource="{Binding AvailableLanguages}"
-                                          Padding="8,6"
-                                          Background="White"
-                                          BorderBrush="#E0E0E0"/>
-                            </StackPanel>
-                        </Border>
-
                         <!-- About Section -->
                         <Border Background="#F3F3F3" Padding="16" CornerRadius="8">
                             <StackPanel>
