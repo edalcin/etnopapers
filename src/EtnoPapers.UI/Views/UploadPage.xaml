@@ -33,15 +33,8 @@
             <!-- File Selection Area -->
             <Border Background="#F3F3F3" BorderBrush="#E0E0E0" BorderThickness="2" CornerRadius="8" Padding="24" Margin="0,0,0,24">
                 <StackPanel>
-                    <!-- File Drop Zone -->
+                    <!-- File Selection -->
                     <TextBlock Text="Selecione um arquivo PDF" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
-
-                    <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="2" CornerRadius="8" Padding="0" Margin="0,0,0,16" Height="120">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="📄" FontSize="48" TextAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="Clique para selecionar ou arraste um PDF aqui" FontSize="13" TextAlignment="Center" Foreground="#505050"/>
-                        </StackPanel>
-                    </Border>
 
                     <!-- Selected File Display -->
                     <TextBlock Text="{Binding SelectedFilePath, StringFormat='Arquivo: {0}'}" FontSize="12" Foreground="#505050" Margin="0,0,0,12" TextWrapping="Wrap"/>
