@@ -170,5 +170,62 @@ namespace EtnoPapers.Core.Services
         {
             return _collection != null ? "connected" : "disconnected";
         }
+
+        /// <summary>
+        /// Checks if a record with the same title and year already exists in MongoDB.
+        /// </summary>
+        /// <param name="titulo">The title to check</param>
+        /// <param name="ano">The year to check</param>
+        /// <returns>True if a duplicate exists, false otherwise</returns>
+        public async Task<bool> CheckDuplicateExistsAsync(string titulo, int? ano)
+        {
+            if (_collection == null)
+            {
+                _logger.Error("CheckDuplicateExistsAsync: MongoDB collection is not initialized");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(titulo))
+            {
+                _logger.Warn("CheckDuplicateExistsAsync: titulo is null or empty");
+                return false;
+            }
+
+            try
+            {
+                var normalizedTitulo = titulo.Trim().ToLowerInvariant();
+
+                FilterDefinition<BsonDocument> filter;
+
+                if (ano.HasValue)
+                {
+                    // Match both title (case-insensitive) and year
+                    filter = Builders<BsonDocument>.Filter.And(
+                        Builders<BsonDocument>.Filter.Regex("titulo", new BsonRegularExpression($"^{System.Text.RegularExpressions.Regex.Escape(normalizedTitulo)}$", "i")),
+                        Builders<BsonDocument>.Filter.Eq("ano", ano.Value)
+                    );
+                }
+                else
+                {
+                    // Match only title (case-insensitive) if year is not available
+                    filter = Builders<BsonDocument>.Filter.Regex("titulo", new BsonRegularExpression($"^{System.Text.RegularExpressions.Regex.Escape(normalizedTitulo)}$", "i"));
+                }
+
+                var count = await _collection.CountDocumentsAsync(filter);
+                var exists = count > 0;
+
+                if (exists)
+                {
+                    _logger.Info($"CheckDuplicateExistsAsync: Found duplicate for titulo='{titulo}', ano={ano}");
+                }
+
+                return exists;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"CheckDuplicateExistsAsync: Failed to check duplicate: {ex.Message}", ex);
+                return false;
+            }
+        }
     }
 }

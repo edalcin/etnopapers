@@ -322,6 +322,7 @@ namespace EtnoPapers.UI.ViewModels
 
         /// <summary>
         /// Starts synchronization of selected records to MongoDB.
+        /// Checks for duplicates (by title+year) before uploading each record.
         /// </summary>
         public async Task StartSync()
         {
@@ -370,6 +371,8 @@ namespace EtnoPapers.UI.ViewModels
                 _loggerService.Info($"Preparing to sync {recordsToSync.Count} records");
 
                 int successCount = 0;
+                int skippedCount = 0;
+                var skippedRecords = new List<string>();
 
                 for (int i = 0; i < recordsToSync.Count; i++)
                 {
@@ -379,6 +382,24 @@ namespace EtnoPapers.UI.ViewModels
                         if (record == null)
                         {
                             _loggerService.Warn($"Skipping null record at index {i}");
+                            continue;
+                        }
+
+                        CurrentSyncStatus = $"Verificando: {i + 1}/{recordsToSync.Count} - {record.Titulo}";
+                        _loggerService.Info($"Checking duplicate for record {i + 1}/{recordsToSync.Count}: {record.Id} - {record.Titulo} ({record.Ano})");
+
+                        // Check if record already exists in MongoDB (by title + year)
+                        bool isDuplicate = await _syncService.CheckDuplicateExistsAsync(record.Titulo, record.Ano);
+
+                        if (isDuplicate)
+                        {
+                            _loggerService.Info($"⚠ Record already exists in MongoDB, skipping: {record.Titulo} ({record.Ano})");
+                            skippedCount++;
+                            var displayTitle = record.Titulo?.Length > 50 ? record.Titulo.Substring(0, 50) + "..." : record.Titulo;
+                            skippedRecords.Add($"• {displayTitle} ({record.Ano})");
+
+                            // Update progress
+                            SyncProgress = (int)((i + 1) * 100 / recordsToSync.Count);
                             continue;
                         }
 
@@ -415,10 +436,27 @@ namespace EtnoPapers.UI.ViewModels
                 LastSyncTime = DateTime.UtcNow;
                 SyncProgress = 100;
 
-                _loggerService.Info($"Sync completed: {successCount}/{recordsToSync.Count} records uploaded successfully");
+                _loggerService.Info($"Sync completed: {successCount}/{recordsToSync.Count} records uploaded, {skippedCount} skipped (duplicates)");
 
-                // Mostrar messageBox de sucesso
-                System.Windows.MessageBox.Show($"Sincronização concluída com sucesso!\n\n{successCount} de {recordsToSync.Count} registros enviados para MongoDB.", "Sincronização OK");
+                // Build summary message
+                var summaryMessage = $"Sincronização concluída!\n\n✓ {successCount} registro(s) enviado(s) para MongoDB.";
+
+                if (skippedCount > 0)
+                {
+                    summaryMessage += $"\n\n⚠ {skippedCount} registro(s) já existente(s) no banco de dados (não sincronizados):";
+                    // Show up to 5 skipped records in the message
+                    var recordsToShow = skippedRecords.Take(5).ToList();
+                    foreach (var rec in recordsToShow)
+                    {
+                        summaryMessage += $"\n{rec}";
+                    }
+                    if (skippedCount > 5)
+                    {
+                        summaryMessage += $"\n... e mais {skippedCount - 5} registro(s).";
+                    }
+                }
+
+                System.Windows.MessageBox.Show(summaryMessage, "Sincronização Concluída");
 
                 // Reload available records after sync
                 try

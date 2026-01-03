@@ -1,0 +1,3130 @@
+{
+  "_id": {
+    "$oid": "6950169b2a1d68e5ddcf52f4"
+  },
+  "titulo": "Diversity of plant uses in two Caiçara communities from the Atlantic Forest coast, Brazil",
+  "autores": [
+    "HANAZAKI, N.",
+    "TAMASHIRO, J. Y.",
+    "LEITÃO-FILHO, H. F.",
+    "BEGOSSI, A."
+  ],
+  "ano": 2000,
+  "resumo": "Os Caiçaras são habitantes nativos da costa atlântica do sudeste do Brasil, cuja subsistência se baseia especialmente na agricultura e pesca artesanal. Devido ao seu conhecimento sobre o ambiente adquirido através de gerações, os Caiçaras podem desempenhar um papel importante na conservação da Mata Atlântica. Um estudo etnobotânico foi conduzido em duas comunidades Caiçaras (Ponta do Almada e praia do Camburí, Estado de São Paulo, Brasil), focando nos usos de plantas. Em 102 entrevistas, 227 etnoespécies de plantas foram citadas, principalmente para alimentação, medicina, artesanato e construção de casas e canoas. As pessoas das comunidades estudadas dependem da vegetação nativa para mais da metade das espécies conhecidas e usadas. Usando índices de diversidade, os usos de plantas são comparados entre as comunidades estudadas e entre categorias de gênero e idade dentro de cada comunidade. Foram encontradas diferenças quantitativas no conhecimento sobre plantas entre categorias de gênero para cada tipo de uso (medicinal, alimentar e artesanato). Informantes mais velhos e mais jovens também têm diferentes conhecimentos sobre plantas para artesanato e medicina, mas não para plantas comestíveis.",
+  "DOI": null,
+  "comunidades": [
+    {
+      "nome": "Ponta do Almada",
+      "tipo": "Caiçaras",
+      "municipio": "Ubatuba",
+      "estado": "São Paulo",
+      "local": "limite sul do Núcleo Picinguaba do Parque Estadual da Serra do Mar, dentro da Reserva da Biosfera da Mata Atlântica",
+      "atividadesEconomicas": [
+        "pesca",
+        "turismo"
+      ],
+      "observacoes": "31 casas de habitantes nativos com cerca de 125 residentes. 87% dos entrevistados são Caiçaras. 64% dos habitantes dedicam-se ao turismo. 76% dos homens dedicam-se à pesca. 76% das mulheres dedicam-se aos trabalhos domésticos. Famílias com média de 5 pessoas.",
+      "plantas": [
+        {
+          "nomeCientifico": [
+            "Foeniculum vulgare"
+          ],
+          "nomeVernacular": [
+            "erva-doce"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Astrocaryum aculeatissimum"
+          ],
+          "nomeVernacular": [
+            "brejaúva"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Euterpe edulis"
+          ],
+          "nomeVernacular": [
+            "palmito",
+            "jiçara"
+          ],
+          "tipoUso": [
+            "artesanato",
+            "alimentar",
+            "outros"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Baccharis trimera"
+          ],
+          "nomeVernacular": [
+            "carqueja"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Bidens pilosa"
+          ],
+          "nomeVernacular": [
+            "picão",
+            "picão-preto"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Matricaria chamomilla"
+          ],
+          "nomeVernacular": [
+            "camomila"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Jacaranda puberula"
+          ],
+          "nomeVernacular": [
+            "caroba"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia cassinoides"
+          ],
+          "nomeVernacular": [
+            "caxeta"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Schizolobium parahyba"
+          ],
+          "nomeVernacular": [
+            "guapuruvu",
+            "bacurubu"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cecropia glaziouii"
+          ],
+          "nomeVernacular": [
+            "embaúba"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Chenopodium ambrosioides"
+          ],
+          "nomeVernacular": [
+            "erva-de-santa-maria"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Ipomoea batatas"
+          ],
+          "nomeVernacular": [
+            "batata-doce"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Kalanchoe sp."
+          ],
+          "nomeVernacular": [
+            "saião"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Hyeronima alchorneoides"
+          ],
+          "nomeVernacular": [
+            "aricurana",
+            "urucurana"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Manihot esculenta"
+          ],
+          "nomeVernacular": [
+            "mandioca"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Pausandra morisiana"
+          ],
+          "nomeVernacular": [
+            "guacá"
+          ],
+          "tipoUso": [
+            "artesanato",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Phaseolus vulgaris"
+          ],
+          "nomeVernacular": [
+            "feijão"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Coleus barbatus"
+          ],
+          "nomeVernacular": [
+            "boldo"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cunila spicata"
+          ],
+          "nomeVernacular": [
+            "poejo"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Melissa officinalis"
+          ],
+          "nomeVernacular": [
+            "erva-cidreira"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Mentha piperita"
+          ],
+          "nomeVernacular": [
+            "hortelã"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Laurus nobilis"
+          ],
+          "nomeVernacular": [
+            "louro"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Persea americana"
+          ],
+          "nomeVernacular": [
+            "abacate"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cedrela fissilis"
+          ],
+          "nomeVernacular": [
+            "cedro"
+          ],
+          "tipoUso": [
+            "artesanato",
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Enterolobium contortisiliquum"
+          ],
+          "nomeVernacular": [
+            "timbuíba"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Inga sessilis"
+          ],
+          "nomeVernacular": [
+            "ingá"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Ficus insipida"
+          ],
+          "nomeVernacular": [
+            "figueira"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Musa acuminata"
+          ],
+          "nomeVernacular": [
+            "bananeira"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Virola bicuhyba"
+          ],
+          "nomeVernacular": [
+            "bacubixaba"
+          ],
+          "tipoUso": [
+            "alimentar",
+            "outros"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Eugenia uniflora"
+          ],
+          "nomeVernacular": [
+            "pitanga"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Psidium guajava"
+          ],
+          "nomeVernacular": [
+            "goiaba"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cymbopogon citratus"
+          ],
+          "nomeVernacular": [
+            "capim-cidrão",
+            "capim-cidreira",
+            "capim-cheiroso",
+            "capim-santo"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Saccharum officinarum"
+          ],
+          "nomeVernacular": [
+            "cana"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Zea mays"
+          ],
+          "nomeVernacular": [
+            "milho"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Citrus limon"
+          ],
+          "nomeVernacular": [
+            "limão"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Citrus sinensis"
+          ],
+          "nomeVernacular": [
+            "laranja"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Abuta sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Achillea millefolium"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Achyrocline satureoides"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Adiantum capillus-veneris"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Aegiphila sellowiana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ageratum conyzoides"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Aleuritis moluccana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Allium fistulosum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Anacardium occidentale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ananas comosus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Annona squamosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Artocarpus integrifolia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Aspidosperma sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Asplundia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Attalea compta"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Attalea dubia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Averrhoa carambola"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Bambusa sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Beta vulgaris"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Boerhaavia diffusa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Bombacopsis glabra"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cabralea canjerana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cajanus cajan"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Calophyllum brasiliense"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Capsicum annuum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Capsicum flexuosum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Carica papaya"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cariniana legalis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cassia fistula"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cayaponia tayuya"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Chenopodium album"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Chorisia speciosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Chusquea sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cinnamomum zeylanicum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Citrus reticulata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cocos nucifera"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Coffea arabica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cordia curassavica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Costus spicatus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Croton floribundus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cucurbita pepo"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cupania racemosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cuphea carthaginensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Curatella sambaiba"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cymbopogon martinii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Citharexylum myrianthum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Daucus carota"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Davilla sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Dieffenbachia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Dioscorea alata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Diospyros kaki"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Echinodorus macrophyllus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eclipta sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Elephantopus mollis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eriobotrya japonica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eriotheca pentaphylla"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eryngium sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eucalyptus spp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eugenia aquea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eugenia brasiliensis"
+          ],
+          "nomeVernacular": [
+            "gumixama"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Garcinia gardneriana"
+          ],
+          "nomeVernacular": [
+            "bacupari"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Hibiscus tiliaceus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Hymenaea courbaril"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Hypoxys decumbens"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Hyptis sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Impatiens sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Imperata brasiliensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Indigofera suffruticosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Inga sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Jacaranda sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Justicia af. hylobates"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Laguncularia racemosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Lecythis pisonis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Lepidium virginicum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Lycopersicum esculentum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mabea brasiliensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Machaerium nyctitans"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Magonia pubescens"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mammea americana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Manilkara subsericea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Melinis minutiflora"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mentha sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Merostachys sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Miconia cinnamomifolia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mikania sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mikania cordifolia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mimosa pudica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mirabilis jalapa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Momordica charantia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Monstera sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Morus nigra"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Myrciaria floribunda"
+          ],
+          "nomeVernacular": [
+            "jabuticaba"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Myristica sebifera"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Myrocarpus frondosus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Nectandra mollis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocimum sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocimum gratissimum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocimum micranthum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocotea sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Passiflora alata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Pera glabrata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Petroselium sativum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Philodendron sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Philodendron imbe"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Phyllanthus corcovadensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Phyllanthus niruri"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Piper arboreum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Plantago major"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Plinia edulis"
+          ],
+          "nomeVernacular": [
+            "cambucá"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Potomorphe umbellata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Psidium sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Psidium cattleyanum"
+          ],
+          "nomeVernacular": [
+            "araçá"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Quiina glaziovii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rapanea ferruginea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rheedia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rollinia ubatubensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rosa sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rosmarinus officinalis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ruta graveolens"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sambucus australis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Schinus terebinthifolius"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Scoparia dulcis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sechium edule"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Senna sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Serjania erecta"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sida sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sida santanimnensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Siparuna sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sloanea monosperma"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Smilax spicata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Solanum sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Solanum americanum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Solanum inaequale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sorocea bomplandii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Stachytarpheta polyura"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Strychnos sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Syagrus sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Syagrus pseudococos"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Symphytum officinale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Syzygium jambos"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia avellanedae"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia impetiginosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Terminalia catappa"
+          ],
+          "nomeVernacular": [
+            "chapéu-de-sol",
+            "amendoeira"
+          ],
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tibouchina sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tibouchina estrellensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tibouchina pulchra"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Trema micrantha"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Trigonia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Trigonia nivea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tynnanthus elegans"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Urtica sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Vernonia lindbergii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Vernonia polyanthes"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Xanthosoma sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Zanthoxylum rhoifolium"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Zingiber officinale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        }
+      ]
+    },
+    {
+      "nome": "Praia do Camburí",
+      "tipo": "Caiçaras",
+      "municipio": "Ubatuba",
+      "estado": "São Paulo",
+      "local": "dentro do Núcleo Picinguaba do Parque Estadual da Serra do Mar, dentro da Reserva da Biosfera da Mata Atlântica",
+      "atividadesEconomicas": [
+        "pesca",
+        "agricultura",
+        "turismo"
+      ],
+      "observacoes": "Cerca de 70 casas de habitantes locais com aproximadamente 300 residentes. 95% dos entrevistados são Caiçaras. 50% dos residentes praticam atividades de turismo. 61% dos homens dedicam-se à pesca, 35% à agricultura. 92% das mulheres dedicam-se aos trabalhos domésticos. Famílias com média de 4 pessoas.",
+      "plantas": [
+        {
+          "nomeCientifico": [
+            "Foeniculum vulgare"
+          ],
+          "nomeVernacular": [
+            "erva-doce"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Astrocaryum aculeatissimum"
+          ],
+          "nomeVernacular": [
+            "brejaúva"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Euterpe edulis"
+          ],
+          "nomeVernacular": [
+            "palmito",
+            "jiçara"
+          ],
+          "tipoUso": [
+            "artesanato",
+            "alimentar",
+            "outros"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Baccharis trimera"
+          ],
+          "nomeVernacular": [
+            "carqueja"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Bidens pilosa"
+          ],
+          "nomeVernacular": [
+            "picão",
+            "picão-preto"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Matricaria chamomilla"
+          ],
+          "nomeVernacular": [
+            "camomila"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Jacaranda puberula"
+          ],
+          "nomeVernacular": [
+            "caroba"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia cassinoides"
+          ],
+          "nomeVernacular": [
+            "caxeta"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Schizolobium parahyba"
+          ],
+          "nomeVernacular": [
+            "guapuruvu",
+            "bacurubu"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cecropia glaziouii"
+          ],
+          "nomeVernacular": [
+            "embaúba"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Chenopodium ambrosioides"
+          ],
+          "nomeVernacular": [
+            "erva-de-santa-maria"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Ipomoea batatas"
+          ],
+          "nomeVernacular": [
+            "batata-doce"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Kalanchoe sp."
+          ],
+          "nomeVernacular": [
+            "saião"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Hyeronima alchorneoides"
+          ],
+          "nomeVernacular": [
+            "aricurana",
+            "urucurana"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Manihot esculenta"
+          ],
+          "nomeVernacular": [
+            "mandioca"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Pausandra morisiana"
+          ],
+          "nomeVernacular": [
+            "guacá"
+          ],
+          "tipoUso": [
+            "artesanato",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Phaseolus vulgaris"
+          ],
+          "nomeVernacular": [
+            "feijão"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Coleus barbatus"
+          ],
+          "nomeVernacular": [
+            "boldo"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cunila spicata"
+          ],
+          "nomeVernacular": [
+            "poejo"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Melissa officinalis"
+          ],
+          "nomeVernacular": [
+            "erva-cidreira"
+          ],
+          "tipoUso": [
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Mentha piperita"
+          ],
+          "nomeVernacular": [
+            "hortelã"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Laurus nobilis"
+          ],
+          "nomeVernacular": [
+            "louro"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Persea americana"
+          ],
+          "nomeVernacular": [
+            "abacate"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cedrela fissilis"
+          ],
+          "nomeVernacular": [
+            "cedro"
+          ],
+          "tipoUso": [
+            "artesanato",
+            "medicinal"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Enterolobium contortisiliquum"
+          ],
+          "nomeVernacular": [
+            "timbuíba"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Inga sessilis"
+          ],
+          "nomeVernacular": [
+            "ingá"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Ficus insipida"
+          ],
+          "nomeVernacular": [
+            "figueira"
+          ],
+          "tipoUso": [
+            "artesanato"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Musa acuminata"
+          ],
+          "nomeVernacular": [
+            "bananeira"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Virola bicuhyba"
+          ],
+          "nomeVernacular": [
+            "bacubixaba"
+          ],
+          "tipoUso": [
+            "alimentar",
+            "outros"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Eugenia uniflora"
+          ],
+          "nomeVernacular": [
+            "pitanga"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Psidium guajava"
+          ],
+          "nomeVernacular": [
+            "goiaba"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Cymbopogon citratus"
+          ],
+          "nomeVernacular": [
+            "capim-cidrão",
+            "capim-cidreira",
+            "capim-cheiroso",
+            "capim-santo"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Saccharum officinarum"
+          ],
+          "nomeVernacular": [
+            "cana"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Zea mays"
+          ],
+          "nomeVernacular": [
+            "milho"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Citrus limon"
+          ],
+          "nomeVernacular": [
+            "limão"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Citrus sinensis"
+          ],
+          "nomeVernacular": [
+            "laranja"
+          ],
+          "tipoUso": [
+            "medicinal",
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Abuta sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Achillea millefolium"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Achyrocline satureoides"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Adiantum capillus-veneris"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Aegiphila sellowiana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ageratum conyzoides"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Aleuritis moluccana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Allium fistulosum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Anacardium occidentale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ananas comosus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Annona squamosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Artocarpus integrifolia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Aspidosperma sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Asplundia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Attalea compta"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Attalea dubia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Averrhoa carambola"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Bambusa sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Beta vulgaris"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Boerhaavia diffusa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Bombacopsis glabra"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cabralea canjerana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cajanus cajan"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Calophyllum brasiliense"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Capsicum annuum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Capsicum flexuosum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Carica papaya"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cariniana legalis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cassia fistula"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cayaponia tayuya"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Chenopodium album"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Chorisia speciosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Chusquea sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cinnamomum zeylanicum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Citrus reticulata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cocos nucifera"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Coffea arabica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cordia curassavica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Costus spicatus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Croton floribundus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cucurbita pepo"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cupania racemosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cuphea carthaginensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Curatella sambaiba"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Cymbopogon martinii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Citharexylum myrianthum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Daucus carota"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Davilla sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Dieffenbachia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Dioscorea alata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Diospyros kaki"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Echinodorus macrophyllus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eclipta sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Elephantopus mollis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eriobotrya japonica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eriotheca pentaphylla"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eryngium sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eucalyptus spp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eugenia aquea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Eugenia brasiliensis"
+          ],
+          "nomeVernacular": [
+            "gumixama"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Garcinia gardneriana"
+          ],
+          "nomeVernacular": [
+            "bacupari"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Hibiscus tiliaceus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Hymenaea courbaril"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Hypoxys decumbens"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Hyptis sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Impatiens sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Imperata brasiliensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Indigofera suffruticosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Inga sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Jacaranda sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Justicia af. hylobates"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Laguncularia racemosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Lecythis pisonis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Lepidium virginicum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Lycopersicum esculentum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mabea brasiliensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Machaerium nyctitans"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Magonia pubescens"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mammea americana"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Manilkara subsericea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Melinis minutiflora"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mentha sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Merostachys sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Miconia cinnamomifolia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mikania sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mikania cordifolia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mimosa pudica"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Mirabilis jalapa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Momordica charantia"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Monstera sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Morus nigra"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Myrciaria floribunda"
+          ],
+          "nomeVernacular": [
+            "jabuticaba"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Myristica sebifera"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Myrocarpus frondosus"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Nectandra mollis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocimum sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocimum gratissimum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocimum micranthum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ocotea sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Passiflora alata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Pera glabrata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Petroselium sativum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Philodendron sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Philodendron imbe"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Phyllanthus corcovadensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Phyllanthus niruri"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Piper arboreum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Plantago major"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Plinia edulis"
+          ],
+          "nomeVernacular": [
+            "cambucá"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Potomorphe umbellata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Psidium sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Psidium cattleyanum"
+          ],
+          "nomeVernacular": [
+            "araçá"
+          ],
+          "tipoUso": [
+            "alimentar"
+          ]
+        },
+        {
+          "nomeCientifico": [
+            "Quiina glaziovii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rapanea ferruginea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rheedia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rollinia ubatubensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rosa sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Rosmarinus officinalis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Ruta graveolens"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sambucus australis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Schinus terebinthifolius"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Scoparia dulcis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sechium edule"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Senna sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Serjania erecta"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sida sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sida santanimnensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Siparuna sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sloanea monosperma"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Smilax spicata"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Solanum sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Solanum americanum"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Solanum inaequale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Sorocea bomplandii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Stachytarpheta polyura"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Strychnos sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Syagrus sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Syagrus pseudococos"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Symphytum officinale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Syzygium jambos"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia avellanedae"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tabebuia impetiginosa"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Terminalia catappa"
+          ],
+          "nomeVernacular": [
+            "chapéu-de-sol",
+            "amendoeira"
+          ],
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tibouchina sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tibouchina estrellensis"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tibouchina pulchra"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Trema micrantha"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Trigonia sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Trigonia nivea"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Tynnanthus elegans"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Urtica sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Vernonia lindbergii"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Vernonia polyanthes"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Xanthosoma sp."
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Zanthoxylum rhoifolium"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        },
+        {
+          "nomeCientifico": [
+            "Zingiber officinale"
+          ],
+          "nomeVernacular": null,
+          "tipoUso": null
+        }
+      ]
+    }
+  ],
+  "createdAt": "2025-12-27T17:16:52.194Z",
+  "fonte": "Claude - Opus 4.5 - Benchmark",
+  "status": "approved",
+  "updatedAt": "2025-12-27T17:16:52.194Z"
+}
