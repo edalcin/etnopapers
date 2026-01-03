@@ -2,6 +2,10 @@
 
 <img src="docs/etnopapers.png" alt="EtnoPapers" width="150" />
 
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/edalcin/etnopapers/releases)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18139340.svg)](https://doi.org/10.5281/zenodo.18139340)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
+
 **Aplicação Desktop para Extração Automatizada de Metadados Etnobotânicos**
 
 **Versão Atual**: 2.1.0 | [Ver Histórico de Versões](VERSION_HISTORY.md)
