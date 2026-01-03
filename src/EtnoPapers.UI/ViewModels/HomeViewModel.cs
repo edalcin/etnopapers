@@ -31,7 +31,7 @@ namespace EtnoPapers.UI.ViewModels
             set => SetProperty(ref _welcomeMessage, value);
         }
 
-        public string ApplicationVersion => "1.0.0";
+        public string ApplicationVersion => "2.1.0";
 
         private void LoadData()
         {

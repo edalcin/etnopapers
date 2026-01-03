@@ -292,8 +292,16 @@ Para questões, problemas ou sugestões sobre o EtnoPapers, use o [Issues](https
 
 ---
 
+## Contato
+
+Para mais informações sobre o projeto:
+* Desenvolvedor: Eduardo Dalcin - edalcin@jbrj.gov.br
+* Referência Arquitetônica: [etnoArquitetura](https://github.com/edalcin/etnoArquitetura)
+
+---
+
 **Versão**: 2.1.0
-**Licença**: [A definir]
+**Licença**: MIT License
 **Última atualização**: Dezembro 2025
 
 ---

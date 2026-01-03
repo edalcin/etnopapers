@@ -59,7 +59,7 @@ namespace EtnoPapers.UI.ViewModels
             set => SetProperty(ref _applicationTitle, value);
         }
 
-        public string Version => "2.0.0";
+        public string Version => "2.1.0";
 
         #endregion
 
