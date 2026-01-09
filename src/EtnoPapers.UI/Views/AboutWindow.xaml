@@ -19,7 +19,7 @@
             <TextBlock Text="Extração Automatizada de Dados e Metadados Etnobotânicos" FontSize="14" TextAlignment="Center" Foreground="#505050" Margin="0,0,0,20" TextWrapping="Wrap"/>
 
             <!-- Version -->
-            <TextBlock Text="Versão 1.0.0" FontSize="12" TextAlignment="Center" Foreground="#505050" Margin="0,0,0,30"/>
+            <TextBlock Text="Versão 2.1.0" FontSize="12" TextAlignment="Center" Foreground="#505050" Margin="0,0,0,30"/>
 
             <!-- Description -->
             <TextBlock TextAlignment="Center" TextWrapping="Wrap" FontSize="12" Foreground="#505050" Margin="0,0,0,20">
