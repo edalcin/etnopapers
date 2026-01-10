@@ -45,7 +45,15 @@
       "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build src/EtnoPapers.UI/EtnoPapers.UI.csproj -c Release)",
       "Bash(\"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" build D:gitetnopaperssrcEtnoPapers.UIEtnoPapers.UI.csproj -c Release)",
       "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build D:gitetnopaperssrcEtnoPapers.UIEtnoPapers.UI.csproj -c Release)",
-      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build srcEtnoPapers.UIEtnoPapers.UI.csproj -c Release)"
+      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build srcEtnoPapers.UIEtnoPapers.UI.csproj -c Release)",
+      "Bash(\"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" build \"D:\\\\git\\\\etnopapers\\\\src\\\\EtnoPapers.UI\\\\EtnoPapers.UI.csproj\" -c Release)",
+      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build \"D:\\\\git\\\\etnopapers\\\\src\\\\EtnoPapers.UI\\\\EtnoPapers.UI.csproj\" -c Release)",
+      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" build \"D:\\\\git\\\\etnopapers\\\\src\\\\EtnoPapers.UI\\\\EtnoPapers.UI.csproj\" -c Release --no-restore)",
+      "WebFetch(domain:github.com)",
+      "Bash(\"C:\\\\Program Files\\\\dotnet\\\\dotnet.exe\" clean \"D:\\\\git\\\\etnopapers\\\\src\\\\EtnoPapers.UI\\\\EtnoPapers.UI.csproj\" -c Release)",
+      "Bash(\"C:\\\\Users\\\\EDalcin\\\\.dotnet\\\\dotnet.exe\" clean \"D:\\\\git\\\\etnopapers\\\\src\\\\EtnoPapers.UI\\\\EtnoPapers.UI.csproj\" -c Release)",
+      "WebFetch(domain:zenodo.org)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
